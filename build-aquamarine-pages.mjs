@@ -778,7 +778,8 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 3rem 2rem;
+      padding: 1.5rem 2rem 4rem;
+      margin-top: -2.8rem; /* Elevate hero content so it is not pushed too far down */
       z-index: 2;
       animation: heroSlowFadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -789,7 +790,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
 
     .hero-totem-wrap {
       position: relative;
-      margin-bottom: 2rem;
+      margin-bottom: 1.4rem;
       cursor: pointer;
     }
     .hero-totem-aura {
@@ -830,7 +831,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       font-weight: 700;
       letter-spacing: -0.04em;
       color: #fff;
-      margin-bottom: 2.5rem;
+      margin-bottom: 1.8rem;
     }
 
     .btn-see-how {
@@ -2657,7 +2658,7 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       });
     }
 
-    // SCROLL SLIDE-IN REVEAL OBSERVER WITH IMMEDIATE REVEAL & FALLBACK
+    // SCROLL SLIDE-IN REVEAL OBSERVER (AUTHENTIC 1.25s SMOOTH SCROLL ANIMATION)
     function initScrollReveal() {
       const elements = document.querySelectorAll('.slide-reveal-left, .slide-reveal-right, .slide-reveal-up');
       if (!('IntersectionObserver' in window)) {
@@ -2671,11 +2672,13 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
             observer.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.02, rootMargin: '0px 0px 200px 0px' });
+      }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
 
       elements.forEach(function(el) {
         const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight + 200) {
+        // ONLY elements already on screen above fold are revealed on load
+        // All lower elements will smoothly slide in when scrolled into view
+        if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
           el.classList.add('is-revealed');
         } else {
           observer.observe(el);
@@ -2688,23 +2691,6 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
     } else {
       initScrollReveal();
     }
-    window.addEventListener('load', initScrollReveal);
-    window.addEventListener('scroll', function() {
-      const pending = document.querySelectorAll('.slide-reveal-left:not(.is-revealed), .slide-reveal-right:not(.is-revealed), .slide-reveal-up:not(.is-revealed)');
-      for (let i = 0; i < pending.length; i++) {
-        const rect = pending[i].getBoundingClientRect();
-        if (rect.top < window.innerHeight + 250) {
-          pending[i].classList.add('is-revealed');
-        }
-      }
-    }, { passive: true });
-
-    // Safety fallback: reveal all elements after 1.5s regardless of scroll to guarantee no blank spaces
-    setTimeout(function() {
-      document.querySelectorAll('.slide-reveal-left, .slide-reveal-right, .slide-reveal-up').forEach(function(el) {
-        el.classList.add('is-revealed');
-      });
-    }, 1500);
 
     // MATRIX DOTS CANVAS SIMULATION IN AQUAMARINE
     const canvas = document.getElementById('matrixCanvas');
