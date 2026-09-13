@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <meta name="theme-color" content="#05070e">
 
-  <!-- Minimal Monospace & Clean Sans -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
   <style>
     :root {
       --bg: #05070e;
-      --bg-grid: rgba(255, 255, 255, 0.025);
+      --bg-grid: rgba(255, 255, 255, 0.02);
       --card-bg: #070a13;
       --border: rgba(255, 255, 255, 0.07);
       --border-subtle: rgba(255, 255, 255, 0.12);
@@ -25,8 +25,6 @@
       --text-dim: #475569;
       --emerald: #10b981;
       --emerald-glow: rgba(16, 185, 129, 0.25);
-      --emerald-subtle: rgba(16, 185, 129, 0.1);
-      --indigo: #6366f1;
       --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
     }
@@ -54,17 +52,17 @@
         linear-gradient(to bottom, var(--bg-grid) 1px, transparent 1px);
       pointer-events: none;
       z-index: 0;
-      mask-image: radial-gradient(circle at 50% 30%, black 40%, transparent 90%);
+      mask-image: radial-gradient(circle at 50% 35%, black 40%, transparent 90%);
     }
 
-    /* CENTER VERTICAL LASER LINE (Persis seperti di screenshot RTK) */
+    /* CENTER VERTICAL LASER LINE */
     .hero-laser-line {
       position: absolute;
       top: 0;
       left: 50%;
       width: 1px;
-      height: 480px;
-      background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.15) 30%, #10b981 85%, transparent 100%);
+      height: 520px;
+      background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.2) 30%, #10b981 85%, transparent 100%);
       box-shadow: 0 0 16px var(--emerald-glow);
       transform: translateX(-50%);
       pointer-events: none;
@@ -77,7 +75,7 @@
       top: 0;
       z-index: 1000;
       backdrop-filter: blur(16px);
-      background: rgba(5, 7, 14, 0.75);
+      background: rgba(5, 7, 14, 0.8);
       border-bottom: 1px solid var(--border);
     }
     .nav-inner {
@@ -132,7 +130,6 @@
       font-weight: 500;
     }
     .nav-links a:hover { color: var(--text-main); }
-    .nav-links span { color: var(--text-dim); font-size: 0.75rem; margin-left: 2px; }
 
     .nav-right {
       display: flex;
@@ -145,14 +142,8 @@
       gap: 0.45rem;
       font-size: 0.85rem;
       color: var(--text-muted);
-      transition: color 0.2s;
     }
     .nav-gh-link:hover { color: var(--text-main); }
-    .star-counter {
-      color: #38bdf8;
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-    }
 
     .btn-install-rtk {
       background: rgba(16, 185, 129, 0.1);
@@ -173,10 +164,10 @@
       box-shadow: 0 0 20px var(--emerald-glow);
     }
 
-    /* HERO STAGE (PERSIS SCREENSHOT RTK) */
+    /* HERO STAGE */
     .hero-stage {
       position: relative;
-      min-height: 86vh;
+      min-height: 90vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -186,25 +177,7 @@
       z-index: 10;
     }
 
-    /* DUAL CONTEXT ANNOTATIONS IN HERO BACKGROUND (RAW CONTEXT vs CLEAN CONTEXT) */
-    .hero-bg-markers {
-      position: absolute;
-      top: 22%;
-      left: 0; right: 0;
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      padding: 0 4rem;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.2);
-      pointer-events: none;
-    }
-
-    /* CENTER ICON & RADIAL GREEN GLOW (HERO TOTEM) */
+    /* CENTER ICON & RADIAL GREEN GLOW */
     .hero-totem-wrap {
       position: relative;
       margin-bottom: 2rem;
@@ -216,168 +189,237 @@
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 280px; height: 280px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
-      filter: blur(35px);
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%);
+      filter: blur(40px);
       pointer-events: none;
       z-index: -1;
     }
     .hero-totem-icon {
       width: 120px; height: 120px;
-      filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.5));
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.6));
+      animation: floatTotem 4s ease-in-out infinite;
     }
-    .hero-totem-wrap:hover .hero-totem-icon {
-      transform: scale(1.05);
+    @keyframes floatTotem {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
     }
     .totem-brand-sub {
       font-family: var(--font-mono);
-      font-size: 0.78rem;
-      letter-spacing: 0.3em;
+      font-size: 0.8rem;
+      letter-spacing: 0.35em;
       color: #6ee7b7;
       text-transform: uppercase;
       margin-top: 1.2rem;
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
-    /* HERO TYPOGRAPHY (CALM, NO RUSH, CLASSY) */
     .hero-headline-sub {
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       color: var(--text-muted);
       font-weight: 400;
       margin-bottom: 0.4rem;
       letter-spacing: -0.01em;
     }
     .hero-headline-main {
-      font-size: 2.2rem;
+      font-size: 2.3rem;
       font-weight: 700;
       color: #ffffff;
       letter-spacing: -0.03em;
       margin-bottom: 2.5rem;
     }
 
-    /* "SEE HOW IT WORKS" PILL BUTTON WITH DOWN ARROW */
     .btn-see-how {
       display: inline-flex;
       align-items: center;
       gap: 0.6rem;
-      background: rgba(10, 15, 26, 0.7);
+      background: rgba(10, 15, 26, 0.8);
       border: 1px solid var(--border-subtle);
       border-radius: 999px;
-      padding: 0.5rem 1.3rem;
+      padding: 0.5rem 1.4rem;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       transition: all 0.25s ease;
-      backdrop-filter: blur(8px);
-    }
-    .btn-see-how svg {
-      width: 12px; height: 12px;
-      color: var(--emerald);
-      transition: transform 0.2s;
     }
     .btn-see-how:hover {
       border-color: var(--border-green);
       color: var(--text-main);
       transform: translateY(2px);
     }
-    .btn-see-how:hover svg {
-      transform: translateY(2px);
-    }
 
-    /* CONTENT SECTIONS */
-    .content-container {
+    /* DUAL MATRIX COMPARISON CARDS (EXACT RTK SCREENSHOT REPLICA) */
+    .matrix-section {
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 4rem 2rem 8rem;
+      margin: 2rem auto 6rem;
+      padding: 0 2rem;
       position: relative;
       z-index: 10;
     }
-
-    .section-label {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--emerald);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 0.8rem;
-    }
-    .section-h2 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-bottom: 1rem;
-      line-height: 1.25;
-    }
-    .section-lead {
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      max-width: 680px;
-      margin-bottom: 3rem;
-      line-height: 1.6;
-    }
-
-    /* INTERACTIVE COMPARISON TERMINAL (RTK HIGH-END CODE COMPARISON) */
-    .comparison-grid {
+    .matrix-cards-wrap {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 5rem;
+      gap: 2.5rem;
+      align-items: center;
     }
-    .terminal-window {
-      background: #060913;
+    .matrix-card {
+      background: #070b16;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 18px;
+      padding: 1.8rem;
+      box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8);
+      position: relative;
       overflow: hidden;
-      font-family: var(--font-mono);
-      font-size: 0.84rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     }
-    .term-titlebar {
-      padding: 0.75rem 1.25rem;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid var(--border);
+    .matrix-card.active-clean {
+      border-color: rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.12);
+    }
+    .matrix-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.75rem;
-      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.4rem;
     }
-    .term-code {
-      padding: 1.5rem;
-      min-height: 260px;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      color: #94a3b8;
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 6px;
+      margin-bottom: 1.5rem;
     }
-    .term-code.cleaned {
-      color: #38bdf8;
+    .m-dot {
+      height: 12px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.04);
+      transition: all 0.3s;
     }
-    .term-badge-red {
-      background: rgba(239, 68, 68, 0.12);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
+    .m-dot.red { background: rgba(239, 68, 68, 0.7); }
+    .m-dot.emerald { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .m-dot.blue { background: #38bdf8; }
+
+    .matrix-bar-track {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 1rem;
     }
-    .term-badge-green {
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.7rem;
+    .matrix-bar-fill-red { width: 86%; height: 100%; background: #ef4444; }
+    .matrix-bar-fill-green { width: 14%; height: 100%; background: #10b981; box-shadow: 0 0 10px #10b981; }
+
+    /* STATS BANNER (1.6M+, 80.0K+, 140K+, etc.) */
+    .stats-banner {
+      max-width: 1200px;
+      margin: 4rem auto 7rem;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.5rem;
+      text-align: center;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    .stat-metric {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
     }
 
-    /* INTERACTIVE STUDIO / ZERO-FLUFF SYNTHESIZER */
+    /* THE PROBLEM: CONTEXT WINDOW BREAKDOWN (EXACT REPLICA OF SCREENSHOT) */
+    .problem-section {
+      max-width: 1200px;
+      margin: 0 auto 8rem;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+    .problem-left-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--emerald);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .problem-left-h2 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+    .problem-left-h2 em {
+      font-style: italic;
+      font-weight: 400;
+      color: #94a3b8;
+    }
+    .problem-left-p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .context-breakdown-card {
+      background: #070a14;
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.8rem;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+    }
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+    .breakdown-row-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #cbd5e1;
+    }
+    .b-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .b-bar-track {
+      flex: 1;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+      margin: 0 1.2rem;
+      overflow: hidden;
+    }
+    .b-bar-val { height: 100%; border-radius: 999px; }
+
+    /* STUDIO & CLI CARDS */
+    .studio-container {
+      max-width: 1200px;
+      margin: 0 auto 8rem;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
     .studio-box {
       background: #070a14;
       border: 1px solid var(--border-subtle);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8);
-      margin-bottom: 6rem;
     }
     .studio-header {
       padding: 1rem 1.8rem;
@@ -390,7 +432,7 @@
     .studio-split {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      min-height: 420px;
+      min-height: 400px;
     }
     .studio-col {
       padding: 1.8rem;
@@ -399,16 +441,6 @@
     }
     .studio-col:first-child {
       border-right: 1px solid var(--border);
-    }
-    .col-label-strip {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      margin-bottom: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
     }
     textarea.studio-area {
       flex: 1;
@@ -424,9 +456,7 @@
       outline: none;
       line-height: 1.6;
     }
-    textarea.studio-area:focus {
-      border-color: var(--emerald);
-    }
+    textarea.studio-area:focus { border-color: var(--emerald); }
     .studio-output-area {
       flex: 1;
       width: 100%;
@@ -469,36 +499,6 @@
       box-shadow: 0 0 20px var(--emerald-glow);
     }
 
-    /* CLI INSTALL & CHEATSHEET */
-    .cli-card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 6rem;
-    }
-    .cli-feature-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.8rem;
-      transition: border-color 0.2s;
-    }
-    .cli-feature-card:hover {
-      border-color: var(--border-subtle);
-    }
-    .cli-code-badge {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: #38bdf8;
-      margin-bottom: 0.75rem;
-    }
-    .cli-card-body {
-      font-size: 0.87rem;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-
-    /* FOOTER */
     footer {
       border-top: 1px solid var(--border);
       padding: 4rem 2.5rem;
@@ -516,7 +516,6 @@
       color: var(--text-dim);
     }
 
-    /* TOAST */
     #toast {
       position: fixed;
       bottom: 2rem; right: 2rem;
@@ -533,11 +532,11 @@
     }
 
     @media (max-width: 900px) {
-      .hero-bg-markers { display: none; }
-      .comparison-grid { grid-template-columns: 1fr; }
+      .matrix-cards-wrap { grid-template-columns: 1fr; }
+      .stats-banner { grid-template-columns: 1fr 1fr; }
+      .problem-section { grid-template-columns: 1fr; }
       .studio-split { grid-template-columns: 1fr; }
       .studio-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
-      .cli-card-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
   </style>
@@ -557,16 +556,16 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span>Search or run...</span>
+          <span>Search documentation...</span>
           <kbd>Ctrl K</kbd>
         </div>
       </div>
 
       <nav class="nav-links">
         <a href="#how-it-works">How it works</a>
-        <a href="#demo">Live Demo</a>
-        <a href="#cli">CLI Commands</a>
-        <a href="https://github.com/alatariz/graviton" target="_blank">Docs <span>↗</span></a>
+        <a href="#demo">Live Studio</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="https://github.com/alatariz/graviton" target="_blank">GitHub ↗</a>
       </nav>
 
       <div class="nav-right">
@@ -574,27 +573,21 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
-          <span class="star-counter">alatariz/graviton</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #38bdf8;">alatariz/graviton</span>
         </a>
-        <a href="#cli" class="btn-install-rtk">
-          <span>Install Graviton →</span>
+        <a href="/docs.html" class="btn-install-rtk">
+          <span>Docs & Guides →</span>
         </a>
       </div>
     </div>
   </header>
 
-  <!-- HERO STAGE (REPLICATING RTK'S CALM, ATMOSPHERIC, HIGH-END LOOK) -->
+  <!-- HERO SECTION WITH TOTEM & LASER RETICLE -->
   <main>
     <section class="hero-stage">
       <div class="hero-laser-line"></div>
 
-      <!-- Left / Right Context Markers (like in screenshot) -->
-      <div class="hero-bg-markers">
-        <div>● RAW CONTEXT &nbsp;&nbsp;&nbsp;&nbsp; 86% USED</div>
-        <div>● CLEAN CONTEXT &nbsp;&nbsp;&nbsp;&nbsp; 14% ROOM TO THINK</div>
-      </div>
-
-      <!-- Central Totem / Logo -->
+      <!-- Hero Totem with Smooth Float Animation -->
       <div class="hero-totem-wrap">
         <div class="hero-totem-aura"></div>
         <img src="/icon.svg" alt="Graviton Totem" class="hero-totem-icon">
@@ -604,7 +597,7 @@
       <div class="hero-headline-sub">Your AI agent drowns in noise.</div>
       <h1 class="hero-headline-main">Graviton cleans it up.</h1>
 
-      <a href="#how-it-works" class="btn-see-how">
+      <a href="#matrix" class="btn-see-how">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 5v14M19 12l-7 7-7-7"/>
         </svg>
@@ -612,136 +605,212 @@
       </a>
     </section>
 
-    <!-- CONTENT BODY -->
-    <div class="content-container">
-      <!-- 01 / The Problem & Solution -->
-      <section id="how-it-works">
-        <div class="section-label">01 / The Solution</div>
-        <h2 class="section-h2">Give your Antigravity agent room to think</h2>
-        <p class="section-lead">
-          AI agents don't need more output. They need more relevant output. Graviton sits directly between your terminal and Antigravity, purging command noise and structuring messy thoughts with zero configuration.
-        </p>
+    <!-- DUAL MATRIX COMPARISON SECTION (PERSIS GAMBAR 3) -->
+    <section id="matrix" class="matrix-section">
+      <div class="matrix-cards-wrap">
+        <!-- RAW CONTEXT CARD -->
+        <div class="matrix-card">
+          <div class="matrix-head">
+            <span style="color: #f87171;">● RAW CONTEXT</span>
+            <span style="color: #f87171;">86% USED</span>
+          </div>
+          <div class="matrix-grid">
+            <!-- Simulated dense red bloated tokens -->
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot blue"></div><div class="m-dot blue"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+            <div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div><div class="m-dot red"></div>
+          </div>
+          <div class="matrix-bar-track">
+            <div class="matrix-bar-fill-red"></div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem; line-height: 1.5;">
+            ANSI escape sequences, duplicate logs, conversational pleasantries, and manual approval prompts fill up context.
+          </p>
+        </div>
 
-        <!-- Before & After Comparison Terminals -->
-        <div class="comparison-grid">
-          <div class="terminal-window">
-            <div class="term-titlebar">
-              <span>Raw Unfiltered Input</span>
-              <span class="term-badge-red">1,829 lines noise</span>
+        <!-- CLEAN CONTEXT CARD -->
+        <div class="matrix-card active-clean">
+          <div class="matrix-head">
+            <span style="color: #34d399;">● CLEAN CONTEXT</span>
+            <span style="color: #34d399;">14% ROOM TO THINK</span>
+          </div>
+          <div class="matrix-grid">
+            <div class="m-dot emerald"></div><div class="m-dot emerald"></div><div class="m-dot blue"></div><div class="m-dot blue"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+            <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+          </div>
+          <div class="matrix-bar-track">
+            <div class="matrix-bar-fill-green"></div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem; line-height: 1.5;">
+            Zero fluff, high-context code structure, continuous auto-allow permissions, and instant reasoning space.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS BANNER (PERSIS GAMBAR 4) -->
+    <section class="stats-banner">
+      <div>
+        <div class="stat-metric">230K+</div>
+        <div class="stat-label">Tokens Saved</div>
+      </div>
+      <div>
+        <div class="stat-metric">~0 ms</div>
+        <div class="stat-label">CLI Filter Latency</div>
+      </div>
+      <div>
+        <div class="stat-metric">100%</div>
+        <div class="stat-label">Auto-Allow Execution</div>
+      </div>
+      <div>
+        <div class="stat-metric">1,500/d</div>
+        <div class="stat-label">Free Model Reprompts</div>
+      </div>
+      <div>
+        <div class="stat-metric">Apache 2.0</div>
+        <div class="stat-label">Open Source</div>
+      </div>
+    </section>
+
+    <!-- 01 / THE PROBLEM: CONTEXT WINDOW BREAKDOWN (PERSIS GAMBAR 5) -->
+    <section id="how-it-works" class="problem-section">
+      <div>
+        <div class="problem-left-label">01 / The Problem</div>
+        <h2 class="problem-left-h2">Your context window is <em>valuable</em></h2>
+        <p class="problem-left-p">
+          AI agents don't need more output. They need more relevant output. Graviton prevents terminal output noise and conversational fluff from triggering premature auto-compact.
+        </p>
+      </div>
+
+      <!-- Center breakdown chart -->
+      <div class="context-breakdown-card">
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 1.2rem; display: flex; justify-content: space-between;">
+          <span>AI CONTEXT</span>
+          <span style="color: #34d399;">14% USED</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-row-left">
+            <div class="b-dot" style="background: #60a5fa;"></div>
+            <span>System prompt & tools</span>
+          </div>
+          <div class="b-bar-track"><div class="b-bar-val" style="width: 3%; background: #60a5fa;"></div></div>
+          <span style="color: var(--text-dim);">3%</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-row-left">
+            <div class="b-dot" style="background: #34d399;"></div>
+            <span>MCP tools</span>
+          </div>
+          <div class="b-bar-track"><div class="b-bar-val" style="width: 1%; background: #34d399;"></div></div>
+          <span style="color: var(--text-dim);">1%</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-row-left">
+            <div class="b-dot" style="background: #a78bfa;"></div>
+            <span>Workspace context</span>
+          </div>
+          <div class="b-bar-track"><div class="b-bar-val" style="width: 2%; background: #a78bfa;"></div></div>
+          <span style="color: var(--text-dim);">2%</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-row-left">
+            <div class="b-dot" style="background: #38bdf8;"></div>
+            <span>Synthesized task prompt</span>
+          </div>
+          <div class="b-bar-track"><div class="b-bar-val" style="width: 8%; background: #38bdf8;"></div></div>
+          <span style="color: var(--text-dim);">8%</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-row-left">
+            <div class="b-dot" style="background: #ef4444;"></div>
+            <span>CLI output / logs</span>
+          </div>
+          <div class="b-bar-track"><div class="b-bar-val" style="width: 0%; background: #ef4444;"></div></div>
+          <span style="color: #34d399;">0% (Pruned)</span>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.78rem;">
+          <span style="color: #34d399;">Room for deep reasoning</span>
+          <span style="color: #34d399; font-weight: 700;">86% Free</span>
+        </div>
+      </div>
+
+      <div style="font-size: 1rem; color: #cbd5e1; line-height: 1.6;">
+        Too much noise means <strong>higher costs</strong>, <strong>slower reasoning</strong>, and <strong>less capable agents</strong>.
+      </div>
+    </section>
+
+    <!-- 02 / LIVE STUDIO PLAYGROUND -->
+    <section id="demo" class="studio-container">
+      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--emerald); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.8rem;">
+        02 / Live Synthesis Playground
+      </div>
+      <h2 style="font-size: 2.2rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 2rem;">
+        Experience the noise killer directly
+      </h2>
+
+      <div class="studio-box">
+        <div class="studio-header">
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
+            graviton-engine.v2 [Google Account Sync Active]
+          </div>
+          <button class="btn-see-how" onclick="loadSample()" style="padding: 0.35rem 0.9rem;">
+            Load sample verbose prompt
+          </button>
+        </div>
+
+        <div class="studio-split">
+          <div class="studio-col">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+              <span>Developer Input</span>
+              <span id="in-tokens">0 tokens</span>
             </div>
-            <div class="term-code">$ cargo test
-running 184 tests
-test filter::tests::collapses_dupes ... ok
-test filter::tests::keeps_failures ... ok
-test parse::tests::ansi_codes ... ok
-test parse::tests::empty_input ... ok
-test tree::tests::depth_limit ... ok
-test gain::tests::daily_rollup ... ok
-test proxy::tests::passthrough ... ok
-test proxy::tests::exit_codes ... ok
-test git::tests::short_status ... ok
-test git::tests::diff_stat ... ok
-... 1,819 repetitive lines ...
-test result: ok. 184 passed; 0 failed</div>
+            <textarea id="in-text" class="studio-area" placeholder="Type prompt or paste raw terminal output..."></textarea>
           </div>
 
-          <div class="terminal-window">
-            <div class="term-titlebar">
-              <span>$ graviton test</span>
-              <span class="term-badge-green">✓ 99% Noise Pruned</span>
+          <div class="studio-col">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+              <span>Graviton Synthesized</span>
+              <span id="out-tokens" style="color: #34d399;">0 tokens</span>
             </div>
-            <div class="term-code cleaned">$ graviton test
-✓ 184 passed · 0 failed · finished in 1.4s
-
-[graviton: 1829 → 1 lines (99% pruned, saved ~4,200 tokens)]
-[Auto-Allow: continuous permissions approved]</div>
+            <div id="out-text" class="studio-output-area">// Click "Synthesize & Prune" to process...</div>
           </div>
         </div>
-      </section>
 
-      <!-- 02 / Live Interactive Studio -->
-      <section id="demo">
-        <div class="section-label">02 / Interactive Demo</div>
-        <h2 class="section-h2">Experience the synthesis layer</h2>
-        <p class="section-lead">
-          Paste any unformatted prompt, error dump, or messy conversation. Graviton isolates the code, scrubs sensitive tokens, and structures the task for Antigravity.
-        </p>
-
-        <div class="studio-box">
-          <div class="studio-header">
-            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
-              graviton-engine.v2 [Connected via Google Account]
-            </div>
-            <button class="btn-see-how" onclick="loadSample()" style="padding: 0.35rem 0.9rem;">
-              Load sample error prompt
-            </button>
+        <div class="studio-bottombar">
+          <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-dim);">
+            Auto-copies to clipboard on synthesis
           </div>
-
-          <div class="studio-split">
-            <div class="studio-col">
-              <div class="col-label-strip">
-                <span>Developer Input</span>
-                <span id="in-tokens">0 tokens</span>
-              </div>
-              <textarea id="in-text" class="studio-area" placeholder="Type prompt or paste raw terminal output..."></textarea>
-            </div>
-
-            <div class="studio-col">
-              <div class="col-label-strip">
-                <span>Graviton Synthesized</span>
-                <span id="out-tokens" style="color: #34d399;">0 tokens</span>
-              </div>
-              <div id="out-text" class="studio-output-area">// Click "Synthesize & Prune" to process...</div>
-            </div>
-          </div>
-
-          <div class="studio-bottombar">
-            <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-dim);">
-              Auto-copies output to clipboard on completion
-            </div>
-            <button class="btn-synth-action" onclick="runSynthesize()">
-              <span>Synthesize & Prune (Ctrl+Enter)</span>
-            </button>
-          </div>
+          <button class="btn-synth-action" onclick="runSynthesize()">
+            <span>Synthesize & Prune (Ctrl+Enter)</span>
+          </button>
         </div>
-      </section>
-
-      <!-- 03 / CLI Reference -->
-      <section id="cli">
-        <div class="section-label">03 / Quickstart</div>
-        <h2 class="section-h2">Terminal-first by design</h2>
-        <p class="section-lead">
-          Install once and forget. All commands are compressed automatically before they reach your AI context window.
-        </p>
-
-        <div class="cli-card-grid">
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">graviton "&lt;prompt&gt;"</div>
-            <div class="cli-card-body">The core 1-shot command. Synthesizes prompt with zero-cost model, copies to clipboard, and executes Antigravity with auto-allow.</div>
-          </div>
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">graviton -c "&lt;prompt&gt;"</div>
-            <div class="cli-card-body">Resumes your last Antigravity conversation with full session memory and continuous permissions active.</div>
-          </div>
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">&lt;cmd&gt; | graviton</div>
-            <div class="cli-card-body">Unix pipe support. Directs build tools, tests, or git log outputs into Graviton's instant noise pruner.</div>
-          </div>
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">graviton gain</div>
-            <div class="cli-card-body">Displays your lifetime audit: thousands of lines and tokens saved from polluting your AI context window.</div>
-          </div>
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">graviton clean "&lt;prompt&gt;"</div>
-            <div class="cli-card-body">Synthesizes and structures prompt text directly into your clipboard without launching the agent process.</div>
-          </div>
-          <div class="cli-feature-card">
-            <div class="cli-code-badge">graviton serve</div>
-            <div class="cli-card-body">Starts this visual control dashboard locally on port 3000 for team or graphical workflow.</div>
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </main>
 
   <!-- FOOTER -->
