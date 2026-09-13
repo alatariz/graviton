@@ -84,27 +84,27 @@
     /* SCROLL SLIDE-IN REVEAL EFFECT PER SECTION */
     .slide-reveal-left {
       opacity: 0;
-      transform: translateX(-45px);
-      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(-35px);
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-right {
       opacity: 0;
-      transform: translateX(45px);
-      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(35px);
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-up {
       opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(30px);
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-left.is-revealed,
     .slide-reveal-right.is-revealed,
     .slide-reveal-up.is-revealed {
-      opacity: 1;
-      transform: translate(0, 0);
+      opacity: 1 !important;
+      transform: translate(0, 0) !important;
     }
 
     /* UNIFIED NAVBAR */
@@ -321,7 +321,7 @@
       100% { top: 105%; opacity: 0; }
     }
 
-    /* HERO TOP STAGE */
+    /* HERO TOP STAGE (ALWAYS VISIBLE WITH SMOOTH INTRO FADE) */
     .hero-top-stage {
       position: relative;
       max-width: 1400px;
@@ -332,7 +332,13 @@
       align-items: center;
       text-align: center;
       z-index: 2;
+      animation: heroFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+    @keyframes heroFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .hero-totem-wrap {
       position: relative;
       margin-bottom: 1.8rem;
@@ -1429,7 +1435,7 @@
 
   <main>
     <!-- HERO TOP INTRO WITH LASER AXIS & ORIGINAL GRAVITATIONAL SINGULARITY TOTEM -->
-    <section class="hero-top-stage slide-reveal-up">
+    <section class="hero-top-stage">
       <div class="laser-line-axis">
         <div class="laser-particle"></div>
       </div>
@@ -2021,18 +2027,37 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       }
     }
 
-    // SCROLL SLIDE-IN REVEAL OBSERVER
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
+    // SCROLL SLIDE-IN REVEAL OBSERVER WITH IMMEDIATE FALLBACK
+    function initScrollReveal() {
+      const elements = document.querySelectorAll('.slide-reveal-left, .slide-reveal-right, .slide-reveal-up');
+      if (!('IntersectionObserver' in window)) {
+        elements.forEach(el => el.classList.add('is-revealed'));
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+
+      elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          el.classList.add('is-revealed');
+        } else {
+          observer.observe(el);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    }
 
-    document.querySelectorAll('.slide-reveal-left, .slide-reveal-right, .slide-reveal-up').forEach(el => {
-      revealObserver.observe(el);
-    });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initScrollReveal);
+    } else {
+      initScrollReveal();
+    }
 
     // MATRIX DOTS CANVAS SIMULATION IN AQUAMARINE
     const canvas = document.getElementById('matrixCanvas');
@@ -2091,104 +2116,37 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       renderMatrix();
     }
 
-    // ACTION TAB PRESETS
+    // ACTION TAB PRESETS (WITHOUT LITERAL BACKTICK COLLISIONS)
     const ACTION_PRESETS = {
       command: {
         rawLines: '1,042 LINES',
         cleanLines: '4 LINES (-99%)',
-        raw: `$ cargo build
-   Compiling libc v0.2.155
-   Compiling proc-macro2 v1.0.85
-   Compiling unicode-ident v1.0.12
-   Compiling quote v1.0.36
-   Compiling syn v2.0.66
-   Compiling cfg-if v1.0.0
-   Compiling once_cell v1.19.0
-warning: unused variable: `raw`
-  --> src/filter.rs:214:9
-warning: field is never read: `depth`
-  --> src/tree.rs:87:5
-   Compiling serde v1.0.197
-   Compiling anyhow v1.0.79
-... 1,028 more lines ...
-Finished dev [unoptimized] in 32.48s`,
-        clean: `$ rtk cargo build
-✔ build finished in 32.4s
-· 214 crates compiled
-· 2 warnings: filter.rs:214, tree.rs:87`
+        raw: "$ cargo build\n   Compiling libc v0.2.155\n   Compiling proc-macro2 v1.0.85\n   Compiling unicode-ident v1.0.12\n   Compiling quote v1.0.36\n   Compiling syn v2.0.66\n   Compiling cfg-if v1.0.0\n   Compiling once_cell v1.19.0\nwarning: unused variable: 'raw'\n  --> src/filter.rs:214:9\nwarning: field is never read: 'depth'\n  --> src/tree.rs:87:5\n   Compiling serde v1.0.197\n   Compiling anyhow v1.0.79\n... 1,028 more lines ...\nFinished dev [unoptimized] in 32.48s",
+        clean: "$ rtk cargo build\n✔ build finished in 32.4s\n· 214 crates compiled\n· 2 warnings: filter.rs:214, tree.rs:87"
       },
       tests: {
         rawLines: '468 LINES',
         cleanLines: '2 LINES (-99%)',
-        raw: `> vitest run --reporter=verbose
-
- RUN  v1.4.0 C:/projects/graviton
- ✓ test/pipeline.test.js (12 tests) 48ms
-   ✓ should strip ANSI escape sequences
-   ✓ should deduplicate repetitive status logs
-   ✓ should redact credentials & Bearer tokens
-   ✓ should estimate tokens accurately
-   ✓ should inject Antigravity skill directives
-   ✓ should detect Node.js workspace root
-... 450 lines of callstacks and trace dumps ...
-Test Files  1 passed (1)
-Tests  12 passed (12)
-Duration  480ms`,
-        clean: `$ graviton test
-✔ 12/12 tests passed (vitest 480ms)
-Coverage: 96.4% Stmts | 88.2% Branch | 100% Funcs`
+        raw: "> vitest run --reporter=verbose\n\n RUN  v1.4.0 C:/projects/graviton\n ✓ test/pipeline.test.js (12 tests) 48ms\n   ✓ should strip ANSI escape sequences\n   ✓ should deduplicate repetitive status logs\n   ✓ should redact credentials & Bearer tokens\n   ✓ should estimate tokens accurately\n   ✓ should inject Antigravity skill directives\n   ✓ should detect Node.js workspace root\n... 450 lines of callstacks and trace dumps ...\nTest Files  1 passed (1)\nTests  12 passed (12)\nDuration  480ms",
+        clean: "$ graviton test\n✔ 12/12 tests passed (vitest 480ms)\nCoverage: 96.4% Stmts | 88.2% Branch | 100% Funcs"
       },
       git: {
         rawLines: '64 LINES',
         cleanLines: '5 LINES (-92%)',
-        raw: `On branch main
-Your branch is up to date with 'origin/main'.
-
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   package.json
-	modified:   src/server.js
-	modified:   public/index.html
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	temp_cache.log
-	node_modules/.cache/
-
-no changes added to commit (use "git add" to track)`,
-        clean: `$ graviton git status
-M package.json
-M src/server.js
-M public/index.html
-?? temp_cache.log`
+        raw: "On branch main\nYour branch is up to date with 'origin/main'.\n\nChanges not staged for commit:\n  (use \"git add <file>...\" to update what will be committed)\n  (use \"git restore <file>...\" to discard changes in working directory)\n\tmodified:   package.json\n\tmodified:   src/server.js\n\tmodified:   public/index.html\n\nUntracked files:\n  (use \"git add <file>...\" to include in what will be committed)\n\ttemp_cache.log\n\tnode_modules/.cache/\n\nno changes added to commit (use \"git add\" to track)",
+        clean: "$ graviton git status\nM package.json\nM src/server.js\nM public/index.html\n?? temp_cache.log"
       },
       skills: {
         rawLines: '52 TOKENS (RAW)',
         cleanLines: '108 TOKENS (+DIRECTIVES)',
-        raw: `Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!`,
-        clean: `[Workspace: Node.js / JavaScript @ C:\\projects]
-[Antigravity Skill Activated: bigquery-sql & data-autocleaning]
-
-**Tujuan Utama:**
-Implementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent).`
+        raw: "Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!",
+        clean: "[Workspace: Node.js / JavaScript @ C:\\projects]\n[Antigravity Skill Activated: bigquery-sql & data-autocleaning]\n\n**Tujuan Utama:**\nImplementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent)."
       },
       files: {
         rawLines: '180 LINES',
         cleanLines: '8 LINES (-95%)',
-        raw: `drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .
-drwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..
--rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json
--rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md
-drwxr-xr-x   6 user  staff   192 Mar  3 10:14 src
-drwxr-xr-x   4 user  staff   128 Mar  3 10:14 public
-drwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules
-... 160 more files ...`,
-        clean: `$ graviton ls
-src/           (6 files)
-public/        (4 files)
-package.json   1.2KB
-README.md      284B`
+        raw: "drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .\ndrwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..\n-rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json\n-rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md\ndrwxr-xr-x   6 user  staff   192 Mar  3 10:14 src\ndrwxr-xr-x   4 user  staff   128 Mar  3 10:14 public\ndrwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules\n... 160 more files ...",
+        clean: "$ graviton ls\nsrc/           (6 files)\npublic/        (4 files)\npackage.json   1.2KB\nREADME.md      284B"
       }
     };
 
@@ -2207,23 +2165,13 @@ README.md      284B`
 
     // LIVE STUDIO SCRIPT
     function loadSamplePrompt() {
-      document.getElementById('studio-in-text').value = `Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.
-Kodenya seperti ini:
-
-```javascript
-export async function verifyUser(req, res) {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).json({ error: 'Missing' });
-}
-```
-
-Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!`;
+      document.getElementById('studio-in-text').value = "Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.\nKodenya seperti ini:\n\n```javascript\nexport async function verifyUser(req, res) {\n  const token = req.headers['authorization'];\n  if (!token) return res.status(401).json({ error: 'Missing' });\n}\n```\n\nSaat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!";
       updateStudioTokens();
     }
 
     function updateStudioTokens() {
       const val = document.getElementById('studio-in-text').value;
-      document.getElementById('studio-in-tokens').innerText = `${Math.round(val.length / 3.8)} tokens`;
+      document.getElementById('studio-in-tokens').innerText = Math.round(val.length / 3.8) + ' tokens';
     }
 
     document.getElementById('studio-in-text').addEventListener('input', updateStudioTokens);
@@ -2244,9 +2192,9 @@ Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasi
         const data = await res.json();
         if (data.optimizedText) {
           document.getElementById('studio-out-text').innerText = data.optimizedText;
-          document.getElementById('studio-out-tokens').innerText = `${data.stats.optimizedTokens} tokens`;
+          document.getElementById('studio-out-tokens').innerText = data.stats.optimizedTokens + ' tokens';
           navigator.clipboard.writeText(data.optimizedText);
-          showToast(`✔ Synthesized & Copied to clipboard (- ${data.stats.percentSaved}% saved)`);
+          showToast('✔ Synthesized & Copied to clipboard (- ' + data.stats.percentSaved + '% saved)');
         }
       } catch (e) {
         showToast('Error: ' + e.message);
