@@ -81,7 +81,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
   const child = spawn(agyExecutable, args, {
     stdio: ['pipe', 'pipe', 'pipe'],
-    shell: true
+    shell: false
   });
 
   // Relay process.stdin to child

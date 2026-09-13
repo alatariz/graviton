@@ -88,12 +88,23 @@ async function main() {
     }
   }
 
-  if (!command || command === '--help' || command === '-h' || command === 'help') {
+  // =========================================================================
+  // NATIVE COMMAND ROUTER / INTERCEPTOR
+  // =========================================================================
+  // Intercept and route internal Graviton utility commands immediately.
+  // Native commands MUST execute internal logic and call process.exit(0).
+  // Under NO circumstances should native commands be sent to repromptWithAI
+  // or relayed to the Antigravity child process!
+  // =========================================================================
+
+  // 1. HELP / USAGE
+  if (!command || command === 'help' || command === '--help' || command === '-h') {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity (Meta 2026)
 
 \x1b[1mUSAGE\x1b[0m
   graviton [options] "<prompt>"
+  graviton <command> [args...]
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
@@ -102,13 +113,15 @@ async function main() {
   \x1b[33m-c, --continue\x1b[0m          Resume previous Antigravity session with synthesized prompt & auto-allow
 
 \x1b[1mCOMMANDS\x1b[0m
-  \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Dual-Clutch Engine & run Antigravity with Auto-Allow!
+  \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Dual-Clutch Engine & run Antigravity with Auto-Allow
+  \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
+  \x1b[32mgain\x1b[0m, \x1b[32mstats\x1b[0m             Display aggregate tokens & lines pruned across sessions
   \x1b[32mclean\x1b[0m "<raw_text>"       Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with zero-latency RTK output pruning
   \x1b[32mgit\x1b[0m <git_args...>        Shorthand for "graviton run git <git_args>"
   \x1b[32mtest\x1b[0m <test_args...>      Shorthand for "graviton run test <test_args>"
-  \x1b[32mgain\x1b[0m                     Display aggregate tokens & lines pruned across sessions
-  \x1b[32mserve\x1b[0m                    Launch local luxury Web Studio on port 3000
+  \x1b[32mserve\x1b[0m                    Launch local Web Studio on port 3000
+  \x1b[32mversion\x1b[0m, \x1b[32m-v\x1b[0m             Display Graviton CLI version
 
 \x1b[1mEXAMPLES\x1b[0m
   # Default 1-Shot with Gear 1 (Flash 3.8 Sanitizer):
@@ -126,8 +139,56 @@ async function main() {
     process.exit(0);
   }
 
-  // GAIN STATS
-  if (command === 'gain') {
+  // 2. VERSION
+  if (command === 'version' || command === '--version' || command === '-v') {
+    let version = '1.0.0';
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+      version = pkg.version || version;
+    } catch {}
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Meta 2026 Overclocking Architecture)`);
+    process.exit(0);
+  }
+
+  // 3. INIT (Setup ~/.graviton and Local Skill Vault)
+  if (command === 'init' || command === '--init') {
+    const gravitonDir = path.join(os.homedir(), '.graviton');
+    const skillsDir = path.join(gravitonDir, 'skills');
+
+    if (!fs.existsSync(skillsDir)) {
+      fs.mkdirSync(skillsDir, { recursive: true });
+    }
+
+    const initialSkills = {
+      'modern-web.md': `# Modern Web Guidance\nKeywords: web, modal, css, html, dialog, responsive, animation\nDirective: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
+      'bigquery.md': `# BigQuery SQL Optimization\nKeywords: bigquery, sql, etl, partition, cluster, dataset, table\nDirective: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
+      'antigravity-overclock.md': `# Antigravity Overclocking Directive\nKeywords: overclock, performance, leak, background, relay, signal\nDirective: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
+    };
+
+    let createdCount = 0;
+    for (const [filename, content] of Object.entries(initialSkills)) {
+      const target = path.join(skillsDir, filename);
+      if (!fs.existsSync(target)) {
+        fs.writeFileSync(target, content, 'utf8');
+        createdCount++;
+      }
+    }
+
+    if (!fs.existsSync(STATS_FILE)) {
+      saveStats({ commandsRun: 0, promptsOptimized: 0, tokensSaved: 0, linesFiltered: 0 });
+    }
+
+    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON INITIALIZATION ===\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m Graviton Config Path : \x1b[1m${gravitonDir}\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m Local Skill Vault    : \x1b[1m${skillsDir}\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m Skills Status        : \x1b[1m${Object.keys(initialSkills).length}\x1b[0m skills available (${createdCount} new)`);
+    console.log(`  \x1b[32m✔\x1b[0m Auto-Allow Relay     : Active`);
+    console.log(`\x1b[90mGraviton initialized successfully. Ready to accelerate Antigravity.\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  // 4. GAIN & STATS
+  if (command === 'gain' || command === 'stats' || command === '--gain' || command === '--stats') {
     const stats = loadStats();
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON EFFICIENCY GAINS ===\x1b[0m`);
     console.log(`  \x1b[36mCommands Processed    :\x1b[0m ${stats.commandsRun.toLocaleString()}`);
@@ -138,13 +199,13 @@ async function main() {
     process.exit(0);
   }
 
-  // SERVE WEB STUDIO
-  if (command === 'serve') {
+  // 5. SERVE WEB STUDIO
+  if (command === 'serve' || command === '--serve') {
     import('../src/server.js');
     return;
   }
 
-  // CLEAN ONLY
+  // 6. CLEAN ONLY (Prompt synthesis without Antigravity launch)
   if (command === 'clean') {
     let input = filteredArgs.slice(1).join(' ');
     if (!input && !process.stdin.isTTY) {
@@ -161,7 +222,7 @@ async function main() {
     process.exit(0);
   }
 
-  // RUN / GIT / TEST CLI LOG PRUNER
+  // 7. RUN / GIT / TEST CLI LOG PRUNER (Zero-latency RTK output pruning)
   if (command === 'run' || command === 'git' || command === 'test') {
     let cmdToRun = command === 'git' ? 'git' : command === 'test' ? 'npm' : filteredArgs[1];
     let cmdArgs = command === 'git' ? filteredArgs.slice(1) : command === 'test' ? ['test', ...filteredArgs.slice(1)] : filteredArgs.slice(2);
