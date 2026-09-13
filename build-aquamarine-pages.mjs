@@ -223,92 +223,138 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       transform: translate(0, 0) !important;
     }
 
-    /* CLEANED UP NAVBAR */
+    
+    /* ========================================================
+       RTK-INSPIRED HIGH-PRECISION NAVBAR (EXACT SPECIFICATION)
+       ======================================================== */
     .global-navbar {
       position: sticky;
       top: 0;
       z-index: 1000;
-      height: 68px;
-      background: rgba(4, 7, 17, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+      height: 58px;
+      background: rgba(8, 12, 22, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .nav-inner {
       max-width: 1400px;
       height: 100%;
       margin: 0 auto;
-      padding: 0 2rem;
+      padding: 0 1.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1.5rem;
     }
+
+    /* Left Group */
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 1.8rem;
+      gap: 1.25rem;
     }
     .nav-logo-wrap {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.65rem;
       text-decoration: none;
       color: #fff;
-      font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: 0.08em;
     }
     .nav-logo-wrap img {
-      width: 28px;
-      height: 28px;
-      filter: drop-shadow(0 0 10px var(--aqua-glow));
+      width: 24px;
+      height: 24px;
+      filter: drop-shadow(0 0 8px var(--aqua-glow));
     }
+    .nav-brand-text {
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+    }
+
+    /* Search input pill */
     .nav-search-bar {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      background: rgba(56, 189, 248, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0.45rem 1rem;
-      font-size: 0.8rem;
-      color: var(--text-dim);
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0 0.65rem;
+      height: 30px;
+      color: #64748b;
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.25s;
+      transition: all 0.2s ease;
     }
     .nav-search-bar:hover {
-      border-color: var(--aqua);
-      background: rgba(0, 240, 255, 0.08);
-      color: #fff;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+      background: rgba(0, 240, 255, 0.06);
+      border-color: rgba(0, 240, 255, 0.3);
+      color: #cbd5e1;
     }
-    .nav-search-bar kbd {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+    .nav-search-bar .search-icon {
+      stroke: #64748b;
+      transition: stroke 0.2s;
+    }
+    .nav-search-bar:hover .search-icon {
+      stroke: var(--aqua);
+    }
+    .nav-search-bar .search-label {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .nav-search-bar:hover .search-label {
+      color: #cbd5e1;
+    }
+    .nav-search-bar .search-kbd {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 4px;
-      padding: 0.1rem 0.35rem;
-      font-size: 0.7rem;
+      padding: 1px 4px;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
+      color: #64748b;
+    }
+    .nav-search-bar:hover .search-kbd {
       color: var(--aqua-ice);
+      border-color: rgba(0, 240, 255, 0.2);
     }
 
+    /* Center Links */
     .nav-center-links {
       display: flex;
       align-items: center;
-      gap: 2rem;
-      font-size: 0.88rem;
+      gap: 1.75rem;
     }
-    .nav-center-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      transition: color 0.2s;
+    .nav-item {
       position: relative;
     }
-    .nav-center-links a:hover { color: #fff; }
-    .nav-center-links a.active { color: #fff; font-weight: 600; }
-    .nav-center-links a.active::after {
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 0.4rem 0;
+      transition: color 0.15s ease;
+      position: relative;
+    }
+    .nav-link:hover,
+    .nav-item:hover .nav-link,
+    .nav-item.active .nav-link {
+      color: #ffffff;
+    }
+    .nav-link .chevron {
+      transition: transform 0.2s ease;
+      stroke: #64748b;
+    }
+    .nav-item:hover .nav-link .chevron {
+      transform: rotate(180deg);
+      stroke: #cbd5e1;
+    }
+    .nav-item.active .nav-link::after {
       content: '';
       position: absolute;
       bottom: -6px;
@@ -321,6 +367,80 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       box-shadow: 0 0 8px var(--aqua);
     }
 
+    /* RTK Dropdown Cards (Images 2, 3, 4) */
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-4px);
+      min-width: 170px;
+      background: #0b1220;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 240, 255, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1010;
+    }
+    .dropdown-menu::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 0;
+      right: 0;
+      height: 12px;
+    }
+    .nav-item:hover .dropdown-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    .dropdown-community {
+      min-width: 195px;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: #94a3b8;
+      text-decoration: none;
+      border-radius: 7px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+    .dropdown-item.item-pro {
+      color: #cbd5e1;
+    }
+    .dropdown-item.item-pro:hover {
+      color: #ffffff;
+    }
+    .pro-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--aqua);
+      box-shadow: 0 0 8px var(--aqua);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dropdown-item .item-icon {
+      color: #64748b;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .dropdown-item:hover .item-icon {
+      color: var(--aqua-bright);
+    }
+
+    /* Right Group */
     .nav-right {
       display: flex;
       align-items: center;
@@ -330,47 +450,73 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0.42rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(56, 189, 248, 0.03);
-      color: var(--text-dim);
-      font-size: 0.8rem;
-      font-family: var(--font-mono);
+      color: #94a3b8;
       text-decoration: none;
-      transition: all 0.2s;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      transition: color 0.15s ease;
     }
     .nav-gh-stars:hover {
-      color: #fff;
-      border-color: var(--aqua);
-      background: rgba(0, 240, 255, 0.06);
+      color: #ffffff;
     }
-    .nav-gh-stars .stars-num {
-      color: var(--aqua);
-      font-weight: 600;
+    .nav-gh-stars .gh-icon {
+      color: #cbd5e1;
+    }
+    .nav-gh-stars .gh-count {
+      color: #94a3b8;
+    }
+    .nav-gh-stars:hover .gh-count {
+      color: #ffffff;
+    }
+
+    .nav-lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+    .nav-lang-switch:hover {
+      color: #ffffff;
+    }
+    .nav-lang-switch .globe-icon {
+      stroke: #64748b;
+    }
+    .nav-lang-switch:hover .globe-icon {
+      stroke: #cbd5e1;
     }
 
     .btn-nav-install {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      background: rgba(0, 240, 255, 0.08);
-      border: 1px solid var(--aqua);
+      gap: 0.3rem;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.05);
       color: var(--aqua);
-      padding: 0.45rem 1.15rem;
-      border-radius: 999px;
+      padding: 0.38rem 1.15rem;
+      border-radius: 9999px;
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
-      transition: all 0.25s;
+      transition: all 0.25s ease;
     }
     .btn-nav-install:hover {
       background: var(--aqua);
-      color: #021526;
+      color: #040711;
+      border-color: var(--aqua);
       box-shadow: 0 0 20px var(--aqua-glow);
     }
 
-    /* SEARCH MODAL (SPOTLIGHT DIALOG) */
+    /* ========================================================
+       RTK-INSPIRED SPOTLIGHT SEARCH MODAL (IMAGE 5)
+       ======================================================== */
     .search-dialog {
       position: fixed;
       inset: 0;
@@ -382,95 +528,174 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       outline: none;
     }
     .search-dialog::backdrop {
-      background: rgba(2, 4, 10, 0.8);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(2, 5, 12, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .search-dialog-box {
-      background: #060b19;
-      border: 1px solid var(--aqua);
+      background: #0c1322;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 16px;
       width: 580px;
       max-width: 92vw;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 240, 255, 0.2);
       overflow: hidden;
-      animation: searchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: searchModalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes searchModalIn {
-      from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+      from { opacity: 0; transform: scale(0.97) translateY(-8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .search-input-wrap {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
-      padding: 1.1rem 1.4rem;
-      border-bottom: 1px solid var(--border);
+      gap: 0.75rem;
+      padding: 0.95rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .search-input-icon {
+      stroke: #64748b;
+      flex-shrink: 0;
     }
     .search-input-wrap input {
       flex: 1;
       background: transparent;
       border: none;
       outline: none;
-      font-size: 1rem;
-      color: #fff;
+      font-size: 0.98rem;
+      color: #ffffff;
       font-family: inherit;
     }
-    .search-close-btn {
-      background: rgba(255, 255, 255, 0.08);
+    .search-input-wrap input::placeholder {
+      color: #64748b;
+    }
+    .search-esc-badge {
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-dim);
+      color: #94a3b8;
       border-radius: 4px;
-      padding: 0.2rem 0.5rem;
+      padding: 0.15rem 0.45rem;
       font-size: 0.72rem;
       font-family: var(--font-mono);
       cursor: pointer;
+      transition: all 0.15s;
     }
+    .search-esc-badge:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
     .search-results-list {
-      max-height: 360px;
+      max-height: 380px;
       overflow-y: auto;
-      padding: 0.8rem;
+      padding: 0.6rem;
+    }
+    .search-empty-prompt {
+      padding: 0.4rem;
+    }
+    .empty-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      padding: 0.6rem 0.8rem 0.8rem;
+    }
+    .empty-quick-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
     .search-result-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 0.8rem 1rem;
+      gap: 0.85rem;
+      padding: 0.7rem 0.9rem;
       border-radius: 8px;
       text-decoration: none;
       color: var(--text-main);
-      transition: all 0.15s;
+      transition: all 0.15s ease;
+      cursor: pointer;
     }
-    .search-result-item:hover, .search-result-item.selected {
-      background: rgba(0, 240, 255, 0.08);
+    .search-result-item:hover,
+    .search-result-item.selected {
+      background: rgba(255, 255, 255, 0.05);
       border-left: 2px solid var(--aqua);
     }
-    .res-icon { font-size: 1.2rem; }
-    .res-body { flex: 1; }
-    .res-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
-    .res-sub { font-size: 0.78rem; color: var(--text-dim); }
+    .res-icon {
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+    .res-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .res-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .res-sub {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .res-badge {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--aqua);
       background: rgba(0, 240, 255, 0.08);
-      padding: 0.2rem 0.5rem;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      padding: 0.15rem 0.45rem;
       border-radius: 4px;
+      flex-shrink: 0;
     }
-    .search-footer-hint {
-      padding: 0.75rem 1.4rem;
-      border-top: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.3);
-      font-size: 0.75rem;
-      color: var(--text-muted);
+
+    /* Footer Shortcuts (Matching RTK Image 5) */
+    .search-footer-shortcuts {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.65rem 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.74rem;
+      color: #64748b;
       font-family: var(--font-mono);
     }
-    .search-footer-hint kbd {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 0.1rem 0.35rem;
-      border-radius: 3px;
-      color: var(--text-dim);
+    .shortcut-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
+    .key-cap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: #94a3b8;
+      font-size: 0.7rem;
+    }
+    .key-label {
+      color: #64748b;
+      font-family: var(--font-sans);
+    }
+
+    @media (max-width: 960px) {
+      .nav-center-links { display: none; }
+      .nav-lang-switch { display: none; }
+    }
+    @media (max-width: 600px) {
+      .nav-search-bar .search-label,
+      .nav-search-bar .search-kbd { display: none; }
+      .nav-gh-stars .gh-count { display: none; }
+      .btn-nav-install span { font-size: 0.75rem; }
+    }
+
 
     /* SECTION BADGES */
     .section-tag {
@@ -547,7 +772,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     /* ========================================================= */
     .hero-top-stage {
       position: relative;
-      min-height: calc(100vh - 68px);
+      min-height: calc(100vh - 58px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -2280,18 +2505,61 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       showToast('✔ Copied: ' + str);
     }
 
-    // SEARCH MODAL FUNCTIONALITY
+    
+    
+    // SEARCH MODAL FUNCTIONALITY (SPOTLIGHT - EXACT RTK SPECS)
     const searchModal = document.getElementById('searchModal');
     const spotlightInput = document.getElementById('spotlightInput');
     const searchResultsList = document.getElementById('searchResultsList');
+    const searchEmptyPrompt = document.getElementById('searchEmptyPrompt');
+    const emptyQuickList = document.getElementById('emptyQuickList');
+    const searchDynamicResults = document.getElementById('searchDynamicResults');
+
+    const SEARCH_ITEMS = [
+      { title: 'Install Graviton CLI', sub: 'npm install -g @alatariz/graviton or npx proxy', link: '/#get-started', badge: 'Install', icon: '⚡' },
+      { title: 'Why Graviton vs Raw', sub: '99.1% terminal noise reduction and clean reasoning state', link: '/#evidence', badge: 'Why', icon: '💎' },
+      { title: 'Benchmarks & Audit', sub: 'graviton gain CLI measurement and real-world token savings', link: '/#action', badge: 'Compare', icon: '📊' },
+      { title: 'Antigravity Skill Matrix', sub: 'Bypass context limits and unlock specialized Google skills', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
+      { title: 'Interactive Studio Workbench', sub: 'Simulate prompt synthesis live and copy clean prompts', link: '/#demo', badge: 'Studio', icon: '🧪' },
+      { title: 'Continuous Auto-Allow Relay', sub: '--dangerously-skip-permissions unblocking Antigravity', link: '/docs.html#auto-allow', badge: 'Docs', icon: '🛡️' },
+      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing and zero external telemetry', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' },
+      { title: 'Architecture & Specifications', sub: 'Developer specs, overhead < 0.5ms, and proxy architecture', link: '/#solution', badge: 'Specs', icon: '📐' }
+    ];
+
+    let currentSelectedIndex = -1;
+
+    function renderSearchItemHtml(item, idx) {
+      return '<a href="' + item.link + '" class="search-result-item" onclick="closeSearchModal()" data-index="' + idx + '">' +
+        '<span class="res-icon">' + item.icon + '</span>' +
+        '<div class="res-body">' +
+          '<div class="res-title">' + item.title + '</div>' +
+          '<div class="res-sub">' + item.sub + '</div>' +
+        '</div>' +
+        '<span class="res-badge">' + item.badge + '</span>' +
+      '</a>';
+    }
+
+    function renderEmptyState() {
+      if (!emptyQuickList) return;
+      emptyQuickList.innerHTML = SEARCH_ITEMS.slice(0, 4).map(function(item, idx) {
+        return renderSearchItemHtml(item, idx);
+      }).join('');
+    }
 
     function openSearchModal() {
       if (searchModal) {
         searchModal.showModal();
+        currentSelectedIndex = -1;
         if (spotlightInput) {
           spotlightInput.value = '';
           spotlightInput.focus();
         }
+        if (searchEmptyPrompt) searchEmptyPrompt.style.display = 'block';
+        if (searchDynamicResults) {
+          searchDynamicResults.style.display = 'none';
+          searchDynamicResults.innerHTML = '';
+        }
+        renderEmptyState();
       }
     }
 
@@ -2301,22 +2569,19 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       }
     }
 
-    // Light dismiss when clicking backdrop
     if (searchModal) {
-      searchModal.addEventListener('click', (e) => {
+      searchModal.addEventListener('click', function(e) {
         const rect = searchModal.getBoundingClientRect();
         const isInDialog = (
           rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
           rect.left <= e.clientX && e.clientX <= rect.left + rect.width
         );
-        if (!isInDialog) {
-          closeSearchModal();
-        }
+        if (!isInDialog) closeSearchModal();
       });
     }
 
-    // Global keyboard shortcut: Ctrl+K or Cmd+K
-    window.addEventListener('keydown', (e) => {
+    // Keyboard Shortcuts: Ctrl+K / Cmd+K and Arrow Navigation
+    window.addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         openSearchModal();
@@ -2324,220 +2589,74 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       if (e.key === 'Escape' && searchModal && searchModal.open) {
         closeSearchModal();
       }
+
+      if (searchModal && searchModal.open) {
+        const items = searchResultsList.querySelectorAll('.search-result-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          currentSelectedIndex = (currentSelectedIndex + 1) % items.length;
+          updateSelected(items);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          currentSelectedIndex = (currentSelectedIndex - 1 + items.length) % items.length;
+          updateSelected(items);
+        } else if (e.key === 'Enter') {
+          if (currentSelectedIndex >= 0 && items[currentSelectedIndex]) {
+            e.preventDefault();
+            items[currentSelectedIndex].click();
+          }
+        }
+      }
     });
 
-    // Live search filter inside spotlight
-    const SEARCH_ITEMS = [
-      { title: 'Quick Install & Setup', sub: 'npm install -g @alatariz/graviton or npx', link: '/#get-started', badge: 'Install', icon: '⚡' },
-      { title: 'See It In Action (Benchmarks)', sub: 'Compare raw terminal noise vs. 99% pruned clean context', link: '/#action', badge: 'Compare', icon: '⇄' },
-      { title: 'graviton gain CLI Audit', sub: 'Real-world developer token savings and efficiency meter', link: '/#evidence', badge: 'Evidence', icon: '📊' },
-      { title: 'Antigravity Skill Matrix Unlocker', sub: 'Modern Web, BigQuery ETL, Flutter, and Testing directives', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
-      { title: 'Interactive Live Studio', sub: 'Test prompt synthesis live and copy clean prompts', link: '/#demo', badge: 'Studio', icon: '🧪' },
-      { title: 'Continuous Auto-Allow Relay', sub: '--dangerously-skip-permissions unblocking Antigravity', link: '/docs.html#auto-allow', badge: 'Docs', icon: '🛡️' },
-      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing and zero telemetry', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' },
-      { title: 'Architecture & Specifications', sub: 'Developer specs, overhead < 0.5ms, and proxy architecture', link: '/#solution', badge: 'Specs', icon: '📐' }
-    ];
+    function updateSelected(items) {
+      items.forEach(function(item, idx) {
+        if (idx === currentSelectedIndex) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
 
     if (spotlightInput) {
-      spotlightInput.addEventListener('input', (e) => {
+      spotlightInput.addEventListener('input', function(e) {
         const query = e.target.value.toLowerCase().trim();
-        if (!searchResultsList) return;
+        currentSelectedIndex = -1;
 
-        const filtered = SEARCH_ITEMS.filter(item => 
-          item.title.toLowerCase().includes(query) || item.sub.toLowerCase().includes(query) || item.badge.toLowerCase().includes(query)
-        );
-
-        if (filtered.length === 0) {
-          searchResultsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+        if (!query) {
+          if (searchEmptyPrompt) searchEmptyPrompt.style.display = 'block';
+          if (searchDynamicResults) {
+            searchDynamicResults.style.display = 'none';
+            searchDynamicResults.innerHTML = '';
+          }
+          renderEmptyState();
           return;
         }
 
-        searchResultsList.innerHTML = filtered.map(item => \`
-          <a href="\${item.link}" class="search-result-item" onclick="closeSearchModal()">
-            <span class="res-icon">\${item.icon}</span>
-            <div class="res-body">
-              <div class="res-title">\${item.title}</div>
-              <div class="res-sub">\${item.sub}</div>
-            </div>
-            <span class="res-badge">\${item.badge}</span>
-          </a>
-        \`).join('');
-      });
-    }
+        if (searchEmptyPrompt) searchEmptyPrompt.style.display = 'none';
+        if (searchDynamicResults) searchDynamicResults.style.display = 'block';
 
-    // SCROLL SLIDE-IN REVEAL OBSERVER WITH IMMEDIATE FALLBACK
-    function initScrollReveal() {
-      const elements = document.querySelectorAll('.slide-reveal-left, .slide-reveal-right, .slide-reveal-up');
-      if (!('IntersectionObserver' in window)) {
-        elements.forEach(el => el.classList.add('is-revealed'));
-        return;
-      }
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-revealed');
-            observer.unobserve(entry.target);
-          }
+        const filtered = SEARCH_ITEMS.filter(function(item) {
+          return item.title.toLowerCase().indexOf(query) !== -1 || 
+                 item.sub.toLowerCase().indexOf(query) !== -1 || 
+                 item.badge.toLowerCase().indexOf(query) !== -1;
         });
-      }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
 
-      elements.forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          el.classList.add('is-revealed');
-        } else {
-          observer.observe(el);
+        if (filtered.length === 0) {
+          searchDynamicResults.innerHTML = '<div style="padding: 2rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+          return;
         }
+
+        searchDynamicResults.innerHTML = filtered.map(function(item, idx) {
+          return renderSearchItemHtml(item, idx);
+        }).join('');
       });
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initScrollReveal);
-    } else {
-      initScrollReveal();
-    }
-
-    // MATRIX DOTS CANVAS SIMULATION IN AQUAMARINE
-    const canvas = document.getElementById('matrixCanvas');
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      let w = canvas.width = canvas.parentElement.clientWidth;
-      let h = canvas.height = canvas.parentElement.clientHeight;
-
-      window.addEventListener('resize', () => {
-        w = canvas.width = canvas.parentElement.clientWidth;
-        h = canvas.height = canvas.parentElement.clientHeight;
-      });
-
-      const cols = 24;
-      const rows = 12;
-      const drops = [
-        { col: 3, row: 0, speed: 0.12 },
-        { col: 8, row: 2, speed: 0.16 },
-        { col: 14, row: 5, speed: 0.14 },
-        { col: 19, row: 1, speed: 0.18 }
-      ];
-
-      function renderMatrix() {
-        ctx.clearRect(0, 0, w, h);
-        
-        for (const drop of drops) {
-          drop.row += drop.speed;
-          if (drop.row > rows) {
-            drop.row = 0;
-            drop.col = Math.floor(Math.random() * cols);
-            drop.speed = 0.1 + Math.random() * 0.12;
-          }
-        }
-
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            const x = (c + 0.5) * (w / cols);
-            const y = (r + 0.5) * (h / rows);
-            
-            let alpha = 0.08;
-            for (const drop of drops) {
-              if (Math.abs(drop.col - c) < 1 && Math.abs(drop.row - r) < 2) {
-                const dist = Math.abs(drop.row - r);
-                alpha = Math.max(alpha, 1 - dist * 0.45);
-              }
-            }
-
-            ctx.fillStyle = alpha > 0.4 ? 'rgba(0, 240, 255, ' + alpha + ')' : 'rgba(186, 230, 253, ' + alpha * 0.7 + ')';
-            ctx.beginPath();
-            ctx.arc(x, y, alpha > 0.4 ? 2.2 : 1.4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        requestAnimationFrame(renderMatrix);
-      }
-      renderMatrix();
-    }
-
-    // ACTION TAB PRESETS
-    const ACTION_PRESETS = {
-      command: {
-        rawLines: '1,042 LINES',
-        cleanLines: '4 LINES (-99%)',
-        raw: "$ cargo build\\n   Compiling libc v0.2.155\\n   Compiling proc-macro2 v1.0.85\\n   Compiling unicode-ident v1.0.12\\n   Compiling quote v1.0.36\\n   Compiling syn v2.0.66\\n   Compiling cfg-if v1.0.0\\n   Compiling once_cell v1.19.0\\nwarning: unused variable: 'raw'\\n  --> src/filter.rs:214:9\\nwarning: field is never read: 'depth'\\n  --> src/tree.rs:87:5\\n   Compiling serde v1.0.197\\n   Compiling anyhow v1.0.79\\n... 1,028 more lines ...\\nFinished dev [unoptimized] in 32.48s",
-        clean: "$ rtk cargo build\\n✔ build finished in 32.4s\\n· 214 crates compiled\\n· 2 warnings: filter.rs:214, tree.rs:87"
-      },
-      tests: {
-        rawLines: '468 LINES',
-        cleanLines: '2 LINES (-99%)',
-        raw: "> vitest run --reporter=verbose\\n\\n RUN  v1.4.0 C:/projects/graviton\\n ✓ test/pipeline.test.js (12 tests) 48ms\\n   ✓ should strip ANSI escape sequences\\n   ✓ should deduplicate repetitive status logs\\n   ✓ should redact credentials & Bearer tokens\\n   ✓ should estimate tokens accurately\\n   ✓ should inject Antigravity skill directives\\n   ✓ should detect Node.js workspace root\\n... 450 lines of callstacks and trace dumps ...\\nTest Files  1 passed (1)\\nTests  12 passed (12)\\nDuration  480ms",
-        clean: "$ graviton test\\n✔ 12/12 tests passed (vitest 480ms)\\nCoverage: 96.4% Stmts | 88.2% Branch | 100% Funcs"
-      },
-      git: {
-        rawLines: '64 LINES',
-        cleanLines: '5 LINES (-92%)',
-        raw: "On branch main\\nYour branch is up to date with 'origin/main'.\\n\\nChanges not staged for commit:\\n  (use \\\"git add <file>...\\\" to update what will be committed)\\n  (use \\\"git restore <file>...\\\" to discard changes in working directory)\\n\\tmodified:   package.json\\n\\tmodified:   src/server.js\\n\\tmodified:   public/index.html\\n\\nUntracked files:\\n  (use \\\"git add <file>...\\\" to include in what will be committed)\\n\\ttemp_cache.log\\n\\tnode_modules/.cache/\\n\\nno changes added to commit (use \\\"git add\\\" to track)",
-        clean: "$ graviton git status\\nM package.json\\nM src/server.js\\nM public/index.html\\n?? temp_cache.log"
-      },
-      skills: {
-        rawLines: '52 TOKENS (RAW)',
-        cleanLines: '108 TOKENS (+DIRECTIVES)',
-        raw: "Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!",
-        clean: "[Workspace: Node.js / JavaScript @ C:\\\\projects]\\n[Antigravity Skill Activated: bigquery-sql & data-autocleaning]\\n\\n**Tujuan Utama:**\\nImplementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent)."
-      },
-      files: {
-        rawLines: '180 LINES',
-        cleanLines: '8 LINES (-95%)',
-        raw: "drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .\\ndrwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..\\n-rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json\\n-rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md\\ndrwxr-xr-x   6 user  staff   192 Mar  3 10:14 src\\ndrwxr-xr-x   4 user  staff   128 Mar  3 10:14 public\\ndrwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules\\n... 160 more files ...",
-        clean: "$ graviton ls\\nsrc/           (6 files)\\npublic/        (4 files)\\npackage.json   1.2KB\\nREADME.md      284B"
-      }
-    };
-
-    function switchActionTab(key, btn) {
-      document.querySelectorAll('.action-tab-item').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      const preset = ACTION_PRESETS[key];
-      if (!preset) return;
-      document.getElementById('raw-line-count').innerText = preset.rawLines;
-      document.getElementById('clean-line-count').innerText = preset.cleanLines;
-      document.getElementById('raw-code-view').innerText = preset.raw;
-      document.getElementById('clean-code-view').innerText = preset.clean;
-    }
-
-    switchActionTab('command', null);
-
-    // LIVE STUDIO SCRIPT
-    function loadSamplePrompt() {
-      document.getElementById('studio-in-text').value = "Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.\\nKodenya seperti ini:\\n\\n\`\`\`javascript\\nexport async function verifyUser(req, res) {\\n  const token = req.headers['authorization'];\\n  if (!token) return res.status(401).json({ error: 'Missing' });\\n}\\n\`\`\`\\n\\nSaat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!";
-      updateStudioTokens();
-    }
-
-    function updateStudioTokens() {
-      const val = document.getElementById('studio-in-text').value;
-      document.getElementById('studio-in-tokens').innerText = Math.round(val.length / 3.8) + ' tokens';
-    }
-
-    document.getElementById('studio-in-text').addEventListener('input', updateStudioTokens);
-    document.getElementById('studio-in-text').addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeStudioSynthesize();
-    });
-
-    async function executeStudioSynthesize() {
-      const prompt = document.getElementById('studio-in-text').value.trim();
-      if (!prompt) return;
-
-      try {
-        const res = await fetch('/api/synthesize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
-        });
-        const data = await res.json();
-        if (data.optimizedText) {
-          document.getElementById('studio-out-text').innerText = data.optimizedText;
-          document.getElementById('studio-out-tokens').innerText = data.stats.optimizedTokens + ' tokens';
-          navigator.clipboard.writeText(data.optimizedText);
-          showToast('✔ Synthesized & Copied to clipboard (- ' + data.stats.percentSaved + '% saved)');
-        }
-      } catch (e) {
-        showToast('Error: ' + e.message);
-      }
-    }
   </script>
 </body>
 </html>
@@ -2602,138 +2721,300 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       -webkit-font-smoothing: antialiased;
     }
 
-    /* GLOBAL NAVBAR (IDENTICAL TO INDEX.HTML) */
+    
+    /* ========================================================
+       RTK-INSPIRED HIGH-PRECISION NAVBAR (EXACT SPECIFICATION)
+       ======================================================== */
     .global-navbar {
       position: sticky;
       top: 0;
       z-index: 1000;
-      height: 68px;
-      background: rgba(4, 7, 17, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+      height: 58px;
+      background: rgba(8, 12, 22, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .nav-inner {
       max-width: 1400px;
       height: 100%;
       margin: 0 auto;
-      padding: 0 2rem;
+      padding: 0 1.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1.5rem;
     }
-    .nav-left { display: flex; align-items: center; gap: 1.8rem; }
+
+    /* Left Group */
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
     .nav-logo-wrap {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.65rem;
       text-decoration: none;
       color: #fff;
-      font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: 0.08em;
     }
     .nav-logo-wrap img {
-      width: 28px; height: 28px;
-      filter: drop-shadow(0 0 10px var(--aqua-glow));
+      width: 24px;
+      height: 24px;
+      filter: drop-shadow(0 0 8px var(--aqua-glow));
     }
+    .nav-brand-text {
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+    }
+
+    /* Search input pill */
     .nav-search-bar {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      background: rgba(56, 189, 248, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0.45rem 1rem;
-      font-size: 0.8rem;
-      color: var(--text-dim);
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0 0.65rem;
+      height: 30px;
+      color: #64748b;
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.25s;
+      transition: all 0.2s ease;
     }
     .nav-search-bar:hover {
-      border-color: var(--aqua);
-      background: rgba(0, 240, 255, 0.08);
-      color: #fff;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+      background: rgba(0, 240, 255, 0.06);
+      border-color: rgba(0, 240, 255, 0.3);
+      color: #cbd5e1;
     }
-    .nav-search-bar kbd {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+    .nav-search-bar .search-icon {
+      stroke: #64748b;
+      transition: stroke 0.2s;
+    }
+    .nav-search-bar:hover .search-icon {
+      stroke: var(--aqua);
+    }
+    .nav-search-bar .search-label {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .nav-search-bar:hover .search-label {
+      color: #cbd5e1;
+    }
+    .nav-search-bar .search-kbd {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 4px;
-      padding: 0.1rem 0.35rem;
-      font-size: 0.7rem;
+      padding: 1px 4px;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
-      color: var(--aqua-ice);
+      color: #64748b;
     }
+    .nav-search-bar:hover .search-kbd {
+      color: var(--aqua-ice);
+      border-color: rgba(0, 240, 255, 0.2);
+    }
+
+    /* Center Links */
     .nav-center-links {
       display: flex;
       align-items: center;
-      gap: 2rem;
-      font-size: 0.88rem;
+      gap: 1.75rem;
     }
-    .nav-center-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      transition: color 0.2s;
+    .nav-item {
       position: relative;
     }
-    .nav-center-links a:hover { color: #fff; }
-    .nav-center-links a.active { color: #fff; font-weight: 600; }
-    .nav-center-links a.active::after {
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 0.4rem 0;
+      transition: color 0.15s ease;
+      position: relative;
+    }
+    .nav-link:hover,
+    .nav-item:hover .nav-link,
+    .nav-item.active .nav-link {
+      color: #ffffff;
+    }
+    .nav-link .chevron {
+      transition: transform 0.2s ease;
+      stroke: #64748b;
+    }
+    .nav-item:hover .nav-link .chevron {
+      transform: rotate(180deg);
+      stroke: #cbd5e1;
+    }
+    .nav-item.active .nav-link::after {
       content: '';
       position: absolute;
       bottom: -6px;
       left: 50%;
       transform: translateX(-50%);
-      width: 4px; height: 4px;
+      width: 4px;
+      height: 4px;
       border-radius: 50%;
       background: var(--aqua);
       box-shadow: 0 0 8px var(--aqua);
     }
-    .nav-right { display: flex; align-items: center; gap: 1rem; }
+
+    /* RTK Dropdown Cards (Images 2, 3, 4) */
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-4px);
+      min-width: 170px;
+      background: #0b1220;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 240, 255, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1010;
+    }
+    .dropdown-menu::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 0;
+      right: 0;
+      height: 12px;
+    }
+    .nav-item:hover .dropdown-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    .dropdown-community {
+      min-width: 195px;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: #94a3b8;
+      text-decoration: none;
+      border-radius: 7px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+    .dropdown-item.item-pro {
+      color: #cbd5e1;
+    }
+    .dropdown-item.item-pro:hover {
+      color: #ffffff;
+    }
+    .pro-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--aqua);
+      box-shadow: 0 0 8px var(--aqua);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dropdown-item .item-icon {
+      color: #64748b;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .dropdown-item:hover .item-icon {
+      color: var(--aqua-bright);
+    }
+
+    /* Right Group */
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
     .nav-gh-stars {
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0.42rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(56, 189, 248, 0.03);
-      color: var(--text-dim);
-      font-size: 0.8rem;
-      font-family: var(--font-mono);
+      color: #94a3b8;
       text-decoration: none;
-      transition: all 0.2s;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      transition: color 0.15s ease;
     }
     .nav-gh-stars:hover {
-      color: #fff;
-      border-color: var(--aqua);
-      background: rgba(0, 240, 255, 0.06);
+      color: #ffffff;
     }
-    .nav-gh-stars .stars-num { color: var(--aqua); font-weight: 600; }
+    .nav-gh-stars .gh-icon {
+      color: #cbd5e1;
+    }
+    .nav-gh-stars .gh-count {
+      color: #94a3b8;
+    }
+    .nav-gh-stars:hover .gh-count {
+      color: #ffffff;
+    }
+
+    .nav-lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+    .nav-lang-switch:hover {
+      color: #ffffff;
+    }
+    .nav-lang-switch .globe-icon {
+      stroke: #64748b;
+    }
+    .nav-lang-switch:hover .globe-icon {
+      stroke: #cbd5e1;
+    }
+
     .btn-nav-install {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      background: rgba(0, 240, 255, 0.08);
-      border: 1px solid var(--aqua);
+      gap: 0.3rem;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.05);
       color: var(--aqua);
-      padding: 0.45rem 1.15rem;
-      border-radius: 999px;
+      padding: 0.38rem 1.15rem;
+      border-radius: 9999px;
       font-size: 0.82rem;
       font-weight: 600;
       text-decoration: none;
-      transition: all 0.25s;
+      transition: all 0.25s ease;
     }
     .btn-nav-install:hover {
       background: var(--aqua);
-      color: #021526;
+      color: #040711;
+      border-color: var(--aqua);
       box-shadow: 0 0 20px var(--aqua-glow);
     }
 
-    /* SEARCH MODAL */
+    /* ========================================================
+       RTK-INSPIRED SPOTLIGHT SEARCH MODAL (IMAGE 5)
+       ======================================================== */
     .search-dialog {
       position: fixed;
       inset: 0;
@@ -2745,95 +3026,174 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       outline: none;
     }
     .search-dialog::backdrop {
-      background: rgba(2, 4, 10, 0.8);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(2, 5, 12, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .search-dialog-box {
-      background: #060b19;
-      border: 1px solid var(--aqua);
+      background: #0c1322;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 16px;
       width: 580px;
       max-width: 92vw;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 240, 255, 0.2);
       overflow: hidden;
-      animation: searchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: searchModalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes searchModalIn {
-      from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+      from { opacity: 0; transform: scale(0.97) translateY(-8px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .search-input-wrap {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
-      padding: 1.1rem 1.4rem;
-      border-bottom: 1px solid var(--border);
+      gap: 0.75rem;
+      padding: 0.95rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .search-input-icon {
+      stroke: #64748b;
+      flex-shrink: 0;
     }
     .search-input-wrap input {
       flex: 1;
       background: transparent;
       border: none;
       outline: none;
-      font-size: 1rem;
-      color: #fff;
+      font-size: 0.98rem;
+      color: #ffffff;
       font-family: inherit;
     }
-    .search-close-btn {
-      background: rgba(255, 255, 255, 0.08);
+    .search-input-wrap input::placeholder {
+      color: #64748b;
+    }
+    .search-esc-badge {
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-dim);
+      color: #94a3b8;
       border-radius: 4px;
-      padding: 0.2rem 0.5rem;
+      padding: 0.15rem 0.45rem;
       font-size: 0.72rem;
       font-family: var(--font-mono);
       cursor: pointer;
+      transition: all 0.15s;
     }
+    .search-esc-badge:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
     .search-results-list {
-      max-height: 360px;
+      max-height: 380px;
       overflow-y: auto;
-      padding: 0.8rem;
+      padding: 0.6rem;
+    }
+    .search-empty-prompt {
+      padding: 0.4rem;
+    }
+    .empty-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      padding: 0.6rem 0.8rem 0.8rem;
+    }
+    .empty-quick-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
     .search-result-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 0.8rem 1rem;
+      gap: 0.85rem;
+      padding: 0.7rem 0.9rem;
       border-radius: 8px;
       text-decoration: none;
       color: var(--text-main);
-      transition: all 0.15s;
+      transition: all 0.15s ease;
+      cursor: pointer;
     }
-    .search-result-item:hover {
-      background: rgba(0, 240, 255, 0.08);
+    .search-result-item:hover,
+    .search-result-item.selected {
+      background: rgba(255, 255, 255, 0.05);
       border-left: 2px solid var(--aqua);
     }
-    .res-icon { font-size: 1.2rem; }
-    .res-body { flex: 1; }
-    .res-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
-    .res-sub { font-size: 0.78rem; color: var(--text-dim); }
+    .res-icon {
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+    .res-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .res-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .res-sub {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .res-badge {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--aqua);
       background: rgba(0, 240, 255, 0.08);
-      padding: 0.2rem 0.5rem;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      padding: 0.15rem 0.45rem;
       border-radius: 4px;
+      flex-shrink: 0;
     }
-    .search-footer-hint {
-      padding: 0.75rem 1.4rem;
-      border-top: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.3);
-      font-size: 0.75rem;
-      color: var(--text-muted);
+
+    /* Footer Shortcuts (Matching RTK Image 5) */
+    .search-footer-shortcuts {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.65rem 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.74rem;
+      color: #64748b;
       font-family: var(--font-mono);
     }
-    .search-footer-hint kbd {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 0.1rem 0.35rem;
-      border-radius: 3px;
-      color: var(--text-dim);
+    .shortcut-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
+    .key-cap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: #94a3b8;
+      font-size: 0.7rem;
+    }
+    .key-label {
+      color: #64748b;
+      font-family: var(--font-sans);
+    }
+
+    @media (max-width: 960px) {
+      .nav-center-links { display: none; }
+      .nav-lang-switch { display: none; }
+    }
+    @media (max-width: 600px) {
+      .nav-search-bar .search-label,
+      .nav-search-bar .search-kbd { display: none; }
+      .nav-gh-stars .gh-count { display: none; }
+      .btn-nav-install span { font-size: 0.75rem; }
+    }
+
 
     /* DOCS 3-COLUMN LAYOUT */
     .docs-container {
@@ -2841,14 +3201,14 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       margin: 0 auto;
       display: grid;
       grid-template-columns: 260px 1fr 240px;
-      min-height: calc(100vh - 68px);
+      min-height: calc(100vh - 58px);
     }
     .sidebar-left {
       border-right: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 68px;
-      height: calc(100vh - 68px);
+      top: 58px;
+      height: calc(100vh - 58px);
       overflow-y: auto;
     }
     .sidebar-title {
@@ -2950,8 +3310,8 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       border-left: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 68px;
-      height: calc(100vh - 68px);
+      top: 58px;
+      height: calc(100vh - 58px);
     }
     .toc-title {
       font-family: var(--font-mono);
