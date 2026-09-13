@@ -33,16 +33,16 @@
       }
     }
     ::view-transition-old(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
     }
     ::view-transition-new(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
     }
     @keyframes pageSlideOut {
-      to { transform: translateX(-30px); opacity: 0; }
+      to { transform: translateX(-40px); opacity: 0; }
     }
     @keyframes pageSlideIn {
-      from { transform: translateX(30px); opacity: 0; }
+      from { transform: translateX(40px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
@@ -61,15 +61,17 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(4, 7, 17, 0.85);
+      height: 68px;
+      background: rgba(4, 7, 17, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
     .nav-inner {
       max-width: 1400px;
+      height: 100%;
       margin: 0 auto;
-      padding: 0.8rem 2rem;
+      padding: 0 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -97,10 +99,11 @@
       background: rgba(56, 189, 248, 0.04);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.4rem 0.95rem;
+      padding: 0.45rem 1rem;
       font-size: 0.8rem;
       color: var(--text-dim);
       cursor: pointer;
+      font-family: inherit;
       transition: all 0.25s;
     }
     .nav-search-bar:hover {
@@ -148,7 +151,7 @@
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0.4rem 0.85rem;
+      padding: 0.42rem 0.9rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(56, 189, 248, 0.03);
@@ -171,7 +174,7 @@
       background: rgba(0, 240, 255, 0.08);
       border: 1px solid var(--aqua);
       color: var(--aqua);
-      padding: 0.45rem 1.1rem;
+      padding: 0.45rem 1.15rem;
       border-radius: 999px;
       font-size: 0.82rem;
       font-weight: 600;
@@ -184,20 +187,122 @@
       box-shadow: 0 0 20px var(--aqua-glow);
     }
 
+    /* SEARCH MODAL */
+    .search-dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      background: transparent;
+      border: none;
+      padding: 0;
+      z-index: 99999;
+      outline: none;
+    }
+    .search-dialog::backdrop {
+      background: rgba(2, 4, 10, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .search-dialog-box {
+      background: #060b19;
+      border: 1px solid var(--aqua);
+      border-radius: 16px;
+      width: 580px;
+      max-width: 92vw;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.2);
+      overflow: hidden;
+      animation: searchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes searchModalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      color: #fff;
+      font-family: inherit;
+    }
+    .search-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+    .search-results-list {
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+    .search-result-item:hover {
+      background: rgba(0, 240, 255, 0.08);
+      border-left: 2px solid var(--aqua);
+    }
+    .res-icon { font-size: 1.2rem; }
+    .res-body { flex: 1; }
+    .res-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .res-sub { font-size: 0.78rem; color: var(--text-dim); }
+    .res-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--aqua);
+      background: rgba(0, 240, 255, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .search-footer-hint {
+      padding: 0.75rem 1.4rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .search-footer-hint kbd {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: var(--text-dim);
+    }
+
     /* DOCS 3-COLUMN LAYOUT */
     .docs-container {
       max-width: 1400px;
       margin: 0 auto;
       display: grid;
       grid-template-columns: 260px 1fr 240px;
-      min-height: calc(100vh - 65px);
+      min-height: calc(100vh - 68px);
     }
     .sidebar-left {
       border-right: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 65px;
-      height: calc(100vh - 65px);
+      top: 68px;
+      height: calc(100vh - 68px);
       overflow-y: auto;
     }
     .sidebar-title {
@@ -299,8 +404,8 @@
       border-left: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 65px;
-      height: calc(100vh - 65px);
+      top: 68px;
+      height: calc(100vh - 68px);
     }
     .toc-title {
       font-family: var(--font-mono);
@@ -330,7 +435,7 @@
 </head>
 <body>
   
-  <!-- STICKY UNIFIED LUXURY NAVBAR -->
+  <!-- UNIFIED LUXURY NAVBAR -->
   <header class="global-navbar">
     <div class="nav-inner">
       <div class="nav-left">
@@ -338,13 +443,13 @@
           <img src="/icon.svg" alt="Graviton Singularity Logo">
           <span>GRAVITON</span>
         </a>
-        <div class="nav-search-bar" onclick="focusStudioOrSearch()">
+        <button class="nav-search-bar" onclick="openSearchModal()" aria-label="Search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <span>Search docs & commands...</span>
           <kbd>Ctrl K</kbd>
-        </div>
+        </button>
       </div>
 
       <nav class="nav-center-links">
@@ -369,6 +474,75 @@
       </div>
     </div>
   </header>
+
+  <!-- SEARCH MODAL (SPOTLIGHT DIALOG) -->
+  <dialog id="searchModal" class="search-dialog">
+    <div class="search-dialog-box">
+      <div class="search-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="spotlightInput" placeholder="Search commands, docs, skills, guides..." autocomplete="off">
+        <button class="search-close-btn" onclick="closeSearchModal()">Esc</button>
+      </div>
+
+      <div class="search-results-list" id="searchResultsList">
+        <!-- Default Popular Jump Points -->
+        <a href="/#get-started" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">⚡</span>
+          <div class="res-body">
+            <div class="res-title">Quick Install &amp; Setup</div>
+            <div class="res-sub">npm install -g @alatariz/graviton or npx execution</div>
+          </div>
+          <span class="res-badge">Install</span>
+        </a>
+        <a href="/#action" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">⇄</span>
+          <div class="res-body">
+            <div class="res-title">See It In Action (Benchmarks)</div>
+            <div class="res-sub">Compare raw terminal noise vs. 99% pruned clean context</div>
+          </div>
+          <span class="res-badge">Compare</span>
+        </a>
+        <a href="/#evidence" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">📊</span>
+          <div class="res-body">
+            <div class="res-title">graviton gain CLI Audit</div>
+            <div class="res-sub">Real-world developer token savings and efficiency meter</div>
+          </div>
+          <span class="res-badge">Evidence</span>
+        </a>
+        <a href="/docs.html#skill-matrix" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🗝️</span>
+          <div class="res-body">
+            <div class="res-title">Antigravity Skill Matrix Unlocker</div>
+            <div class="res-sub">Modern Web, BigQuery ETL, Flutter, and Testing directives</div>
+          </div>
+          <span class="res-badge">Skills</span>
+        </a>
+        <a href="/#demo" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🧪</span>
+          <div class="res-body">
+            <div class="res-title">Interactive Live Studio</div>
+            <div class="res-sub">Test prompt synthesis live and copy clean prompts</div>
+          </div>
+          <span class="res-badge">Studio</span>
+        </a>
+        <a href="/docs.html#auto-allow" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🛡️</span>
+          <div class="res-body">
+            <div class="res-title">Continuous Auto-Allow Relay</div>
+            <div class="res-sub">--dangerously-skip-permissions unblocking Antigravity</div>
+          </div>
+          <span class="res-badge">Docs</span>
+        </a>
+      </div>
+
+      <div class="search-footer-hint">
+        <span>Navigation: <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>↵</kbd> to select · <kbd>ESC</kbd> to close</span>
+      </div>
+    </div>
+  </dialog>
 
 
   <div class="docs-container">
@@ -487,5 +661,86 @@ Intent: "buat mobile app widget"
       <a href="#privacy" class="toc-link">Privacy & Redaction</a>
     </aside>
   </div>
+
+  <script>
+    const searchModal = document.getElementById('searchModal');
+    const spotlightInput = document.getElementById('spotlightInput');
+    const searchResultsList = document.getElementById('searchResultsList');
+
+    function openSearchModal() {
+      if (searchModal) {
+        searchModal.showModal();
+        if (spotlightInput) {
+          spotlightInput.value = '';
+          spotlightInput.focus();
+        }
+      }
+    }
+
+    function closeSearchModal() {
+      if (searchModal && searchModal.open) {
+        searchModal.close();
+      }
+    }
+
+    if (searchModal) {
+      searchModal.addEventListener('click', (e) => {
+        const rect = searchModal.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) closeSearchModal();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+      }
+      if (e.key === 'Escape' && searchModal && searchModal.open) {
+        closeSearchModal();
+      }
+    });
+
+    const SEARCH_ITEMS = [
+      { title: 'Quick Install & Setup', sub: 'npm install -g @alatariz/graviton or npx', link: '/#get-started', badge: 'Install', icon: '⚡' },
+      { title: 'See It In Action (Benchmarks)', sub: 'Compare raw terminal noise vs. 99% pruned clean context', link: '/#action', badge: 'Compare', icon: '⇄' },
+      { title: 'graviton gain CLI Audit', sub: 'Real-world developer token savings and efficiency meter', link: '/#evidence', badge: 'Evidence', icon: '📊' },
+      { title: 'Antigravity Skill Matrix Unlocker', sub: 'Modern Web, BigQuery ETL, Flutter, and Testing directives', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
+      { title: 'Interactive Live Studio', sub: 'Test prompt synthesis live and copy clean prompts', link: '/#demo', badge: 'Studio', icon: '🧪' },
+      { title: 'Continuous Auto-Allow Relay', sub: '--dangerously-skip-permissions unblocking Antigravity', link: '/docs.html#auto-allow', badge: 'Docs', icon: '🛡️' },
+      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing and zero telemetry', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' },
+      { title: 'Architecture & Specifications', sub: 'Developer specs, overhead < 0.5ms, and proxy architecture', link: '/#solution', badge: 'Specs', icon: '📐' }
+    ];
+
+    if (spotlightInput) {
+      spotlightInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!searchResultsList) return;
+
+        const filtered = SEARCH_ITEMS.filter(item => 
+          item.title.toLowerCase().includes(query) || item.sub.toLowerCase().includes(query) || item.badge.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+          searchResultsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+          return;
+        }
+
+        searchResultsList.innerHTML = filtered.map(item => `
+          <a href="${item.link}" class="search-result-item" onclick="closeSearchModal()">
+            <span class="res-icon">${item.icon}</span>
+            <div class="res-body">
+              <div class="res-title">${item.title}</div>
+              <div class="res-sub">${item.sub}</div>
+            </div>
+            <span class="res-badge">${item.badge}</span>
+          </a>
+        `).join('');
+      });
+    }
+  </script>
 </body>
 </html>

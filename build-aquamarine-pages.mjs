@@ -1,9 +1,9 @@
-// build-aquamarine-pages.mjs - Rebuilds index.html and docs.html with Diamond Blue/Aquamarine theme, smooth slide scroll animations, and unified navbar
+// build-aquamarine-pages.mjs - Luxury Diamond Blue/Aquamarine with 100vh Intro, Slower Smooth Animations, Clean Per-Page Layout, and Full Functional Search Modal
 import fs from 'fs';
 
-// 1. Shared Global Styles & Navbar
-const sharedHeaderHtml = (activePage = 'product') => `
-  <!-- STICKY UNIFIED LUXURY NAVBAR -->
+// 1. Shared Global Navbar & Search Modal
+const sharedHeaderAndSearch = (activePage = 'product') => `
+  <!-- UNIFIED LUXURY NAVBAR -->
   <header class="global-navbar">
     <div class="nav-inner">
       <div class="nav-left">
@@ -11,13 +11,13 @@ const sharedHeaderHtml = (activePage = 'product') => `
           <img src="/icon.svg" alt="Graviton Singularity Logo">
           <span>GRAVITON</span>
         </a>
-        <div class="nav-search-bar" onclick="focusStudioOrSearch()">
+        <button class="nav-search-bar" onclick="openSearchModal()" aria-label="Search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <span>Search docs & commands...</span>
           <kbd>Ctrl K</kbd>
-        </div>
+        </button>
       </div>
 
       <nav class="nav-center-links">
@@ -42,6 +42,75 @@ const sharedHeaderHtml = (activePage = 'product') => `
       </div>
     </div>
   </header>
+
+  <!-- SEARCH MODAL (SPOTLIGHT DIALOG) -->
+  <dialog id="searchModal" class="search-dialog">
+    <div class="search-dialog-box">
+      <div class="search-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="spotlightInput" placeholder="Search commands, docs, skills, guides..." autocomplete="off">
+        <button class="search-close-btn" onclick="closeSearchModal()">Esc</button>
+      </div>
+
+      <div class="search-results-list" id="searchResultsList">
+        <!-- Default Popular Jump Points -->
+        <a href="/#get-started" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">⚡</span>
+          <div class="res-body">
+            <div class="res-title">Quick Install &amp; Setup</div>
+            <div class="res-sub">npm install -g @alatariz/graviton or npx execution</div>
+          </div>
+          <span class="res-badge">Install</span>
+        </a>
+        <a href="/#action" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">⇄</span>
+          <div class="res-body">
+            <div class="res-title">See It In Action (Benchmarks)</div>
+            <div class="res-sub">Compare raw terminal noise vs. 99% pruned clean context</div>
+          </div>
+          <span class="res-badge">Compare</span>
+        </a>
+        <a href="/#evidence" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">📊</span>
+          <div class="res-body">
+            <div class="res-title">graviton gain CLI Audit</div>
+            <div class="res-sub">Real-world developer token savings and efficiency meter</div>
+          </div>
+          <span class="res-badge">Evidence</span>
+        </a>
+        <a href="/docs.html#skill-matrix" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🗝️</span>
+          <div class="res-body">
+            <div class="res-title">Antigravity Skill Matrix Unlocker</div>
+            <div class="res-sub">Modern Web, BigQuery ETL, Flutter, and Testing directives</div>
+          </div>
+          <span class="res-badge">Skills</span>
+        </a>
+        <a href="/#demo" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🧪</span>
+          <div class="res-body">
+            <div class="res-title">Interactive Live Studio</div>
+            <div class="res-sub">Test prompt synthesis live and copy clean prompts</div>
+          </div>
+          <span class="res-badge">Studio</span>
+        </a>
+        <a href="/docs.html#auto-allow" class="search-result-item" onclick="closeSearchModal()">
+          <span class="res-icon">🛡️</span>
+          <div class="res-body">
+            <div class="res-title">Continuous Auto-Allow Relay</div>
+            <div class="res-sub">--dangerously-skip-permissions unblocking Antigravity</div>
+          </div>
+          <span class="res-badge">Docs</span>
+        </a>
+      </div>
+
+      <div class="search-footer-hint">
+        <span>Navigation: <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>↵</kbd> to select · <kbd>ESC</kbd> to close</span>
+      </div>
+    </div>
+  </dialog>
 `;
 
 // 2. Build index.html
@@ -58,7 +127,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* DIAMOND BLUE / AQUAMARINE DESIGN TOKENS */
+    /* DIAMOND BLUE / AQUAMARINE LUXURY DESIGN SYSTEM */
     :root {
       --bg: #040711;
       --bg-surface: #060c1d;
@@ -70,7 +139,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       --text-dim: #94a3b8;
       --text-muted: #64748b;
       
-      /* Aquamarine / Diamond Core */
+      /* Diamond Aquamarine Core */
       --aqua: #00f0ff;
       --aqua-bright: #38bdf8;
       --aqua-ice: #bae6fd;
@@ -89,16 +158,16 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       }
     }
     ::view-transition-old(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
     }
     ::view-transition-new(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
     }
     @keyframes pageSlideOut {
-      to { transform: translateX(-30px); opacity: 0; }
+      to { transform: translateX(-40px); opacity: 0; }
     }
     @keyframes pageSlideIn {
-      from { transform: translateX(30px); opacity: 0; }
+      from { transform: translateX(40px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
@@ -128,23 +197,23 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       z-index: 0;
     }
 
-    /* SCROLL SLIDE-IN REVEAL EFFECT PER SECTION */
+    /* SLOW, SERENE SCROLL SLIDE-IN REVEAL EFFECT (1.2S TRANSITION) */
     .slide-reveal-left {
       opacity: 0;
-      transform: translateX(-35px);
-      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(-45px);
+      transition: opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-right {
       opacity: 0;
-      transform: translateX(35px);
-      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateX(45px);
+      transition: opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-up {
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(40px);
+      transition: opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
     .slide-reveal-left.is-revealed,
@@ -154,20 +223,22 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       transform: translate(0, 0) !important;
     }
 
-    /* UNIFIED NAVBAR */
+    /* CLEANED UP NAVBAR */
     .global-navbar {
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(4, 7, 17, 0.85);
+      height: 68px;
+      background: rgba(4, 7, 17, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
     .nav-inner {
       max-width: 1400px;
+      height: 100%;
       margin: 0 auto;
-      padding: 0.8rem 2rem;
+      padding: 0 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -200,10 +271,11 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       background: rgba(56, 189, 248, 0.04);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.4rem 0.95rem;
+      padding: 0.45rem 1rem;
       font-size: 0.8rem;
       color: var(--text-dim);
       cursor: pointer;
+      font-family: inherit;
       transition: all 0.25s;
     }
     .nav-search-bar:hover {
@@ -258,7 +330,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0.4rem 0.85rem;
+      padding: 0.42rem 0.9rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(56, 189, 248, 0.03);
@@ -285,7 +357,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       background: rgba(0, 240, 255, 0.08);
       border: 1px solid var(--aqua);
       color: var(--aqua);
-      padding: 0.45rem 1.1rem;
+      padding: 0.45rem 1.15rem;
       border-radius: 999px;
       font-size: 0.82rem;
       font-weight: 600;
@@ -296,6 +368,108 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       background: var(--aqua);
       color: #021526;
       box-shadow: 0 0 20px var(--aqua-glow);
+    }
+
+    /* SEARCH MODAL (SPOTLIGHT DIALOG) */
+    .search-dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      background: transparent;
+      border: none;
+      padding: 0;
+      z-index: 99999;
+      outline: none;
+    }
+    .search-dialog::backdrop {
+      background: rgba(2, 4, 10, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .search-dialog-box {
+      background: #060b19;
+      border: 1px solid var(--aqua);
+      border-radius: 16px;
+      width: 580px;
+      max-width: 92vw;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.2);
+      overflow: hidden;
+      animation: searchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes searchModalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      color: #fff;
+      font-family: inherit;
+    }
+    .search-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+    .search-results-list {
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+    .search-result-item:hover, .search-result-item.selected {
+      background: rgba(0, 240, 255, 0.08);
+      border-left: 2px solid var(--aqua);
+    }
+    .res-icon { font-size: 1.2rem; }
+    .res-body { flex: 1; }
+    .res-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .res-sub { font-size: 0.78rem; color: var(--text-dim); }
+    .res-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--aqua);
+      background: rgba(0, 240, 255, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .search-footer-hint {
+      padding: 0.75rem 1.4rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .search-footer-hint kbd {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: var(--text-dim);
     }
 
     /* SECTION BADGES */
@@ -359,7 +533,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       background: linear-gradient(180deg, transparent, var(--aqua), #fff);
       filter: drop-shadow(0 0 12px var(--aqua));
       border-radius: 999px;
-      animation: laserTravel 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      animation: laserTravel 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
     @keyframes laserTravel {
       0% { top: -5%; opacity: 0; }
@@ -368,105 +542,116 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       100% { top: 105%; opacity: 0; }
     }
 
-    /* HERO TOP STAGE (ALWAYS VISIBLE WITH SMOOTH INTRO FADE) */
+    /* ========================================================= */
+    /* 1. HERO TOP INTRO STAGE (FULL 100VH VIEWPORT STANDALONE) */
+    /* ========================================================= */
     .hero-top-stage {
       position: relative;
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 4.5rem 2rem 5rem;
+      min-height: calc(100vh - 68px);
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       text-align: center;
+      padding: 3rem 2rem;
       z-index: 2;
-      animation: heroFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: heroSlowFadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    @keyframes heroFadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes heroSlowFadeIn {
+      0% { opacity: 0; transform: translateY(25px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .hero-totem-wrap {
       position: relative;
-      margin-bottom: 1.8rem;
+      margin-bottom: 2rem;
       cursor: pointer;
     }
     .hero-totem-aura {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 180px; height: 180px;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.3) 0%, transparent 70%);
-      filter: blur(30px);
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.32) 0%, transparent 70%);
+      filter: blur(35px);
       pointer-events: none;
     }
     .hero-totem-icon {
       width: 110px;
       height: 110px;
-      filter: drop-shadow(0 0 28px rgba(0, 240, 255, 0.5));
-      animation: totemBreathing 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.55));
+      animation: totemBreathing 7s ease-in-out infinite;
     }
     @keyframes totemBreathing {
       0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-8px) scale(1.03); }
+      50% { transform: translateY(-7px) scale(1.02); }
     }
     .totem-brand-sub {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       letter-spacing: 0.45em;
       color: var(--aqua-bright);
-      margin-top: 0.9rem;
+      margin-top: 1rem;
     }
 
     .hero-pre-title {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       color: var(--text-dim);
       margin-bottom: 0.5rem;
       font-weight: 400;
     }
     .hero-main-title {
-      font-size: 3.4rem;
+      font-size: 3.6rem;
       font-weight: 700;
       letter-spacing: -0.04em;
       color: #fff;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
     }
 
     .btn-see-how {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      background: rgba(56, 189, 248, 0.04);
+      gap: 0.6rem;
+      background: rgba(56, 189, 248, 0.05);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.55rem 1.3rem;
+      padding: 0.65rem 1.5rem;
       color: var(--text-dim);
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-family: var(--font-mono);
       text-decoration: none;
-      transition: all 0.25s;
+      transition: all 0.3s;
     }
     .btn-see-how:hover {
       border-color: var(--aqua);
-      background: rgba(0, 240, 255, 0.08);
+      background: rgba(0, 240, 255, 0.1);
       color: #fff;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+      transform: translateY(2px);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
     }
 
-    /* HERO DUAL SPLIT SECTION */
-    .hero-split-grid {
+    /* ========================================================= */
+    /* 2. HERO DUAL SPLIT SECTION (DEDICATED PAGE MIN-HEIGHT 85VH) */
+    /* ========================================================= */
+    .section-stage-showcase {
       position: relative;
-      max-width: 1400px;
-      margin: 0 auto 6rem;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 4rem;
+      min-height: 85vh;
+      display: flex;
       align-items: center;
+      padding: 6rem 2rem;
       z-index: 2;
     }
+    .hero-split-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 5rem;
+      align-items: center;
+    }
     .hero-split-left h2 {
-      font-size: 4rem;
+      font-size: 4.2rem;
       line-height: 1.05;
       font-weight: 700;
       letter-spacing: -0.04em;
@@ -479,8 +664,8 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     .hero-split-desc {
       font-size: 1.1rem;
       color: var(--text-dim);
-      line-height: 1.6;
-      margin-bottom: 2.2rem;
+      line-height: 1.65;
+      margin-bottom: 2.4rem;
       max-width: 540px;
     }
     .hero-actions-row {
@@ -494,7 +679,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       background: var(--aqua);
       color: #021526;
       font-weight: 700;
-      padding: 0.75rem 1.8rem;
+      padding: 0.8rem 1.9rem;
       border-radius: 999px;
       text-decoration: none;
       font-size: 0.9rem;
@@ -514,7 +699,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       border: 1px solid var(--border);
       color: #fff;
       font-weight: 500;
-      padding: 0.75rem 1.6rem;
+      padding: 0.8rem 1.7rem;
       border-radius: 999px;
       text-decoration: none;
       font-size: 0.9rem;
@@ -616,7 +801,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     /* STATS BANNER COUNTER */
     .stats-strip-wrap {
       max-width: 1400px;
-      margin: 0 auto 7rem;
+      margin: 0 auto 5rem;
       padding: 0 2rem;
       z-index: 2;
       position: relative;
@@ -643,17 +828,25 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       color: var(--text-dim);
     }
 
-    /* 01 / THE PROBLEM (3 COLUMNS) */
-    .section-problem-grid {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 1.1fr 1.3fr 0.8fr;
-      gap: 3.5rem;
+    /* ========================================================= */
+    /* 3. SECTION 01 / THE PROBLEM (MIN-HEIGHT 85VH) */
+    /* ========================================================= */
+    .section-stage-problem {
+      min-height: 85vh;
+      display: flex;
       align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-problem-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr 0.8fr;
+      gap: 4rem;
+      align-items: center;
     }
     .problem-left-col h2 {
       font-size: 2.8rem;
@@ -766,17 +959,25 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       font-weight: 600;
     }
 
-    /* 02 / THE SOLUTION */
-    .section-solution-grid {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 1fr 1.3fr;
-      gap: 4.5rem;
-      align-items: flex-start;
+    /* ========================================================= */
+    /* 4. SECTION 02 / THE SOLUTION (MIN-HEIGHT 80VH) */
+    /* ========================================================= */
+    .section-stage-solution {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-solution-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 5rem;
+      align-items: flex-start;
     }
     .solution-left h2 {
       font-size: 3rem;
@@ -822,17 +1023,25 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       font-weight: 500;
     }
 
-    /* 03 / SEE IT IN ACTION */
-    .section-action-grid {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 0.9fr 1.3fr;
-      gap: 4rem;
-      align-items: flex-start;
+    /* ========================================================= */
+    /* 5. SECTION 03 / SEE IT IN ACTION (MIN-HEIGHT 85VH) */
+    /* ========================================================= */
+    .section-stage-action {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-action-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 0.9fr 1.3fr;
+      gap: 4.5rem;
+      align-items: flex-start;
     }
     .action-left h2 {
       font-size: 3rem;
@@ -931,13 +1140,21 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     }
     .action-code-pane.clean { color: #7dd3fc; }
 
-    /* 04 / THE EVIDENCE */
-    .section-evidence-wrap {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
+    /* ========================================================= */
+    /* 6. SECTION 04 / THE EVIDENCE (MIN-HEIGHT 90VH) */
+    /* ========================================================= */
+    .section-stage-evidence {
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-evidence-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
     .evidence-head-block {
       margin-bottom: 3rem;
@@ -1020,18 +1237,26 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       line-height: 1.5;
     }
 
-    /* 05 / THE IMPACT */
-    .section-impact-wrap {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
+    /* ========================================================= */
+    /* 7. SECTION 05 / THE IMPACT (MIN-HEIGHT 85VH) */
+    /* ========================================================= */
+    .section-stage-impact {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-impact-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
     .impact-top-grid {
       display: grid;
       grid-template-columns: 1fr 2fr;
-      gap: 4rem;
+      gap: 4.5rem;
       margin-bottom: 5rem;
       align-items: flex-start;
     }
@@ -1052,7 +1277,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     .impact-cards-trio {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      gap: 1.8rem;
     }
     .impact-trio-card {
       border-left: 1px solid var(--border);
@@ -1113,13 +1338,21 @@ const buildIndexHtml = () => `<!DOCTYPE html>
     }
     .stack-item:hover { color: #fff; }
 
-    /* 06 / GET STARTED */
-    .section-get-started-wrap {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
+    /* ========================================================= */
+    /* 8. SECTION 06 / GET STARTED (MIN-HEIGHT 85VH) */
+    /* ========================================================= */
+    .section-stage-get-started {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem;
       position: relative;
       z-index: 2;
+    }
+    .section-get-started-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
     .get-started-head {
       margin-bottom: 3.5rem;
@@ -1245,13 +1478,18 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       font-family: var(--font-mono);
     }
 
-    /* LIVE STUDIO PLAYGROUND */
-    .section-studio-wrap {
-      max-width: 1400px;
-      margin: 0 auto 8rem;
-      padding: 0 2rem;
+    /* ========================================================= */
+    /* 9. SECTION 07 / LIVE STUDIO PLAYGROUND */
+    /* ========================================================= */
+    .section-stage-studio {
+      padding: 6rem 2rem 8rem;
       position: relative;
       z-index: 2;
+    }
+    .section-studio-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
     .studio-box-shell {
       background: var(--bg-card);
@@ -1438,10 +1676,10 @@ const buildIndexHtml = () => `<!DOCTYPE html>
 <body>
   <div class="viewport-grid"></div>
 
-  ${sharedHeaderHtml('product')}
+  ${sharedHeaderAndSearch('product')}
 
   <main>
-    <!-- HERO TOP INTRO WITH LASER AXIS & ORIGINAL GRAVITATIONAL SINGULARITY TOTEM -->
+    <!-- 1. FULL VIEWPORT INTRO HERO: TOTEM + SEE HOW IT WORKS (ONLY THIS IS SHOWN ON LOAD) -->
     <section class="hero-top-stage">
       <div class="laser-line-axis">
         <div class="laser-particle"></div>
@@ -1449,7 +1687,7 @@ const buildIndexHtml = () => `<!DOCTYPE html>
 
       <div class="hero-totem-wrap">
         <div class="hero-totem-aura"></div>
-        <img src="/icon.svg" alt="Graviton Totem" class="hero-totem-icon">
+        <img src="/icon.svg" alt="Graviton Singularity Totem" class="hero-totem-icon">
         <div class="totem-brand-sub">G R A V I T O N</div>
       </div>
 
@@ -1464,59 +1702,61 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       </a>
     </section>
 
-    <!-- HERO DUAL SHOWCASE SPLIT WITH SLIDE-IN REVEAL -->
-    <section id="hero-showcase" class="hero-split-grid">
-      <div class="hero-split-left slide-reveal-left">
-        <a href="#get-started" class="pill-banner-link">
-          <span class="badge-dot">●</span>
-          <span><strong>Graviton Pro:</strong> the AI Control Layer for your team →</span>
-        </a>
-        <h2>
-          Clean context<br>
-          <span class="accent-aqua">Better agents</span>
-        </h2>
-        <p class="hero-split-desc">
-          Graviton sits between your CLI tools and Antigravity. It strips ANSI escape sequences, deduplicates streaming logs, unrolls specialized skill directives, and automatically relays execution with continuous Auto-Allow.
-        </p>
-
-        <div class="hero-actions-row">
-          <a href="#get-started" class="btn-primary-pill">
-            <span>Install Graviton →</span>
+    <!-- 2. STAGE: DUAL SHOWCASE SPLIT (CLEAN CONTEXT BETTER AGENTS + SLAB) -->
+    <section id="hero-showcase" class="section-stage-showcase">
+      <div class="hero-split-grid">
+        <div class="hero-split-left slide-reveal-left">
+          <a href="#get-started" class="pill-banner-link">
+            <span class="badge-dot">●</span>
+            <span><strong>Graviton Pro:</strong> the AI Control Layer for your team →</span>
           </a>
-          <a href="https://github.com/alatariz/graviton" target="_blank" class="btn-glass-pill">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span>View on GitHub ↗</span>
-          </a>
+          <h2>
+            Clean context<br>
+            <span class="accent-aqua">Better agents</span>
+          </h2>
+          <p class="hero-split-desc">
+            Graviton sits between your CLI tools and Antigravity. It strips ANSI escape sequences, deduplicates streaming logs, unrolls specialized skill directives, and automatically relays execution with continuous Auto-Allow.
+          </p>
+
+          <div class="hero-actions-row">
+            <a href="#get-started" class="btn-primary-pill">
+              <span>Install Graviton →</span>
+            </a>
+            <a href="https://github.com/alatariz/graviton" target="_blank" class="btn-glass-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>View on GitHub ↗</span>
+            </a>
+          </div>
+
+          <div class="hero-meta-strip">
+            Open source · Apache 2.0 · Node.js & Antigravity
+          </div>
         </div>
 
-        <div class="hero-meta-strip">
-          Open source · Apache 2.0 · Node.js & Antigravity
-        </div>
-      </div>
+        <div class="matrix-phone-slab slide-reveal-right">
+          <div class="slab-header">
+            <span class="slab-title">CLEAN CONTEXT</span>
+            <span class="slab-status">14% USED</span>
+          </div>
 
-      <div class="matrix-phone-slab slide-reveal-right">
-        <div class="slab-header">
-          <span class="slab-title">CLEAN CONTEXT</span>
-          <span class="slab-status">14% USED</span>
-        </div>
+          <div class="matrix-canvas-wrap">
+            <canvas id="matrixCanvas"></canvas>
+          </div>
 
-        <div class="matrix-canvas-wrap">
-          <canvas id="matrixCanvas"></canvas>
-        </div>
+          <div class="slab-led-bar">
+            <div class="led-dot active"></div><div class="led-dot active"></div><div class="led-dot active"></div>
+            <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
+            <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
+            <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
+            <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
+          </div>
 
-        <div class="slab-led-bar">
-          <div class="led-dot active"></div><div class="led-dot active"></div><div class="led-dot active"></div>
-          <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
-          <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
-          <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
-          <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
-        </div>
-
-        <div class="slab-footer-info">
-          <span>Room for reasoning</span>
-          <span style="color: var(--aqua); font-weight: 700;">86% Free</span>
+          <div class="slab-footer-info">
+            <span>Room for reasoning</span>
+            <span style="color: var(--aqua); font-weight: 700;">86% Free</span>
+          </div>
         </div>
       </div>
     </section>
@@ -1547,198 +1787,205 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- 01 / THE PROBLEM -->
-    <section id="how-it-works" class="section-problem-grid">
-      <div class="problem-left-col slide-reveal-left">
-        <div class="section-tag">01 / The Problem</div>
-        <h2>Your context<br>window is<br><em>valuable</em></h2>
-        <p>
-          AI agents don't need more output. They need more relevant output. Graviton prevents terminal output noise and conversational fluff from triggering premature auto-compact.
-        </p>
-      </div>
-
-      <div class="breakdown-card slide-reveal-up">
-        <div class="b-card-head">
-          <span>AI CONTEXT</span>
-          <span style="color: var(--aqua); font-weight: 700;">14% USED</span>
+    <!-- 3. STAGE: 01 / THE PROBLEM -->
+    <section id="how-it-works" class="section-stage-problem">
+      <div class="section-problem-grid">
+        <div class="problem-left-col slide-reveal-left">
+          <div class="section-tag">01 / The Problem</div>
+          <h2>Your context<br>window is<br><em>valuable</em></h2>
+          <p>
+            AI agents don't need more output. They need more relevant output. Graviton prevents terminal output noise and conversational fluff from triggering premature auto-compact.
+          </p>
         </div>
 
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: #38bdf8;"></span>
-            <span>System prompt & tools</span>
+        <div class="breakdown-card slide-reveal-up">
+          <div class="b-card-head">
+            <span>AI CONTEXT</span>
+            <span style="color: var(--aqua); font-weight: 700;">14% USED</span>
           </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 3%; background: #38bdf8;"></div></div>
-          <span class="b-row-pct">3%</span>
-        </div>
 
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: var(--aqua);"></span>
-            <span>MCP tools</span>
-          </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 1%; background: var(--aqua);"></div></div>
-          <span class="b-row-pct">1%</span>
-        </div>
-
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: #a78bfa;"></span>
-            <span>Memory files</span>
-          </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 1%; background: #a78bfa;"></div></div>
-          <span class="b-row-pct">1%</span>
-        </div>
-
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: #f59e0b;"></span>
-            <span>Skills matrix</span>
-          </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 0.5%; background: #f59e0b;"></div></div>
-          <span class="b-row-pct">0.5%</span>
-        </div>
-
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: #818cf8;"></span>
-            <span>Conversation history</span>
-          </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 8%; background: #818cf8;"></div></div>
-          <span class="b-row-pct">8%</span>
-        </div>
-
-        <div class="b-row">
-          <div class="b-row-label">
-            <span class="b-row-dot" style="background: #ef4444;"></span>
-            <span>CLI output / logs</span>
-          </div>
-          <div class="b-row-track"><div class="b-row-fill" style="width: 0.5%; background: #ef4444;"></div></div>
-          <span class="b-row-pct" style="color: var(--aqua);">0% (Pruned)</span>
-        </div>
-
-        <div class="b-subnote">Example session, varies by project and tooling</div>
-
-        <div class="b-footer-bar">
-          <span>More room for reasoning.</span>
-          <div class="b-footer-progress">
-            <div class="b-footer-fill"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="problem-right-col slide-reveal-right">
-        Too much noise means <strong>higher costs</strong>, <strong>slower reasoning</strong> and <strong>less capable agents</strong>.
-      </div>
-    </section>
-
-    <!-- 02 / THE SOLUTION -->
-    <section id="solution" class="section-solution-grid">
-      <div class="solution-left slide-reveal-left">
-        <div class="section-tag">02 / The Solution</div>
-        <h2>Install & <em>forget</em></h2>
-        <p>
-          Graviton is a thin, open proxy layer. It adds nothing to your workflow: it only takes the noise away.
-        </p>
-      </div>
-
-      <div class="specs-table-box slide-reveal-right">
-        <div class="specs-table-title">BUILT FOR DEVELOPERS</div>
-
-        <div class="spec-table-row">
-          <span class="spec-label">LANGUAGE</span>
-          <span class="spec-val">Node.js / JavaScript & Antigravity Core</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">LICENSE</span>
-          <span class="spec-val">Apache 2.0</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">ARCHITECTURE</span>
-          <span class="spec-val">CLI hook & prompt synthesizer</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">OVERHEAD</span>
-          <span class="spec-val" style="color: var(--aqua);">&lt; 0.5 ms</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">INTEGRATION</span>
-          <span class="spec-val">Google Antigravity & Agy CLI</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">SKILLS MATRIX</span>
-          <span class="spec-val" style="color: #38bdf8;">Auto-unlocked Directive Engine</span>
-        </div>
-        <div class="spec-table-row">
-          <span class="spec-label">TELEMETRY</span>
-          <span class="spec-val">Zero telemetry, 100% local</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 03 / SEE IT IN ACTION -->
-    <section id="action" class="section-action-grid">
-      <div class="action-left slide-reveal-left">
-        <div class="section-tag">03 / See It In Action</div>
-        <h2>The difference is<br><em>clear</em></h2>
-        <p>
-          Compare real output before and after Graviton, and see what gets filtered.
-        </p>
-        <a href="#how-it-works" class="action-link-btn">
-          <span>Why was this removed? →</span>
-        </a>
-      </div>
-
-      <div class="action-terminal-card slide-reveal-right">
-        <div class="action-tabs-bar">
-          <button class="action-tab-item active" onclick="switchActionTab('command', this)">Command output</button>
-          <button class="action-tab-item" onclick="switchActionTab('tests', this)">Tests</button>
-          <button class="action-tab-item" onclick="switchActionTab('git', this)">Git</button>
-          <button class="action-tab-item" onclick="switchActionTab('skills', this)">Skill Prompt</button>
-          <button class="action-tab-item" onclick="switchActionTab('files', this)">Files</button>
-        </div>
-
-        <div class="action-split-content">
-          <div class="action-col">
-            <div class="action-col-head">
-              <span class="label-raw">WITHOUT GRAVITON</span>
-              <span id="raw-line-count">1,042 LINES</span>
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: #38bdf8;"></span>
+              <span>System prompt & tools</span>
             </div>
-            <div id="raw-code-view" class="action-code-pane"></div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 3%; background: #38bdf8;"></div></div>
+            <span class="b-row-pct">3%</span>
           </div>
 
-          <div class="action-col">
-            <div class="action-col-head">
-              <span class="label-clean">WITH GRAVITON</span>
-              <span id="clean-line-count">4 LINES (-99%)</span>
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: var(--aqua);"></span>
+              <span>MCP tools</span>
             </div>
-            <div id="clean-code-view" class="action-code-pane clean"></div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 1%; background: var(--aqua);"></div></div>
+            <span class="b-row-pct">1%</span>
+          </div>
+
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: #a78bfa;"></span>
+              <span>Memory files</span>
+            </div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 1%; background: #a78bfa;"></div></div>
+            <span class="b-row-pct">1%</span>
+          </div>
+
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: #f59e0b;"></span>
+              <span>Skills matrix</span>
+            </div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 0.5%; background: #f59e0b;"></div></div>
+            <span class="b-row-pct">0.5%</span>
+          </div>
+
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: #818cf8;"></span>
+              <span>Conversation history</span>
+            </div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 8%; background: #818cf8;"></div></div>
+            <span class="b-row-pct">8%</span>
+          </div>
+
+          <div class="b-row">
+            <div class="b-row-label">
+              <span class="b-row-dot" style="background: #ef4444;"></span>
+              <span>CLI output / logs</span>
+            </div>
+            <div class="b-row-track"><div class="b-row-fill" style="width: 0.5%; background: #ef4444;"></div></div>
+            <span class="b-row-pct" style="color: var(--aqua);">0% (Pruned)</span>
+          </div>
+
+          <div class="b-subnote">Example session, varies by project and tooling</div>
+
+          <div class="b-footer-bar">
+            <span>More room for reasoning.</span>
+            <div class="b-footer-progress">
+              <div class="b-footer-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="problem-right-col slide-reveal-right">
+          Too much noise means <strong>higher costs</strong>, <strong>slower reasoning</strong> and <strong>less capable agents</strong>.
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. STAGE: 02 / THE SOLUTION -->
+    <section id="solution" class="section-stage-solution">
+      <div class="section-solution-grid">
+        <div class="solution-left slide-reveal-left">
+          <div class="section-tag">02 / The Solution</div>
+          <h2>Install & <em>forget</em></h2>
+          <p>
+            Graviton is a thin, open proxy layer. It adds nothing to your workflow: it only takes the noise away.
+          </p>
+        </div>
+
+        <div class="specs-table-box slide-reveal-right">
+          <div class="specs-table-title">BUILT FOR DEVELOPERS</div>
+
+          <div class="spec-table-row">
+            <span class="spec-label">LANGUAGE</span>
+            <span class="spec-val">Node.js / JavaScript & Antigravity Core</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">LICENSE</span>
+            <span class="spec-val">Apache 2.0</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">ARCHITECTURE</span>
+            <span class="spec-val">CLI hook & prompt synthesizer</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">OVERHEAD</span>
+            <span class="spec-val" style="color: var(--aqua);">&lt; 0.5 ms</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">INTEGRATION</span>
+            <span class="spec-val">Google Antigravity & Agy CLI</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">SKILLS MATRIX</span>
+            <span class="spec-val" style="color: #38bdf8;">Auto-unlocked Directive Engine</span>
+          </div>
+          <div class="spec-table-row">
+            <span class="spec-label">TELEMETRY</span>
+            <span class="spec-val">Zero telemetry, 100% local</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 04 / THE EVIDENCE -->
-    <section id="evidence" class="section-evidence-wrap slide-reveal-up">
-      <div class="evidence-head-block">
-        <div class="section-tag">04 / The Evidence</div>
-        <h2>Measure your graviton <em>gains</em></h2>
-        <p>Real graviton gain output from a developer's daily use.</p>
-      </div>
+    <!-- 5. STAGE: 03 / SEE IT IN ACTION -->
+    <section id="action" class="section-stage-action">
+      <div class="section-action-grid">
+        <div class="action-left slide-reveal-left">
+          <div class="section-tag">03 / See It In Action</div>
+          <h2>The difference is<br><em>clear</em></h2>
+          <p>
+            Compare real output before and after Graviton, and see what gets filtered.
+          </p>
+          <a href="#how-it-works" class="action-link-btn">
+            <span>Why was this removed? →</span>
+          </a>
+        </div>
 
-      <div class="evidence-duo-grid">
-        <div class="slide-reveal-left">
-          <div class="evidence-window">
-            <div class="evidence-window-top">
-              <div class="mac-dots">
-                <span class="mac-dot" style="background: #ef4444;"></span>
-                <span class="mac-dot" style="background: #f59e0b;"></span>
-                <span class="mac-dot" style="background: #00f0ff;"></span>
+        <div class="action-terminal-card slide-reveal-right">
+          <div class="action-tabs-bar">
+            <button class="action-tab-item active" onclick="switchActionTab('command', this)">Command output</button>
+            <button class="action-tab-item" onclick="switchActionTab('tests', this)">Tests</button>
+            <button class="action-tab-item" onclick="switchActionTab('git', this)">Git</button>
+            <button class="action-tab-item" onclick="switchActionTab('skills', this)">Skill Prompt</button>
+            <button class="action-tab-item" onclick="switchActionTab('files', this)">Files</button>
+          </div>
+
+          <div class="action-split-content">
+            <div class="action-col">
+              <div class="action-col-head">
+                <span class="label-raw">WITHOUT GRAVITON</span>
+                <span id="raw-line-count">1,042 LINES</span>
               </div>
-              <span style="color: #38bdf8;">$ graviton gain</span>
-              <span>10:31 · 03.03.26</span>
+              <div id="raw-code-view" class="action-code-pane"></div>
             </div>
-            <div class="evidence-pre"><span style="color: var(--aqua);">⚡ GRAVITON Token Savings (Global Scope)</span>
+
+            <div class="action-col">
+              <div class="action-col-head">
+                <span class="label-clean">WITH GRAVITON</span>
+                <span id="clean-line-count">4 LINES (-99%)</span>
+              </div>
+              <div id="clean-code-view" class="action-code-pane clean"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. STAGE: 04 / THE EVIDENCE -->
+    <section id="evidence" class="section-stage-evidence">
+      <div class="section-evidence-wrap slide-reveal-up">
+        <div class="evidence-head-block">
+          <div class="section-tag">04 / The Evidence</div>
+          <h2>Measure your graviton <em>gains</em></h2>
+          <p>Real graviton gain output from a developer's daily use.</p>
+        </div>
+
+        <div class="evidence-duo-grid">
+          <div class="slide-reveal-left">
+            <div class="evidence-window">
+              <div class="evidence-window-top">
+                <div class="mac-dots">
+                  <span class="mac-dot" style="background: #ef4444;"></span>
+                  <span class="mac-dot" style="background: #f59e0b;"></span>
+                  <span class="mac-dot" style="background: #00f0ff;"></span>
+                </div>
+                <span style="color: #38bdf8;">$ graviton gain</span>
+                <span>10:31 · 03.03.26</span>
+              </div>
+              <div class="evidence-pre"><span style="color: var(--aqua);">⚡ GRAVITON Token Savings (Global Scope)</span>
 
 Total commands:     15728
 Input tokens:       146.3M
@@ -1755,25 +2002,25 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
 3. graviton read            1164    12.2M   22.7%    5ms   <span style="color: #38bdf8;">█████</span>
 4. graviton git diff          88     4.1M   66.9%   33ms   <span style="color: #38bdf8;">██</span>
 5. graviton test vitest      210     8.4M   91.2%  420ms   <span style="color: #38bdf8;">████</span></div>
-          </div>
-          <div class="evidence-footer-caption">
-            <span class="badge-pill-cyan">88.9% efficiency</span>
-            <p>After a few weeks of daily use: <strong>15,720 commands processed, 130M tokens saved.</strong></p>
-          </div>
-        </div>
-
-        <div class="slide-reveal-right">
-          <div class="evidence-window">
-            <div class="evidence-window-top">
-              <div class="mac-dots">
-                <span class="mac-dot" style="background: #ef4444;"></span>
-                <span class="mac-dot" style="background: #f59e0b;"></span>
-                <span class="mac-dot" style="background: #00f0ff;"></span>
-              </div>
-              <span style="color: #38bdf8;">$ graviton gain --all</span>
-              <span>Daily Breakdown (35 dailys)</span>
             </div>
-            <div class="evidence-pre"><span style="color: #94a3b8;">Date         Cmds    Input    Output     Saved  Saved%   Time</span>
+            <div class="evidence-footer-caption">
+              <span class="badge-pill-cyan">88.9% efficiency</span>
+              <p>After a few weeks of daily use: <strong>15,720 commands processed, 130M tokens saved.</strong></p>
+            </div>
+          </div>
+
+          <div class="slide-reveal-right">
+            <div class="evidence-window">
+              <div class="evidence-window-top">
+                <div class="mac-dots">
+                  <span class="mac-dot" style="background: #ef4444;"></span>
+                  <span class="mac-dot" style="background: #f59e0b;"></span>
+                  <span class="mac-dot" style="background: #00f0ff;"></span>
+                </div>
+                <span style="color: #38bdf8;">$ graviton gain --all</span>
+                <span>Daily Breakdown (35 dailys)</span>
+              </div>
+              <div class="evidence-pre"><span style="color: #94a3b8;">Date         Cmds    Input    Output     Saved  Saved%   Time</span>
 -------------------------------------------------------------
 2026-03-03    118     1.3M    129.2K      1.1M   89.5%   1.6s
 2026-03-02    1200    8.5M      1.7M      6.8M   80.2%   1.1s
@@ -1788,180 +2035,187 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
 2026-02-21    140   222.2K     18.4K    203.8K   91.8%   1.5s
 -------------------------------------------------------------
 <span style="color: var(--aqua); font-weight: 700;">TOTAL               146.3M     16.3M    130.0M   88.9% (Clean)</span></div>
-          </div>
-          <div class="evidence-footer-caption">
-            <span class="badge-pill-cyan">Per-command analytics</span>
-            <p>Daily, weekly and monthly stats by command. Run <code>graviton gain</code> to see yours.</p>
+            </div>
+            <div class="evidence-footer-caption">
+              <span class="badge-pill-cyan">Per-command analytics</span>
+              <p>Daily, weekly and monthly stats by command. Run <code>graviton gain</code> to see yours.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 05 / THE IMPACT -->
-    <section id="impact" class="section-impact-wrap slide-reveal-up">
-      <div class="impact-top-grid">
-        <div class="impact-left">
-          <div class="section-tag">05 / The Impact</div>
-          <h2>More <em>efficiency</em></h2>
-          <p>Less noise. More useful context. Fewer tokens.</p>
-        </div>
+    <!-- 7. STAGE: 05 / THE IMPACT -->
+    <section id="impact" class="section-stage-impact">
+      <div class="section-impact-wrap slide-reveal-up">
+        <div class="impact-top-grid">
+          <div class="impact-left">
+            <div class="section-tag">05 / The Impact</div>
+            <h2>More <em>efficiency</em></h2>
+            <p>Less noise. More useful context. Fewer tokens.</p>
+          </div>
 
-        <div class="impact-cards-trio">
-          <div class="impact-trio-card">
-            <div class="trio-icon-circle">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-              </svg>
+          <div class="impact-cards-trio">
+            <div class="impact-trio-card">
+              <div class="trio-icon-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                </svg>
+              </div>
+              <h3>Less noise</h3>
+              <p>Cleaner context window.</p>
             </div>
-            <h3>Less noise</h3>
-            <p>Cleaner context window.</p>
-          </div>
 
-          <div class="impact-trio-card">
-            <div class="trio-icon-circle">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
-              </svg>
+            <div class="impact-trio-card">
+              <div class="trio-icon-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+                </svg>
+              </div>
+              <h3>Better reasoning</h3>
+              <p>More relevant information reaches the agent.</p>
             </div>
-            <h3>Better reasoning</h3>
-            <p>More relevant information reaches the agent.</p>
-          </div>
 
-          <div class="impact-trio-card">
-            <div class="trio-icon-circle">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
+            <div class="impact-trio-card">
+              <div class="trio-icon-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3>Fewer tokens</h3>
+              <p>Less unnecessary output enters the context.</p>
             </div>
-            <h3>Fewer tokens</h3>
-            <p>Less unnecessary output enters the context.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="stack-strip-wrap">
-        <div class="stack-strip-title">WORKS WITH YOUR AI CODING STACK</div>
-        <div class="stack-logos-row">
-          <div class="stack-item"><span>✦</span> Antigravity CLI</div>
-          <div class="stack-item"><span>✱</span> Claude Code</div>
-          <div class="stack-item"><span>⬡</span> Cursor</div>
-          <div class="stack-item"><span>🐙</span> GitHub Copilot</div>
-          <div class="stack-item"><span>⚙</span> Codex</div>
-          <div class="stack-item"><span>✧</span> Gemini CLI</div>
-          <div class="stack-item"><span>≈</span> Windsurf</div>
-          <div class="stack-item"><span>□</span> Cline</div>
-          <div class="stack-item"><span>&lt;&gt;</span> OpenCode</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 06 / GET STARTED -->
-    <section id="get-started" class="section-get-started-wrap slide-reveal-up">
-      <div class="get-started-head">
-        <div class="section-tag">06 / Get Started</div>
-        <h2>Running in <em>30 seconds</em></h2>
-        <p>Install, activate the hook, and every command is compressed automatically.</p>
-      </div>
-
-      <div class="get-started-top-cards">
-        <div class="start-card-box">
-          <div>
-            <h3>Quick install</h3>
-            <p>One-liner for Windows, Linux & macOS.</p>
-          </div>
-          <div class="cmd-box-row">
-            <span>$ npm install -g @alatariz/graviton</span>
-            <button onclick="copyText('npm install -g @alatariz/graviton')">⧉</button>
           </div>
         </div>
 
-        <div class="start-card-box">
-          <div>
-            <h3>Direct Execution</h3>
-            <p>Run directly via npx zero-install.</p>
+        <div class="stack-strip-wrap">
+          <div class="stack-strip-title">WORKS WITH YOUR AI CODING STACK</div>
+          <div class="stack-logos-row">
+            <div class="stack-item"><span>✦</span> Antigravity CLI</div>
+            <div class="stack-item"><span>✱</span> Claude Code</div>
+            <div class="stack-item"><span>⬡</span> Cursor</div>
+            <div class="stack-item"><span>🐙</span> GitHub Copilot</div>
+            <div class="stack-item"><span>⚙</span> Codex</div>
+            <div class="stack-item"><span>✧</span> Gemini CLI</div>
+            <div class="stack-item"><span>≈</span> Windsurf</div>
+            <div class="stack-item"><span>□</span> Cline</div>
+            <div class="stack-item"><span>&lt;&gt;</span> OpenCode</div>
           </div>
-          <div class="cmd-box-row">
-            <span>$ npx @alatariz/graviton</span>
-            <button onclick="copyText('npx @alatariz/graviton')">⧉</button>
-          </div>
-        </div>
-
-        <div class="start-card-box">
-          <div>
-            <h3>Pre-built binaries</h3>
-            <p>macOS, Linux, Windows.</p>
-          </div>
-          <div style="margin-top: 1rem;">
-            <a href="https://github.com/alatariz/graviton/releases" target="_blank" style="color: var(--aqua); text-decoration: none; font-family: var(--font-mono); font-size: 0.85rem;">
-              Download from Releases ↗
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="hook-activation-box">
-        <div class="hook-title">Then activate the auto-rewrite hook</div>
-        <div class="hook-tabs">
-          <button class="hook-tab active">Antigravity</button>
-          <button class="hook-tab">Cursor</button>
-          <button class="hook-tab">Claude Code</button>
-          <button class="hook-tab">Other AI CLI</button>
-        </div>
-
-        <div class="hook-cmd-display">
-          <span>$ graviton init --global</span>
-          <button onclick="copyText('graviton init --global')" style="background:none; border:none; color:var(--text-dim); cursor:pointer;">⧉ Copy</button>
-        </div>
-
-        <div class="hook-desc-footer">
-          <span>Installs a pre-tool hook in Antigravity settings: every command call & prompt is rewritten automatically.</span>
-          <a href="/docs.html">Full install guide →</a>
         </div>
       </div>
     </section>
 
-    <!-- LIVE STUDIO PLAYGROUND -->
-    <section id="demo" class="section-studio-wrap slide-reveal-up">
-      <div class="section-tag">07 / Interactive Studio</div>
-      <h2 style="font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 2rem;">
-        Test the synthesis engine live
-      </h2>
-
-      <div class="studio-box-shell">
-        <div class="studio-topbar">
-          <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
-            graviton-v2.engine · Google Account ADC Linked · 0-Cost Tier
-          </span>
-          <button class="btn-see-how" onclick="loadSamplePrompt()" style="padding: 0.35rem 0.9rem;">
-            Load sample verbose prompt
-          </button>
+    <!-- 8. STAGE: 06 / GET STARTED -->
+    <section id="get-started" class="section-stage-get-started">
+      <div class="section-get-started-wrap slide-reveal-up">
+        <div class="get-started-head">
+          <div class="section-tag">06 / Get Started</div>
+          <h2>Running in <em>30 seconds</em></h2>
+          <p>Install, activate the hook, and every command is compressed automatically.</p>
         </div>
 
-        <div class="studio-split-panes">
-          <div class="studio-pane">
-            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
-              <span>Developer Input (Raw)</span>
-              <span id="studio-in-tokens">0 tokens</span>
+        <div class="get-started-top-cards">
+          <div class="start-card-box">
+            <div>
+              <h3>Quick install</h3>
+              <p>One-liner for Windows, Linux & macOS.</p>
             </div>
-            <textarea id="studio-in-text" class="studio-input" placeholder="Type or paste verbose prompt / raw terminal output..."></textarea>
+            <div class="cmd-box-row">
+              <span>$ npm install -g @alatariz/graviton</span>
+              <button onclick="copyText('npm install -g @alatariz/graviton')">⧉</button>
+            </div>
           </div>
 
-          <div class="studio-pane">
-            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
-              <span>Graviton Synthesized (Clean)</span>
-              <span id="studio-out-tokens" style="color: var(--aqua);">0 tokens</span>
+          <div class="start-card-box">
+            <div>
+              <h3>Direct Execution</h3>
+              <p>Run directly via npx zero-install.</p>
             </div>
-            <div id="studio-out-text" class="studio-output">// Press Ctrl+Enter or click "Synthesize" to run...</div>
+            <div class="cmd-box-row">
+              <span>$ npx @alatariz/graviton</span>
+              <button onclick="copyText('npx @alatariz/graviton')">⧉</button>
+            </div>
+          </div>
+
+          <div class="start-card-box">
+            <div>
+              <h3>Pre-built binaries</h3>
+              <p>macOS, Linux, Windows.</p>
+            </div>
+            <div style="margin-top: 1rem;">
+              <a href="https://github.com/alatariz/graviton/releases" target="_blank" style="color: var(--aqua); text-decoration: none; font-family: var(--font-mono); font-size: 0.85rem;">
+                Download from Releases ↗
+              </a>
+            </div>
           </div>
         </div>
 
-        <div class="studio-bottombar">
-          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim);">
-            Auto-copies to clipboard on synthesis · Continuous Auto-Allow Ready
+        <div class="hook-activation-box">
+          <div class="hook-title">Then activate the auto-rewrite hook</div>
+          <div class="hook-tabs">
+            <button class="hook-tab active">Antigravity</button>
+            <button class="hook-tab">Cursor</button>
+            <button class="hook-tab">Claude Code</button>
+            <button class="hook-tab">Other AI CLI</button>
           </div>
-          <button class="btn-synthesize-run" onclick="executeStudioSynthesize()">
-            <span>Synthesize & Prune (Ctrl+Enter)</span>
-          </button>
+
+          <div class="hook-cmd-display">
+            <span>$ graviton init --global</span>
+            <button onclick="copyText('graviton init --global')" style="background:none; border:none; color:var(--text-dim); cursor:pointer;">⧉ Copy</button>
+          </div>
+
+          <div class="hook-desc-footer">
+            <span>Installs a pre-tool hook in Antigravity settings: every command call & prompt is rewritten automatically.</span>
+            <a href="/docs.html">Full install guide →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. STAGE: 07 / LIVE STUDIO PLAYGROUND -->
+    <section id="demo" class="section-stage-studio">
+      <div class="section-studio-wrap slide-reveal-up">
+        <div class="section-tag">07 / Interactive Studio</div>
+        <h2 style="font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 2rem;">
+          Test the synthesis engine live
+        </h2>
+
+        <div class="studio-box-shell">
+          <div class="studio-topbar">
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc;">
+              graviton-v2.engine · Google Account ADC Linked · 0-Cost Tier
+            </span>
+            <button class="btn-see-how" onclick="loadSamplePrompt()" style="padding: 0.35rem 0.9rem;">
+              Load sample verbose prompt
+            </button>
+          </div>
+
+          <div class="studio-split-panes">
+            <div class="studio-pane">
+              <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+                <span>Developer Input (Raw)</span>
+                <span id="studio-in-tokens">0 tokens</span>
+              </div>
+              <textarea id="studio-in-text" class="studio-input" placeholder="Type or paste verbose prompt / raw terminal output..."></textarea>
+            </div>
+
+            <div class="studio-pane">
+              <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+                <span>Graviton Synthesized (Clean)</span>
+                <span id="studio-out-tokens" style="color: var(--aqua);">0 tokens</span>
+              </div>
+              <div id="studio-out-text" class="studio-output">// Press Ctrl+Enter or click "Synthesize" to run...</div>
+            </div>
+          </div>
+
+          <div class="studio-bottombar">
+            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim);">
+              Auto-copies to clipboard on synthesis · Continuous Auto-Allow Ready
+            </div>
+            <button class="btn-synthesize-run" onclick="executeStudioSynthesize()">
+              <span>Synthesize & Prune (Ctrl+Enter)</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -2026,12 +2280,89 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       showToast('✔ Copied: ' + str);
     }
 
-    function focusStudioOrSearch() {
-      const demo = document.getElementById('demo');
-      if (demo) {
-        demo.scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('studio-in-text').focus();
+    // SEARCH MODAL FUNCTIONALITY
+    const searchModal = document.getElementById('searchModal');
+    const spotlightInput = document.getElementById('spotlightInput');
+    const searchResultsList = document.getElementById('searchResultsList');
+
+    function openSearchModal() {
+      if (searchModal) {
+        searchModal.showModal();
+        if (spotlightInput) {
+          spotlightInput.value = '';
+          spotlightInput.focus();
+        }
       }
+    }
+
+    function closeSearchModal() {
+      if (searchModal && searchModal.open) {
+        searchModal.close();
+      }
+    }
+
+    // Light dismiss when clicking backdrop
+    if (searchModal) {
+      searchModal.addEventListener('click', (e) => {
+        const rect = searchModal.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+          closeSearchModal();
+        }
+      });
+    }
+
+    // Global keyboard shortcut: Ctrl+K or Cmd+K
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+      }
+      if (e.key === 'Escape' && searchModal && searchModal.open) {
+        closeSearchModal();
+      }
+    });
+
+    // Live search filter inside spotlight
+    const SEARCH_ITEMS = [
+      { title: 'Quick Install & Setup', sub: 'npm install -g @alatariz/graviton or npx', link: '/#get-started', badge: 'Install', icon: '⚡' },
+      { title: 'See It In Action (Benchmarks)', sub: 'Compare raw terminal noise vs. 99% pruned clean context', link: '/#action', badge: 'Compare', icon: '⇄' },
+      { title: 'graviton gain CLI Audit', sub: 'Real-world developer token savings and efficiency meter', link: '/#evidence', badge: 'Evidence', icon: '📊' },
+      { title: 'Antigravity Skill Matrix Unlocker', sub: 'Modern Web, BigQuery ETL, Flutter, and Testing directives', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
+      { title: 'Interactive Live Studio', sub: 'Test prompt synthesis live and copy clean prompts', link: '/#demo', badge: 'Studio', icon: '🧪' },
+      { title: 'Continuous Auto-Allow Relay', sub: '--dangerously-skip-permissions unblocking Antigravity', link: '/docs.html#auto-allow', badge: 'Docs', icon: '🛡️' },
+      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing and zero telemetry', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' },
+      { title: 'Architecture & Specifications', sub: 'Developer specs, overhead < 0.5ms, and proxy architecture', link: '/#solution', badge: 'Specs', icon: '📐' }
+    ];
+
+    if (spotlightInput) {
+      spotlightInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!searchResultsList) return;
+
+        const filtered = SEARCH_ITEMS.filter(item => 
+          item.title.toLowerCase().includes(query) || item.sub.toLowerCase().includes(query) || item.badge.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+          searchResultsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+          return;
+        }
+
+        searchResultsList.innerHTML = filtered.map(item => \`
+          <a href="\${item.link}" class="search-result-item" onclick="closeSearchModal()">
+            <span class="res-icon">\${item.icon}</span>
+            <div class="res-body">
+              <div class="res-title">\${item.title}</div>
+              <div class="res-sub">\${item.sub}</div>
+            </div>
+            <span class="res-badge">\${item.badge}</span>
+          </a>
+        \`).join('');
+      });
     }
 
     // SCROLL SLIDE-IN REVEAL OBSERVER WITH IMMEDIATE FALLBACK
@@ -2081,10 +2412,10 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       const cols = 24;
       const rows = 12;
       const drops = [
-        { col: 3, row: 0, speed: 0.15 },
-        { col: 8, row: 2, speed: 0.2 },
-        { col: 14, row: 5, speed: 0.18 },
-        { col: 19, row: 1, speed: 0.22 }
+        { col: 3, row: 0, speed: 0.12 },
+        { col: 8, row: 2, speed: 0.16 },
+        { col: 14, row: 5, speed: 0.14 },
+        { col: 19, row: 1, speed: 0.18 }
       ];
 
       function renderMatrix() {
@@ -2095,7 +2426,7 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
           if (drop.row > rows) {
             drop.row = 0;
             drop.col = Math.floor(Math.random() * cols);
-            drop.speed = 0.12 + Math.random() * 0.15;
+            drop.speed = 0.1 + Math.random() * 0.12;
           }
         }
 
@@ -2123,7 +2454,7 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       renderMatrix();
     }
 
-    // ACTION TAB PRESETS (WITHOUT LITERAL BACKTICK COLLISIONS)
+    // ACTION TAB PRESETS
     const ACTION_PRESETS = {
       command: {
         rawLines: '1,042 LINES',
@@ -2212,7 +2543,7 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
 </html>
 `;
 
-// 3. Build docs.html with the identical navbar and aquamarine palette
+// 3. Build docs.html with the identical navbar, search modal, and aquamarine styling
 const buildDocsHtml = () => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2248,16 +2579,16 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       }
     }
     ::view-transition-old(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
     }
     ::view-transition-new(root) {
-      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
+      animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
     }
     @keyframes pageSlideOut {
-      to { transform: translateX(-30px); opacity: 0; }
+      to { transform: translateX(-40px); opacity: 0; }
     }
     @keyframes pageSlideIn {
-      from { transform: translateX(30px); opacity: 0; }
+      from { transform: translateX(40px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
@@ -2276,15 +2607,17 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(4, 7, 17, 0.85);
+      height: 68px;
+      background: rgba(4, 7, 17, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
     .nav-inner {
       max-width: 1400px;
+      height: 100%;
       margin: 0 auto;
-      padding: 0.8rem 2rem;
+      padding: 0 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2312,10 +2645,11 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       background: rgba(56, 189, 248, 0.04);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.4rem 0.95rem;
+      padding: 0.45rem 1rem;
       font-size: 0.8rem;
       color: var(--text-dim);
       cursor: pointer;
+      font-family: inherit;
       transition: all 0.25s;
     }
     .nav-search-bar:hover {
@@ -2363,7 +2697,7 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 0.45rem;
-      padding: 0.4rem 0.85rem;
+      padding: 0.42rem 0.9rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(56, 189, 248, 0.03);
@@ -2386,7 +2720,7 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       background: rgba(0, 240, 255, 0.08);
       border: 1px solid var(--aqua);
       color: var(--aqua);
-      padding: 0.45rem 1.1rem;
+      padding: 0.45rem 1.15rem;
       border-radius: 999px;
       font-size: 0.82rem;
       font-weight: 600;
@@ -2399,20 +2733,122 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       box-shadow: 0 0 20px var(--aqua-glow);
     }
 
+    /* SEARCH MODAL */
+    .search-dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      background: transparent;
+      border: none;
+      padding: 0;
+      z-index: 99999;
+      outline: none;
+    }
+    .search-dialog::backdrop {
+      background: rgba(2, 4, 10, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .search-dialog-box {
+      background: #060b19;
+      border: 1px solid var(--aqua);
+      border-radius: 16px;
+      width: 580px;
+      max-width: 92vw;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.2);
+      overflow: hidden;
+      animation: searchModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes searchModalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      color: #fff;
+      font-family: inherit;
+    }
+    .search-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+    .search-results-list {
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+    .search-result-item:hover {
+      background: rgba(0, 240, 255, 0.08);
+      border-left: 2px solid var(--aqua);
+    }
+    .res-icon { font-size: 1.2rem; }
+    .res-body { flex: 1; }
+    .res-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .res-sub { font-size: 0.78rem; color: var(--text-dim); }
+    .res-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--aqua);
+      background: rgba(0, 240, 255, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .search-footer-hint {
+      padding: 0.75rem 1.4rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .search-footer-hint kbd {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      color: var(--text-dim);
+    }
+
     /* DOCS 3-COLUMN LAYOUT */
     .docs-container {
       max-width: 1400px;
       margin: 0 auto;
       display: grid;
       grid-template-columns: 260px 1fr 240px;
-      min-height: calc(100vh - 65px);
+      min-height: calc(100vh - 68px);
     }
     .sidebar-left {
       border-right: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 65px;
-      height: calc(100vh - 65px);
+      top: 68px;
+      height: calc(100vh - 68px);
       overflow-y: auto;
     }
     .sidebar-title {
@@ -2514,8 +2950,8 @@ const buildDocsHtml = () => `<!DOCTYPE html>
       border-left: 1px solid var(--border);
       padding: 2.5rem 1.5rem;
       position: sticky;
-      top: 65px;
-      height: calc(100vh - 65px);
+      top: 68px;
+      height: calc(100vh - 68px);
     }
     .toc-title {
       font-family: var(--font-mono);
@@ -2544,7 +2980,7 @@ const buildDocsHtml = () => `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  ${sharedHeaderHtml('docs')}
+  ${sharedHeaderAndSearch('docs')}
 
   <div class="docs-container">
     <aside class="sidebar-left">
@@ -2662,10 +3098,91 @@ Intent: "buat mobile app widget"
       <a href="#privacy" class="toc-link">Privacy & Redaction</a>
     </aside>
   </div>
+
+  <script>
+    const searchModal = document.getElementById('searchModal');
+    const spotlightInput = document.getElementById('spotlightInput');
+    const searchResultsList = document.getElementById('searchResultsList');
+
+    function openSearchModal() {
+      if (searchModal) {
+        searchModal.showModal();
+        if (spotlightInput) {
+          spotlightInput.value = '';
+          spotlightInput.focus();
+        }
+      }
+    }
+
+    function closeSearchModal() {
+      if (searchModal && searchModal.open) {
+        searchModal.close();
+      }
+    }
+
+    if (searchModal) {
+      searchModal.addEventListener('click', (e) => {
+        const rect = searchModal.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) closeSearchModal();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+      }
+      if (e.key === 'Escape' && searchModal && searchModal.open) {
+        closeSearchModal();
+      }
+    });
+
+    const SEARCH_ITEMS = [
+      { title: 'Quick Install & Setup', sub: 'npm install -g @alatariz/graviton or npx', link: '/#get-started', badge: 'Install', icon: '⚡' },
+      { title: 'See It In Action (Benchmarks)', sub: 'Compare raw terminal noise vs. 99% pruned clean context', link: '/#action', badge: 'Compare', icon: '⇄' },
+      { title: 'graviton gain CLI Audit', sub: 'Real-world developer token savings and efficiency meter', link: '/#evidence', badge: 'Evidence', icon: '📊' },
+      { title: 'Antigravity Skill Matrix Unlocker', sub: 'Modern Web, BigQuery ETL, Flutter, and Testing directives', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
+      { title: 'Interactive Live Studio', sub: 'Test prompt synthesis live and copy clean prompts', link: '/#demo', badge: 'Studio', icon: '🧪' },
+      { title: 'Continuous Auto-Allow Relay', sub: '--dangerously-skip-permissions unblocking Antigravity', link: '/docs.html#auto-allow', badge: 'Docs', icon: '🛡️' },
+      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing and zero telemetry', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' },
+      { title: 'Architecture & Specifications', sub: 'Developer specs, overhead < 0.5ms, and proxy architecture', link: '/#solution', badge: 'Specs', icon: '📐' }
+    ];
+
+    if (spotlightInput) {
+      spotlightInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!searchResultsList) return;
+
+        const filtered = SEARCH_ITEMS.filter(item => 
+          item.title.toLowerCase().includes(query) || item.sub.toLowerCase().includes(query) || item.badge.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+          searchResultsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+          return;
+        }
+
+        searchResultsList.innerHTML = filtered.map(item => \`
+          <a href="\${item.link}" class="search-result-item" onclick="closeSearchModal()">
+            <span class="res-icon">\${item.icon}</span>
+            <div class="res-body">
+              <div class="res-title">\${item.title}</div>
+              <div class="res-sub">\${item.sub}</div>
+            </div>
+            <span class="res-badge">\${item.badge}</span>
+          </a>
+        \`).join('');
+      });
+    }
+  </script>
 </body>
 </html>
 `;
 
 fs.writeFileSync('public/index.html', buildIndexHtml(), 'utf8');
 fs.writeFileSync('public/docs.html', buildDocsHtml(), 'utf8');
-console.log('Successfully generated clean, bug-free public/index.html and public/docs.html');
+console.log('Successfully generated public/index.html and public/docs.html with per-page rhythm and interactive spotlight search!');
