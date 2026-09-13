@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" fill="none">
+// make-totem.mjs
+import fs from 'fs';
+
+const totemSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" fill="none">
   <defs>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="3" result="blur" />
@@ -72,4 +75,7 @@
     <!-- Bottom Pendulum Node -->
     <circle cx="80" cy="188" r="3" fill="#34d399" stroke="#fff" stroke-width="1" />
   </g>
-</svg>
+</svg>`;
+
+fs.writeFileSync('public/icon.svg', totemSvg, 'utf8');
+console.log('High-end Graviton cybernetic totem generated at public/icon.svg');

@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+// generate-luxury-site.mjs - Builds the ultimate RTK-grade luxury landing page for GRAVITON
+import fs from 'fs';
+import path from 'path';
+
+const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2055,7 +2059,7 @@ Efficiency meter:   <span style="background: var(--emerald); color: #022c22; fon
       command: {
         rawLines: '1,042 LINES',
         cleanLines: '4 LINES (-99%)',
-        raw: `$ cargo build
+        raw: \`$ cargo build
    Compiling libc v0.2.155
    Compiling proc-macro2 v1.0.85
    Compiling unicode-ident v1.0.12
@@ -2063,23 +2067,23 @@ Efficiency meter:   <span style="background: var(--emerald); color: #022c22; fon
    Compiling syn v2.0.66
    Compiling cfg-if v1.0.0
    Compiling once_cell v1.19.0
-warning: unused variable: `raw`
+warning: unused variable: \`raw\`
   --> src/filter.rs:214:9
-warning: field is never read: `depth`
+warning: field is never read: \`depth\`
   --> src/tree.rs:87:5
    Compiling serde v1.0.197
    Compiling anyhow v1.0.79
 ... 1,028 more lines ...
-Finished dev [unoptimized] in 32.48s`,
-        clean: `$ rtk cargo build
+Finished dev [unoptimized] in 32.48s\`,
+        clean: \`$ rtk cargo build
 ✔ build finished in 32.4s
 · 214 crates compiled
-· 2 warnings: filter.rs:214, tree.rs:87`
+· 2 warnings: filter.rs:214, tree.rs:87\`
       },
       tests: {
         rawLines: '468 LINES',
         cleanLines: '2 LINES (-99%)',
-        raw: `> vitest run --reporter=verbose
+        raw: \`> vitest run --reporter=verbose
 
  RUN  v1.4.0 C:/projects/graviton
  ✓ test/pipeline.test.js (12 tests) 48ms
@@ -2092,15 +2096,15 @@ Finished dev [unoptimized] in 32.48s`,
 ... 450 lines of callstacks and trace dumps ...
 Test Files  1 passed (1)
 Tests  12 passed (12)
-Duration  480ms`,
-        clean: `$ graviton test
+Duration  480ms\`,
+        clean: \`$ graviton test
 ✔ 12/12 tests passed (vitest 480ms)
-Coverage: 96.4% Stmts | 88.2% Branch | 100% Funcs`
+Coverage: 96.4% Stmts | 88.2% Branch | 100% Funcs\`
       },
       git: {
         rawLines: '64 LINES',
         cleanLines: '5 LINES (-92%)',
-        raw: `On branch main
+        raw: \`On branch main
 Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
@@ -2115,39 +2119,39 @@ Untracked files:
 	temp_cache.log
 	node_modules/.cache/
 
-no changes added to commit (use "git add" to track)`,
-        clean: `$ graviton git status
+no changes added to commit (use "git add" to track)\`,
+        clean: \`$ graviton git status
 M package.json
 M src/server.js
 M public/index.html
-?? temp_cache.log`
+?? temp_cache.log\`
       },
       skills: {
         rawLines: '52 TOKENS (RAW)',
         cleanLines: '108 TOKENS (+DIRECTIVES)',
-        raw: `Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!`,
-        clean: `[Workspace: Node.js / JavaScript @ C:\\projects]
+        raw: \`Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!\`,
+        clean: \`[Workspace: Node.js / JavaScript @ C:\\\\projects]
 [Antigravity Skill Activated: bigquery-sql & data-autocleaning]
 
 **Tujuan Utama:**
-Implementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent).`
+Implementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent).\`
       },
       files: {
         rawLines: '180 LINES',
         cleanLines: '8 LINES (-95%)',
-        raw: `drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .
+        raw: \`drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .
 drwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..
 -rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json
 -rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md
 drwxr-xr-x   6 user  staff   192 Mar  3 10:14 src
 drwxr-xr-x   4 user  staff   128 Mar  3 10:14 public
 drwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules
-... 160 more files ...`,
-        clean: `$ graviton ls
+... 160 more files ...\`,
+        clean: \`$ graviton ls
 src/           (6 files)
 public/        (4 files)
 package.json   1.2KB
-README.md      284B`
+README.md      284B\`
       }
     };
 
@@ -2167,23 +2171,23 @@ README.md      284B`
 
     // LIVE STUDIO LOGIC
     function loadSamplePrompt() {
-      document.getElementById('studio-in-text').value = `Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.
+      document.getElementById('studio-in-text').value = \`Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.
 Kodenya seperti ini:
 
-```javascript
+\`\`\`javascript
 export async function verifyUser(req, res) {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).json({ error: 'Missing' });
 }
-```
+\`\`\`
 
-Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!`;
+Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!\`;
       updateStudioTokens();
     }
 
     function updateStudioTokens() {
       const val = document.getElementById('studio-in-text').value;
-      document.getElementById('studio-in-tokens').innerText = `${Math.round(val.length / 3.8)} tokens`;
+      document.getElementById('studio-in-tokens').innerText = \`\${Math.round(val.length / 3.8)} tokens\`;
     }
 
     document.getElementById('studio-in-text').addEventListener('input', updateStudioTokens);
@@ -2204,9 +2208,9 @@ Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasi
         const data = await res.json();
         if (data.optimizedText) {
           document.getElementById('studio-out-text').innerText = data.optimizedText;
-          document.getElementById('studio-out-tokens').innerText = `${data.stats.optimizedTokens} tokens`;
+          document.getElementById('studio-out-tokens').innerText = \`\${data.stats.optimizedTokens} tokens\`;
           navigator.clipboard.writeText(data.optimizedText);
-          showToast(`✔ Synthesized & Copied to clipboard (- ${data.stats.percentSaved}% saved)`);
+          showToast(\`✔ Synthesized & Copied to clipboard (- \${data.stats.percentSaved}% saved)\`);
         }
       } catch (e) {
         showToast('Error: ' + e.message);
@@ -2215,3 +2219,7 @@ Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasi
   </script>
 </body>
 </html>
+`;
+
+fs.writeFileSync('public/index.html', htmlContent, 'utf8');
+console.log('Luxury landing page written to public/index.html. Total bytes:', htmlContent.length);
