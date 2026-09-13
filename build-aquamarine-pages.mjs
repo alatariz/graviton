@@ -1,4 +1,51 @@
-<!DOCTYPE html>
+// build-aquamarine-pages.mjs - Rebuilds index.html and docs.html with Diamond Blue/Aquamarine theme, smooth slide scroll animations, and identical navbar
+import fs from 'fs';
+
+// 1. Shared Global Styles & Navbar
+const sharedHeaderHtml = (activePage = 'product') => `
+  <!-- STICKY UNIFIED LUXURY NAVBAR -->
+  <header class="global-navbar">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="/" class="nav-logo-wrap">
+          <img src="/icon.svg" alt="Graviton Singularity Logo">
+          <span>GRAVITON</span>
+        </a>
+        <div class="nav-search-bar" onclick="focusStudioOrSearch()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Search docs & commands...</span>
+          <kbd>Ctrl K</kbd>
+        </div>
+      </div>
+
+      <nav class="nav-center-links">
+        <a href="/#how-it-works" class="${activePage === 'product' ? 'active' : ''}">Product ▾</a>
+        <a href="/docs.html" class="${activePage === 'docs' ? 'active' : ''}">Docs</a>
+        <a href="/#solution">Architecture</a>
+        <a href="/#action">Benchmarks</a>
+        <a href="/#demo">Live Studio</a>
+      </nav>
+
+      <div class="nav-right">
+        <a href="https://github.com/alatariz/graviton" target="_blank" class="nav-gh-stars">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>alatariz/graviton</span>
+          <span class="stars-num">★ 80.2k</span>
+        </a>
+        <a href="/#get-started" class="btn-nav-install">
+          <span>Install Graviton →</span>
+        </a>
+      </div>
+    </div>
+  </header>
+`;
+
+// 2. Build index.html
+const buildIndexHtml = () => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1385,47 +1432,7 @@
 <body>
   <div class="viewport-grid"></div>
 
-  
-  <!-- STICKY UNIFIED LUXURY NAVBAR -->
-  <header class="global-navbar">
-    <div class="nav-inner">
-      <div class="nav-left">
-        <a href="/" class="nav-logo-wrap">
-          <img src="/icon.svg" alt="Graviton Singularity Logo">
-          <span>GRAVITON</span>
-        </a>
-        <div class="nav-search-bar" onclick="focusStudioOrSearch()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <span>Search docs & commands...</span>
-          <kbd>Ctrl K</kbd>
-        </div>
-      </div>
-
-      <nav class="nav-center-links">
-        <a href="/#how-it-works" class="active">Product ▾</a>
-        <a href="/docs.html" class="">Docs</a>
-        <a href="/#solution">Architecture</a>
-        <a href="/#action">Benchmarks</a>
-        <a href="/#demo">Live Studio</a>
-      </nav>
-
-      <div class="nav-right">
-        <a href="https://github.com/alatariz/graviton" target="_blank" class="nav-gh-stars">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          <span>alatariz/graviton</span>
-          <span class="stars-num">★ 80.2k</span>
-        </a>
-        <a href="/#get-started" class="btn-nav-install">
-          <span>Install Graviton →</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
+  ${sharedHeaderHtml('product')}
 
   <main>
     <!-- HERO TOP INTRO WITH LASER AXIS & ORIGINAL GRAVITATIONAL SINGULARITY TOTEM -->
@@ -2096,7 +2103,7 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       command: {
         rawLines: '1,042 LINES',
         cleanLines: '4 LINES (-99%)',
-        raw: `$ cargo build
+        raw: \`$ cargo build
    Compiling libc v0.2.155
    Compiling proc-macro2 v1.0.85
    Compiling unicode-ident v1.0.12
@@ -2104,23 +2111,23 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
    Compiling syn v2.0.66
    Compiling cfg-if v1.0.0
    Compiling once_cell v1.19.0
-warning: unused variable: `raw`
+warning: unused variable: \`raw\`
   --> src/filter.rs:214:9
-warning: field is never read: `depth`
+warning: field is never read: \`depth\`
   --> src/tree.rs:87:5
    Compiling serde v1.0.197
    Compiling anyhow v1.0.79
 ... 1,028 more lines ...
-Finished dev [unoptimized] in 32.48s`,
-        clean: `$ rtk cargo build
+Finished dev [unoptimized] in 32.48s\`,
+        clean: \`$ rtk cargo build
 ✔ build finished in 32.4s
 · 214 crates compiled
-· 2 warnings: filter.rs:214, tree.rs:87`
+· 2 warnings: filter.rs:214, tree.rs:87\`
       },
       tests: {
         rawLines: '468 LINES',
         cleanLines: '2 LINES (-99%)',
-        raw: `> vitest run --reporter=verbose
+        raw: \`> vitest run --reporter=verbose
 
  RUN  v1.4.0 C:/projects/graviton
  ✓ test/pipeline.test.js (12 tests) 48ms
@@ -2133,15 +2140,15 @@ Finished dev [unoptimized] in 32.48s`,
 ... 450 lines of callstacks and trace dumps ...
 Test Files  1 passed (1)
 Tests  12 passed (12)
-Duration  480ms`,
-        clean: `$ graviton test
+Duration  480ms\`,
+        clean: \`$ graviton test
 ✔ 12/12 tests passed (vitest 480ms)
-Coverage: 96.4% Stmts | 88.2% Branch | 100% Funcs`
+Coverage: 96.4% Stmts | 88.2% Branch | 100% Funcs\`
       },
       git: {
         rawLines: '64 LINES',
         cleanLines: '5 LINES (-92%)',
-        raw: `On branch main
+        raw: \`On branch main
 Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
@@ -2156,39 +2163,39 @@ Untracked files:
 	temp_cache.log
 	node_modules/.cache/
 
-no changes added to commit (use "git add" to track)`,
-        clean: `$ graviton git status
+no changes added to commit (use "git add" to track)\`,
+        clean: \`$ graviton git status
 M package.json
 M src/server.js
 M public/index.html
-?? temp_cache.log`
+?? temp_cache.log\`
       },
       skills: {
         rawLines: '52 TOKENS (RAW)',
         cleanLines: '108 TOKENS (+DIRECTIVES)',
-        raw: `Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!`,
-        clean: `[Workspace: Node.js / JavaScript @ C:\\projects]
+        raw: \`Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!\`,
+        clean: \`[Workspace: Node.js / JavaScript @ C:\\\\projects]
 [Antigravity Skill Activated: bigquery-sql & data-autocleaning]
 
 **Tujuan Utama:**
-Implementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent).`
+Implementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent).\`
       },
       files: {
         rawLines: '180 LINES',
         cleanLines: '8 LINES (-95%)',
-        raw: `drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .
+        raw: \`drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .
 drwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..
 -rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json
 -rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md
 drwxr-xr-x   6 user  staff   192 Mar  3 10:14 src
 drwxr-xr-x   4 user  staff   128 Mar  3 10:14 public
 drwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules
-... 160 more files ...`,
-        clean: `$ graviton ls
+... 160 more files ...\`,
+        clean: \`$ graviton ls
 src/           (6 files)
 public/        (4 files)
 package.json   1.2KB
-README.md      284B`
+README.md      284B\`
       }
     };
 
@@ -2207,23 +2214,23 @@ README.md      284B`
 
     // LIVE STUDIO SCRIPT
     function loadSamplePrompt() {
-      document.getElementById('studio-in-text').value = `Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.
+      document.getElementById('studio-in-text').value = \`Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.
 Kodenya seperti ini:
 
-```javascript
+\`\`\`javascript
 export async function verifyUser(req, res) {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).json({ error: 'Missing' });
 }
-```
+\`\`\`
 
-Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!`;
+Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!\`;
       updateStudioTokens();
     }
 
     function updateStudioTokens() {
       const val = document.getElementById('studio-in-text').value;
-      document.getElementById('studio-in-tokens').innerText = `${Math.round(val.length / 3.8)} tokens`;
+      document.getElementById('studio-in-tokens').innerText = \`\${Math.round(val.length / 3.8)} tokens\`;
     }
 
     document.getElementById('studio-in-text').addEventListener('input', updateStudioTokens);
@@ -2244,9 +2251,9 @@ Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasi
         const data = await res.json();
         if (data.optimizedText) {
           document.getElementById('studio-out-text').innerText = data.optimizedText;
-          document.getElementById('studio-out-tokens').innerText = `${data.stats.optimizedTokens} tokens`;
+          document.getElementById('studio-out-tokens').innerText = \`\${data.stats.optimizedTokens} tokens\`;
           navigator.clipboard.writeText(data.optimizedText);
-          showToast(`✔ Synthesized & Copied to clipboard (- ${data.stats.percentSaved}% saved)`);
+          showToast(\`✔ Synthesized & Copied to clipboard (- \${data.stats.percentSaved}% saved)\`);
         }
       } catch (e) {
         showToast('Error: ' + e.message);
@@ -2255,3 +2262,462 @@ Saat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasi
   </script>
 </body>
 </html>
+`;
+
+// 3. Build docs.html with the identical navbar and aquamarine palette
+const buildDocsHtml = () => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — GRAVITON</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #040711;
+      --bg-surface: #060c1d;
+      --bg-card: rgba(8, 16, 34, 0.7);
+      --border: rgba(56, 189, 248, 0.12);
+      --border-light: rgba(56, 189, 248, 0.22);
+      --text-main: #f1f5f9;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --aqua: #00f0ff;
+      --aqua-bright: #38bdf8;
+      --aqua-ice: #bae6fd;
+      --aqua-glow: rgba(0, 240, 255, 0.28);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      @view-transition {
+        navigation: auto;
+      }
+    }
+    ::view-transition-old(root) {
+      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut;
+    }
+    ::view-transition-new(root) {
+      animation: 0.35s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn;
+    }
+    @keyframes pageSlideOut {
+      to { transform: translateX(-30px); opacity: 0; }
+    }
+    @keyframes pageSlideIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* GLOBAL NAVBAR (IDENTICAL TO INDEX.HTML) */
+    .global-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(4, 7, 17, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0.8rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+    .nav-left { display: flex; align-items: center; gap: 1.8rem; }
+    .nav-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+    }
+    .nav-logo-wrap img {
+      width: 28px; height: 28px;
+      filter: drop-shadow(0 0 10px var(--aqua-glow));
+    }
+    .nav-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(56, 189, 248, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.4rem 0.95rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .nav-search-bar:hover {
+      border-color: var(--aqua);
+      background: rgba(0, 240, 255, 0.08);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+    }
+    .nav-search-bar kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--aqua-ice);
+    }
+    .nav-center-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      font-size: 0.88rem;
+    }
+    .nav-center-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-center-links a:hover { color: #fff; }
+    .nav-center-links a.active { color: #fff; font-weight: 600; }
+    .nav-center-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--aqua);
+      box-shadow: 0 0 8px var(--aqua);
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-gh-stars {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(56, 189, 248, 0.03);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-gh-stars:hover {
+      color: #fff;
+      border-color: var(--aqua);
+      background: rgba(0, 240, 255, 0.06);
+    }
+    .nav-gh-stars .stars-num { color: var(--aqua); font-weight: 600; }
+    .btn-nav-install {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid var(--aqua);
+      color: var(--aqua);
+      padding: 0.45rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s;
+    }
+    .btn-nav-install:hover {
+      background: var(--aqua);
+      color: #021526;
+      box-shadow: 0 0 20px var(--aqua-glow);
+    }
+
+    /* DOCS 3-COLUMN LAYOUT */
+    .docs-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px 1fr 240px;
+      min-height: calc(100vh - 65px);
+    }
+    .sidebar-left {
+      border-right: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      position: sticky;
+      top: 65px;
+      height: calc(100vh - 65px);
+      overflow-y: auto;
+    }
+    .sidebar-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--aqua);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.8rem;
+    }
+    .sidebar-group { margin-bottom: 2rem; }
+    .sidebar-links a {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-bottom: 0.2rem;
+      transition: all 0.2s;
+    }
+    .sidebar-links a:hover {
+      color: #fff;
+      background: rgba(56, 189, 248, 0.06);
+    }
+    .sidebar-links a.active {
+      color: var(--aqua);
+      background: rgba(0, 240, 255, 0.1);
+      font-weight: 600;
+    }
+
+    .docs-content {
+      padding: 3rem 4rem 6rem;
+      max-width: 860px;
+    }
+    .docs-h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.6rem;
+    }
+    .docs-subtitle {
+      font-size: 1.15rem;
+      color: var(--aqua-bright);
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+    .docs-lead {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      margin-bottom: 2rem;
+    }
+    .callout-box {
+      background: rgba(0, 240, 255, 0.04);
+      border-left: 3px solid var(--aqua);
+      padding: 1.2rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+    }
+    .callout-box code {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--aqua);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .docs-h2 {
+      font-size: 1.7rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 3rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .docs-p {
+      color: var(--text-dim);
+      margin-bottom: 1.2rem;
+      line-height: 1.7;
+    }
+    .code-block {
+      background: #02050e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--aqua-ice);
+      margin-bottom: 2rem;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    .sidebar-right {
+      border-left: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      position: sticky;
+      top: 65px;
+      height: calc(100vh - 65px);
+    }
+    .toc-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 1rem;
+    }
+    .toc-link {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      text-decoration: none;
+      margin-bottom: 0.6rem;
+      transition: color 0.2s;
+    }
+    .toc-link:hover { color: var(--aqua); }
+
+    @media (max-width: 1024px) {
+      .docs-container { grid-template-columns: 1fr; }
+      .sidebar-left, .sidebar-right { display: none; }
+      .docs-content { padding: 2rem; }
+      .nav-center-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  ${sharedHeaderHtml('docs')}
+
+  <div class="docs-container">
+    <aside class="sidebar-left">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Overview</div>
+        <div class="sidebar-links">
+          <a href="#overview" class="active">Introduction</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#architecture">Architecture</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <div class="sidebar-links">
+          <a href="#installation">Installation</a>
+          <a href="#cli-quickstart">CLI Quickstart</a>
+          <a href="#auto-allow">Auto-Allow Hook</a>
+          <a href="#skill-matrix">Skill Matrix</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Resources</div>
+        <div class="sidebar-links">
+          <a href="#privacy">Privacy & Redaction</a>
+          <a href="https://github.com/alatariz/graviton" target="_blank">GitHub Repo ↗</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="docs-content">
+      <h1 class="docs-h1">GRAVITON Documentation</h1>
+      <h2 class="docs-subtitle">Autonomous AI Control & Noise Acceleration Layer</h2>
+
+      <p class="docs-lead">
+        GRAVITON is an open-source CLI proxy & prompt synthesizer designed specifically for Google Antigravity. It filters terminal output noise before it reaches the LLM context, and restructures raw user prompts into high-precision, actionable code instructions.
+      </p>
+
+      <div class="callout-box">
+        <strong>Result:</strong> Up to 90% fewer output tokens polluting your agent's context window. Run <code>graviton &lt;prompt&gt;</code> or <code>git status | graviton</code> as usual—Graviton transparently cleans the input/output and keeps Antigravity focused on reasoning.
+      </div>
+
+      <h2 id="how-it-works" class="docs-h2">How It Works</h2>
+      <p class="docs-p">
+        In default AI agent workflows, conversational filler, ANSI color codes, progress bars, and thousands of lines of verbose logs quickly consume 80%+ of your model's context window, triggering early auto-compact and high token costs.
+      </p>
+
+      <div class="code-block">
+Your Prompt / Terminal Output
+      ↓
+Graviton Deterministic Engine (ANSI & Secret Redaction)
+      ↓
+Lean Semantic Restructurer (Gemini 2.5 Flash Free Tier / Local)
+      ↓
+Transparent Forward to Antigravity CLI (agy.exe)
+      ↓
+Continuous Tool Auto-Approval (--dangerously-skip-permissions)
+      </div>
+
+      <h2 id="installation" class="docs-h2">Installation</h2>
+      <p class="docs-p">
+        Install the Graviton CLI globally across your system using npm:
+      </p>
+      <div class="code-block">$ npm install -g @alatariz/graviton</div>
+
+      <h2 id="cli-quickstart" class="docs-h2">CLI Quickstart</h2>
+      <p class="docs-p">
+        Execute your commands with full auto-allow and context compression:
+      </p>
+      <div class="code-block">
+# 1-Shot prompt synthesis + auto-launch Antigravity with auto-allow:
+$ graviton "perbaiki error login di auth.js"
+
+# Resume last active conversation:
+$ graviton -c "sekarang buatkan unit testnya"
+
+# Filter command output (like RTK):
+$ graviton run git status
+$ git status | graviton
+
+# Audit your saved tokens:
+$ graviton gain
+      </div>
+
+      <h2 id="skill-matrix" class="docs-h2">Antigravity Skill Unlocker Matrix</h2>
+      <p class="docs-p">
+        Standard models often struggle or truncate solutions when given open-ended instructions. Graviton's internal skill resolver maps keywords directly to your installed Antigravity capabilities and injects specialized directives:
+      </p>
+      <div class="code-block">
+Intent: "buat modal dialog responsive"
+↳ [Antigravity Skill Activated: modern-web-guidance]
+  Directive: Inject modern web standards (:has, container queries, zero-layout-shift, high-performance CSS)
+
+Intent: "buat query BigQuery transaksi"
+↳ [Antigravity Skill Activated: bigquery-sql & data-autocleaning]
+  Directive: Apply high-efficiency BigQuery optimization and automated data cleaning best practices
+
+Intent: "buat mobile app widget"
+↳ [Antigravity Skill Activated: flutter-apply-architecture-best-practices]
+  Directive: Apply layered reactive Flutter architecture (UI, Domain, Data) and automated unit test mocks
+      </div>
+
+      <h2 id="privacy" class="docs-h2">Privacy & Secret Redaction</h2>
+      <p class="docs-p">
+        Before any prompt is synthesized or relayed to the model, Graviton scrubs API keys, JWT tokens, and database passwords into <code>[REDACTED_SECRET]</code>, guaranteeing that sensitive keys are never saved in conversation history.
+      </p>
+    </main>
+
+    <aside class="sidebar-right">
+      <div class="toc-title">On this page</div>
+      <a href="#overview" class="toc-link">Overview</a>
+      <a href="#how-it-works" class="toc-link">How it works</a>
+      <a href="#installation" class="toc-link">Installation</a>
+      <a href="#cli-quickstart" class="toc-link">CLI Quickstart</a>
+      <a href="#skill-matrix" class="toc-link">Skill Matrix</a>
+      <a href="#privacy" class="toc-link">Privacy & Redaction</a>
+    </aside>
+  </div>
+</body>
+</html>
+`;
+
+fs.writeFileSync('public/index.html', buildIndexHtml(), 'utf8');
+fs.writeFileSync('public/docs.html', buildDocsHtml(), 'utf8');
+console.log('Successfully generated public/index.html and public/docs.html with Diamond Blue / Aquamarine theme!');
