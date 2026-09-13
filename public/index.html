@@ -56,7 +56,14 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; color-scheme: dark; }
+    html {
+      scroll-behavior: smooth;
+      color-scheme: dark;
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 58px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
     body {
       background-color: var(--bg);
       color: var(--text-main);
@@ -66,6 +73,150 @@
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* ALL PAGE STAGES SCROLL SNAP CONFIGURATION */
+    .hero-top-stage,
+    .section-stage-showcase,
+    .section-stage-problem,
+    .section-stage-solution,
+    .section-stage-action,
+    .section-stage-evidence,
+    .section-stage-impact,
+    .section-stage-get-started,
+    .section-stage-studio,
+    footer {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      scroll-margin-top: 58px;
+      box-sizing: border-box;
+    }
+    /* UNIVERSAL LINK RESET - NO PURPLE VISITED LINKS, NO UNDERLINES */
+    a, a:visited, a:hover, a:active, a:focus {
+      text-decoration: none !important;
+    }
+
+    /* GLOBAL NAVBAR VISITED & ACTIVE RESETS */
+    .global-navbar a,
+    .global-navbar a:visited,
+    .global-navbar a:active,
+    .global-navbar a:focus {
+      text-decoration: none !important;
+      color: inherit;
+    }
+
+    .nav-logo-wrap,
+    .nav-logo-wrap:visited {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none !important;
+      color: #ffffff !important;
+    }
+
+    .nav-link,
+    .nav-link:visited {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #94a3b8 !important;
+      text-decoration: none !important;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 0.4rem 0;
+      transition: color 0.15s ease;
+      position: relative;
+    }
+    .nav-link:hover,
+    .nav-item:hover > .nav-link,
+    .nav-item.active > .nav-link,
+    .nav-item.active > .nav-link:visited {
+      color: #ffffff !important;
+      text-decoration: none !important;
+    }
+
+    .dropdown-item,
+    .dropdown-item:visited {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: #94a3b8 !important;
+      text-decoration: none !important;
+      border-radius: 7px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dropdown-item:hover,
+    .dropdown-item:active {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff !important;
+      text-decoration: none !important;
+    }
+
+    .dropdown-item.item-pro,
+    .dropdown-item.item-pro:visited {
+      color: #cbd5e1 !important;
+      text-decoration: none !important;
+    }
+    .dropdown-item.item-pro:hover {
+      color: #ffffff !important;
+    }
+
+    .nav-gh-stars,
+    .nav-gh-stars:visited {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: #94a3b8 !important;
+      text-decoration: none !important;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+    }
+    .nav-gh-stars:hover {
+      color: #ffffff !important;
+      text-decoration: none !important;
+    }
+    .nav-gh-stars .gh-count,
+    .nav-gh-stars:visited .gh-count {
+      color: #94a3b8 !important;
+    }
+    .nav-gh-stars:hover .gh-count {
+      color: #ffffff !important;
+    }
+
+    .btn-nav-install,
+    .btn-nav-install:visited {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.05);
+      color: var(--aqua) !important;
+      padding: 0.38rem 1.15rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none !important;
+      transition: all 0.25s ease;
+    }
+    .btn-nav-install:hover {
+      background: var(--aqua) !important;
+      color: #040711 !important;
+      border-color: var(--aqua);
+      box-shadow: 0 0 20px var(--aqua-glow);
+      text-decoration: none !important;
+    }
+
+    .search-result-item,
+    .search-result-item:visited {
+      color: var(--text-main) !important;
+      text-decoration: none !important;
+    }
+
 
     /* BACKGROUND CYBERNETIC AQUAMARINE GRID */
     .viewport-grid {
@@ -662,8 +813,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 1.5rem 2rem 4rem;
-      margin-top: -2.8rem; /* Elevate hero content so it is not pushed too far down */
+      padding: 2rem 2rem 3rem;
       z-index: 2;
       animation: heroSlowFadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -745,10 +895,11 @@
     /* ========================================================= */
     .section-stage-showcase {
       position: relative;
-      min-height: 85vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem 2.5rem;
       z-index: 2;
     }
     .hero-split-grid {
@@ -911,7 +1062,8 @@
     /* STATS BANNER COUNTER */
     .stats-strip-wrap {
       max-width: 1400px;
-      margin: 0 auto 5rem;
+      margin: 3rem auto 0;
+      width: 100%;
       padding: 0 2rem;
       z-index: 2;
       position: relative;
@@ -942,10 +1094,11 @@
     /* 3. SECTION 01 / THE PROBLEM (MIN-HEIGHT 85VH) */
     /* ========================================================= */
     .section-stage-problem {
-      min-height: 85vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1073,10 +1226,11 @@
     /* 4. SECTION 02 / THE SOLUTION (MIN-HEIGHT 80VH) */
     /* ========================================================= */
     .section-stage-solution {
-      min-height: 80vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1137,10 +1291,11 @@
     /* 5. SECTION 03 / SEE IT IN ACTION (MIN-HEIGHT 85VH) */
     /* ========================================================= */
     .section-stage-action {
-      min-height: 85vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1254,10 +1409,11 @@
     /* 6. SECTION 04 / THE EVIDENCE (MIN-HEIGHT 90VH) */
     /* ========================================================= */
     .section-stage-evidence {
-      min-height: 90vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1351,10 +1507,11 @@
     /* 7. SECTION 05 / THE IMPACT (MIN-HEIGHT 85VH) */
     /* ========================================================= */
     .section-stage-impact {
-      min-height: 85vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1452,10 +1609,11 @@
     /* 8. SECTION 06 / GET STARTED (MIN-HEIGHT 85VH) */
     /* ========================================================= */
     .section-stage-get-started {
-      min-height: 85vh;
+      min-height: calc(100vh - 58px);
       display: flex;
-      align-items: center;
-      padding: 6rem 2rem;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem;
       position: relative;
       z-index: 2;
     }
@@ -1592,7 +1750,11 @@
     /* 9. SECTION 07 / LIVE STUDIO PLAYGROUND */
     /* ========================================================= */
     .section-stage-studio {
-      padding: 6rem 2rem 8rem;
+      min-height: calc(100vh - 58px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3.5rem 2rem 5rem;
       position: relative;
       z-index: 2;
     }
@@ -1787,39 +1949,133 @@
   <div class="viewport-grid"></div>
 
   
-  <!-- UNIFIED LUXURY NAVBAR -->
+  <!-- UNIFIED RTK-INSPIRED LUXURY NAVBAR -->
   <header class="global-navbar">
     <div class="nav-inner">
+      <!-- LEFT: Logo + Search pill -->
       <div class="nav-left">
         <a href="/" class="nav-logo-wrap">
           <img src="/icon.svg" alt="Graviton Singularity Logo">
-          <span>GRAVITON</span>
+          <span class="nav-brand-text">GRAVITON</span>
         </a>
         <button class="nav-search-bar" onclick="openSearchModal()" aria-label="Search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span>Search docs & commands...</span>
-          <kbd>Ctrl K</kbd>
+          <span class="search-label">Search</span>
+          <kbd class="search-kbd">⌘K</kbd>
         </button>
       </div>
 
+      <!-- CENTER: Dropdowns (Product, Docs, Resources, Community) -->
       <nav class="nav-center-links">
-        <a href="/#how-it-works" class="active">Product ▾</a>
-        <a href="/docs.html" class="">Docs</a>
-        <a href="/#solution">Architecture</a>
-        <a href="/#action">Benchmarks</a>
-        <a href="/#demo">Live Studio</a>
+        <!-- 1. Product Dropdown -->
+        <div class="nav-item has-dropdown active">
+          <a href="/#hero-showcase" class="nav-link">
+            <span>Product</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/#get-started" class="dropdown-item">Install Graviton</a>
+            <a href="/#evidence" class="dropdown-item">Why Graviton</a>
+            <a href="/#how-it-works" class="dropdown-item">How it works</a>
+            <a href="/#demo" class="dropdown-item">Demo</a>
+            <a href="/#solution" class="dropdown-item">Architecture</a>
+            <a href="/docs.html#skill-matrix" class="dropdown-item item-pro">
+              <span class="pro-dot"></span>
+              <span>Graviton Pro</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Docs Direct Link -->
+        <div class="nav-item ">
+          <a href="/docs.html" class="nav-link">
+            <span>Docs</span>
+          </a>
+        </div>
+
+        <!-- 3. Resources Dropdown -->
+        <div class="nav-item has-dropdown">
+          <a href="/#action" class="nav-link">
+            <span>Resources</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/#action" class="dropdown-item">Benchmarks</a>
+            <a href="/docs.html#skill-matrix" class="dropdown-item">Skill Matrix</a>
+            <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="dropdown-item">Changelog</a>
+          </div>
+        </div>
+
+        <!-- 4. Community Dropdown with Icons -->
+        <div class="nav-item has-dropdown">
+          <a href="https://github.com/alatariz/graviton" class="nav-link">
+            <span>Community</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu dropdown-community">
+            <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>GitHub Repo</span>
+            </a>
+            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.894.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+              <span>Discord</span>
+            </a>
+            <a href="https://x.com/alatariz" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span>X (@alatariz)</span>
+            </a>
+            <a href="https://github.com/sponsors/alatariz" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span>GitHub Sponsors</span>
+            </a>
+            <a href="https://github.com/alatariz/graviton/discussions" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Discussions</span>
+            </a>
+          </div>
+        </div>
       </nav>
 
+      <!-- RIGHT: GitHub Stars, EN Switcher, Install Button -->
       <div class="nav-right">
-        <a href="https://github.com/alatariz/graviton" target="_blank" class="nav-gh-stars">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="nav-gh-stars" aria-label="GitHub Repository">
+          <svg class="gh-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
-          <span>alatariz/graviton</span>
-          <span class="stars-num">★ 80.2k</span>
+          <span class="gh-count">80.0k ★</span>
         </a>
+
+        <div class="nav-lang-switch" title="Language: English">
+          <svg class="globe-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>EN</span>
+          <svg class="chevron" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+
         <a href="/#get-started" class="btn-nav-install">
           <span>Install Graviton →</span>
         </a>
@@ -1827,71 +2083,45 @@
     </div>
   </header>
 
-  <!-- SEARCH MODAL (SPOTLIGHT DIALOG) -->
+  <!-- SEARCH MODAL (SPOTLIGHT DIALOG - EXACT RTK SPEC) -->
   <dialog id="searchModal" class="search-dialog">
     <div class="search-dialog-box">
+      <!-- Input bar with Esc badge -->
       <div class="search-input-wrap">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aqua)" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <svg class="search-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" id="spotlightInput" placeholder="Search commands, docs, skills, guides..." autocomplete="off">
-        <button class="search-close-btn" onclick="closeSearchModal()">Esc</button>
+        <input type="text" id="spotlightInput" placeholder="Search commands, docs, tools..." autocomplete="off" spellcheck="false">
+        <button class="search-esc-badge" onclick="closeSearchModal()" aria-label="Close dialog">Esc</button>
       </div>
 
+      <!-- Results list or empty state -->
       <div class="search-results-list" id="searchResultsList">
-        <!-- Default Popular Jump Points -->
-        <a href="/#get-started" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">⚡</span>
-          <div class="res-body">
-            <div class="res-title">Quick Install &amp; Setup</div>
-            <div class="res-sub">npm install -g @alatariz/graviton or npx execution</div>
+        <div class="search-empty-prompt" id="searchEmptyPrompt">
+          <div class="empty-title">Start typing to search...</div>
+          <div class="empty-quick-list" id="emptyQuickList">
+            <!-- Rendered by script -->
           </div>
-          <span class="res-badge">Install</span>
-        </a>
-        <a href="/#action" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">⇄</span>
-          <div class="res-body">
-            <div class="res-title">See It In Action (Benchmarks)</div>
-            <div class="res-sub">Compare raw terminal noise vs. 99% pruned clean context</div>
-          </div>
-          <span class="res-badge">Compare</span>
-        </a>
-        <a href="/#evidence" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">📊</span>
-          <div class="res-body">
-            <div class="res-title">graviton gain CLI Audit</div>
-            <div class="res-sub">Real-world developer token savings and efficiency meter</div>
-          </div>
-          <span class="res-badge">Evidence</span>
-        </a>
-        <a href="/docs.html#skill-matrix" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">🗝️</span>
-          <div class="res-body">
-            <div class="res-title">Antigravity Skill Matrix Unlocker</div>
-            <div class="res-sub">Modern Web, BigQuery ETL, Flutter, and Testing directives</div>
-          </div>
-          <span class="res-badge">Skills</span>
-        </a>
-        <a href="/#demo" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">🧪</span>
-          <div class="res-body">
-            <div class="res-title">Interactive Live Studio</div>
-            <div class="res-sub">Test prompt synthesis live and copy clean prompts</div>
-          </div>
-          <span class="res-badge">Studio</span>
-        </a>
-        <a href="/docs.html#auto-allow" class="search-result-item" onclick="closeSearchModal()">
-          <span class="res-icon">🛡️</span>
-          <div class="res-body">
-            <div class="res-title">Continuous Auto-Allow Relay</div>
-            <div class="res-sub">--dangerously-skip-permissions unblocking Antigravity</div>
-          </div>
-          <span class="res-badge">Docs</span>
-        </a>
+        </div>
+        <div id="searchDynamicResults" style="display: none;"></div>
       </div>
 
-      <div class="search-footer-hint">
-        <span>Navigation: <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>↵</kbd> to select · <kbd>ESC</kbd> to close</span>
+      <!-- Footer Shortcuts (Matching RTK Image 5) -->
+      <div class="search-footer-shortcuts">
+        <div class="shortcut-group">
+          <span class="key-cap">↑</span>
+          <span class="key-cap">↓</span>
+          <span class="key-label">navigate</span>
+        </div>
+        <div class="shortcut-group">
+          <span class="key-cap">↵</span>
+          <span class="key-label">open</span>
+        </div>
+        <div class="shortcut-group">
+          <span class="key-cap">Esc</span>
+          <span class="key-label">close</span>
+        </div>
       </div>
     </div>
   </dialog>
@@ -1978,10 +2208,9 @@
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- STATS BANNER STRIP -->
-    <section class="stats-strip-wrap slide-reveal-up">
+      <!-- STATS BANNER STRIP (INTEGRATED INTO SHOWCASE STAGE) -->
+      <div class="stats-strip-wrap slide-reveal-up">
       <div class="stats-strip">
         <div class="stat-box-item">
           <div class="stat-metric-val">1.6M+</div>
@@ -2834,6 +3063,137 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
         showToast('Error: ' + e.message);
       }
     }
+
+    // =========================================================
+    // SMART PAGE-BY-PAGE SMOOTH SNAP CONTROLLER
+    // Direct transition to next/previous stage on wheel or keys
+    // =========================================================
+    (function initPageSnapper() {
+      const stageSelectors = [
+        '.hero-top-stage',
+        '.section-stage-showcase',
+        '.section-stage-problem',
+        '.section-stage-solution',
+        '.section-stage-action',
+        '.section-stage-evidence',
+        '.section-stage-impact',
+        '.section-stage-get-started',
+        '.section-stage-studio',
+        'footer'
+      ];
+
+      function getStages() {
+        return stageSelectors.map(function(sel) {
+          return document.querySelector(sel);
+        }).filter(Boolean);
+      }
+
+      let isSnapping = false;
+      let snapTimer = null;
+
+      function getCurrentIndex(stages) {
+        const scrollY = window.scrollY || window.pageYOffset;
+        const probe = scrollY + 58 + 40; // probe just under navbar
+        for (let i = stages.length - 1; i >= 0; i--) {
+          if (probe >= stages[i].offsetTop) {
+            return i;
+          }
+        }
+        return 0;
+      }
+
+      function scrollToStageIndex(stages, idx) {
+        if (idx < 0 || idx >= stages.length) return;
+        isSnapping = true;
+        clearTimeout(snapTimer);
+
+        const target = stages[idx];
+        const targetTop = target.getBoundingClientRect().top + window.scrollY - 58;
+
+        window.scrollTo({
+          top: Math.max(0, targetTop),
+          behavior: 'smooth'
+        });
+
+        snapTimer = setTimeout(function() {
+          isSnapping = false;
+        }, 750);
+      }
+
+      window.addEventListener('wheel', function(e) {
+        const searchModal = document.getElementById('searchModal');
+        if (searchModal && searchModal.open) return;
+        if (e.ctrlKey) return; // allow browser zoom
+
+        // Check if cursor is inside an interactive scrollable area
+        let node = e.target;
+        while (node && node !== document.body && node !== document.documentElement) {
+          if (node.classList && (
+            node.classList.contains('search-results-list') ||
+            node.classList.contains('interactive-box') ||
+            node.tagName === 'TEXTAREA'
+          )) {
+            return;
+          }
+          node = node.parentElement;
+        }
+
+        const delta = e.deltaY;
+        if (Math.abs(delta) < 20) return;
+
+        if (isSnapping) {
+          e.preventDefault();
+          return;
+        }
+
+        const stages = getStages();
+        const currentIdx = getCurrentIndex(stages);
+        const currentStage = stages[currentIdx];
+
+        if (currentStage) {
+          const rect = currentStage.getBoundingClientRect();
+          const vh = window.innerHeight;
+
+          if (delta > 0) {
+            // If stage is taller than screen and user hasn't scrolled to its bottom, scroll inside it
+            if (rect.bottom > vh + 50) {
+              return;
+            }
+            if (currentIdx < stages.length - 1) {
+              e.preventDefault();
+              scrollToStageIndex(stages, currentIdx + 1);
+            }
+          } else {
+            // Scrolling up: if not at top of current stage, scroll inside it
+            if (rect.top < 58 - 50) {
+              return;
+            }
+            if (currentIdx > 0) {
+              e.preventDefault();
+              scrollToStageIndex(stages, currentIdx - 1);
+            }
+          }
+        }
+      }, { passive: false });
+
+      // Keyboard arrow & Page navigation
+      window.addEventListener('keydown', function(e) {
+        const searchModal = document.getElementById('searchModal');
+        if (searchModal && searchModal.open) return;
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+        const stages = getStages();
+        const currentIdx = getCurrentIndex(stages);
+
+        if (e.key === 'PageDown' || (e.key === 'ArrowDown' && e.altKey)) {
+          e.preventDefault();
+          scrollToStageIndex(stages, currentIdx + 1);
+        } else if (e.key === 'PageUp' || (e.key === 'ArrowUp' && e.altKey)) {
+          e.preventDefault();
+          scrollToStageIndex(stages, currentIdx - 1);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
