@@ -1,4 +1,4 @@
-﻿// src/pipeline.js - Graviton: Precision Prompt Synthesizer & Antigravity Skill Unlocker
+// src/pipeline.js - Graviton: Precision Prompt Synthesizer & Antigravity Skill Unlocker
 import { redactSecrets, detectWorkspaceContext } from './workspace-helper.js';
 import { resolveSkillDirectives } from './skill-matrix.js';
 
@@ -37,26 +37,26 @@ export function pruneNoise(rawText) {
   let prevLine = null;
   let repeatCount = 0;
 
+  const flushRepeats = () => {
+    if (repeatCount > 2) {
+      deduplicated.push(`   ↳ [Repeated ${repeatCount}x: "${prevLine.slice(0, 50)}..."]`);
+    } else if (repeatCount > 0) {
+      for (let i = 0; i < repeatCount; i++) deduplicated.push(prevLine);
+    }
+  };
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed && trimmed === prevLine) {
       repeatCount++;
     } else {
-      if (repeatCount > 2) {
-        deduplicated.push(`   ↳ [Repeated ${repeatCount}x: "${prevLine.slice(0, 50)}..."]`);
-      } else if (repeatCount > 0) {
-        for (let i = 0; i < repeatCount; i++) deduplicated.push(prevLine);
-      }
+      flushRepeats();
       prevLine = trimmed;
       repeatCount = 0;
       deduplicated.push(line);
     }
   }
-  if (repeatCount > 2) {
-    deduplicated.push(`   ↳ [Repeated ${repeatCount}x: "${prevLine.slice(0, 50)}..."]`);
-  } else if (repeatCount > 0) {
-    for (let i = 0; i < repeatCount; i++) deduplicated.push(prevLine);
-  }
+  flushRepeats();
   out = deduplicated.join('\n');
 
   // 4. Remove cosmetic separators

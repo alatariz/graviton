@@ -2914,14 +2914,15 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       initScrollReveal();
     }
 
-    // MATRIX DOTS CANVAS SIMULATION IN AQUAMARINE
+    // MATRIX DOTS CANVAS SIMULATION IN AQUAMARINE (OPTIMIZED WITH INTERSECTION OBSERVER)
     const canvas = document.getElementById('matrixCanvas');
     if (canvas) {
       const ctx = canvas.getContext('2d');
-      let w = canvas.width = canvas.parentElement.clientWidth;
-      let h = canvas.height = canvas.parentElement.clientHeight;
+      let w = canvas.width = (canvas.parentElement ? canvas.parentElement.clientWidth : 300);
+      let h = canvas.height = (canvas.parentElement ? canvas.parentElement.clientHeight : 150);
 
       window.addEventListener('resize', function() {
+        if (!canvas.parentElement) return;
         w = canvas.width = canvas.parentElement.clientWidth;
         h = canvas.height = canvas.parentElement.clientHeight;
       });
@@ -2935,7 +2936,15 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
         { col: 19, row: 1, speed: 0.18 }
       ];
 
+      let animationFrameId = null;
+      let isCanvasVisible = false;
+
       function renderMatrix() {
+        if (!isCanvasVisible) {
+          animationFrameId = null;
+          return;
+        }
+
         ctx.clearRect(0, 0, w, h);
         for (let i = 0; i < drops.length; i++) {
           const drop = drops[i];
@@ -2964,9 +2973,34 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
             ctx.fill();
           }
         }
-        requestAnimationFrame(renderMatrix);
+        animationFrameId = requestAnimationFrame(renderMatrix);
       }
-      renderMatrix();
+
+      if ('IntersectionObserver' in window) {
+        const matrixObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              if (!isCanvasVisible) {
+                isCanvasVisible = true;
+                if (!animationFrameId) {
+                  animationFrameId = requestAnimationFrame(renderMatrix);
+                }
+              }
+            } else {
+              isCanvasVisible = false;
+              if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+              }
+            }
+          });
+        }, { threshold: 0.05 });
+
+        matrixObserver.observe(canvas);
+      } else {
+        isCanvasVisible = true;
+        renderMatrix();
+      }
     }
 
     // ACTION TAB PRESETS
