@@ -2329,47 +2329,54 @@ const buildIndexHtml = () => `<!DOCTYPE html>
       </div>
     </section>
 
-    <!-- 4. STAGE: 02 / THE SOLUTION -->
+        <!-- 4. STAGE: 02 / THE SOLUTION (META 2026 OVERCLOCKING ARCHITECTURE) -->
     <section id="solution" class="section-stage-solution">
       <div class="section-solution-grid">
         <div class="solution-left slide-reveal-left">
-          <div class="section-tag">02 / The Solution</div>
-          <h2>Install & <em>forget</em></h2>
+          <div class="section-tag">02 / Meta 2026 Architecture</div>
+          <h2>The 4-Pillar<br><em>Overclock</em></h2>
           <p>
-            Graviton is a thin, open proxy layer. It adds nothing to your workflow: it only takes the noise away.
+            Graviton is engineered around four relentless token-compression pillars and a Dual-Clutch routing engine designed to eliminate agent context exhaustion.
           </p>
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.8rem; flex-wrap: wrap;">
+            <span class="res-badge" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">⚡ RTK Filter</span>
+            <span class="res-badge" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">📦 Headroom Heuristic</span>
+            <span class="res-badge" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">✂️ Ponytail 7-Staircase</span>
+            <span class="res-badge" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">🗿 Caveman Prose</span>
+            <span class="res-badge" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">🏎️ Dual-Clutch Engine</span>
+          </div>
         </div>
 
         <div class="specs-table-box slide-reveal-right">
-          <div class="specs-table-title">BUILT FOR DEVELOPERS</div>
+          <div class="specs-table-title">META 2026 CORE PILLARS</div>
 
           <div class="spec-table-row">
-            <span class="spec-label">LANGUAGE</span>
-            <span class="spec-val">Node.js / JavaScript & Antigravity Core</span>
+            <span class="spec-label">PILLAR 1: RTK</span>
+            <span class="spec-val">Terminal noise interception. Strips progress bars, compilations &amp; isolates tracebacks.</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">LICENSE</span>
-            <span class="spec-val">Apache 2.0</span>
+            <span class="spec-label">PILLAR 2: HEADROOM</span>
+            <span class="spec-val" style="color: var(--aqua);">JSON squashing. Compresses array floods into schema summaries (&gt;85% token save).</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">ARCHITECTURE</span>
-            <span class="spec-val">CLI hook & prompt synthesizer</span>
+            <span class="spec-label">PILLAR 3: PONYTAIL</span>
+            <span class="spec-val">The 7-staircase laziness validation inside &lt;scratchpad&gt; for minimal surgical blast radius.</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">OVERHEAD</span>
-            <span class="spec-val" style="color: var(--aqua);">&lt; 0.5 ms</span>
+            <span class="spec-label">PILLAR 4: CAVEMAN</span>
+            <span class="spec-val">Zero-fluff technical fragments. Eliminates conversational boilerplate and AI disclaimers.</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">INTEGRATION</span>
-            <span class="spec-val">Google Antigravity & Agy CLI</span>
+            <span class="spec-label">GEAR 1 (FLASH 3.8)</span>
+            <span class="spec-val" style="color: #38bdf8;">The Sanitizer (Default): Ultra-fast bug repair &amp; log isolation with zero token bloat.</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">SKILLS MATRIX</span>
-            <span class="spec-val" style="color: #38bdf8;">Auto-unlocked Directive Engine</span>
+            <span class="spec-label">GEAR 2 (PRO 3.1)</span>
+            <span class="spec-val" style="color: var(--aqua);">The Architect (--deep): Modular system decomposition with step-by-step implementation blueprints.</span>
           </div>
           <div class="spec-table-row">
-            <span class="spec-label">TELEMETRY</span>
-            <span class="spec-val">Zero telemetry, 100% local</span>
+            <span class="spec-label">AUTO-ALLOW</span>
+            <span class="spec-val">Autonomous stdout listener &amp; programmatic affirmative pipe for Antigravity.</span>
           </div>
         </div>
       </div>
@@ -2391,11 +2398,11 @@ const buildIndexHtml = () => `<!DOCTYPE html>
 
         <div class="action-terminal-card slide-reveal-right">
           <div class="action-tabs-bar">
-            <button class="action-tab-item active" onclick="switchActionTab('command', this)">Command output</button>
-            <button class="action-tab-item" onclick="switchActionTab('tests', this)">Tests</button>
-            <button class="action-tab-item" onclick="switchActionTab('git', this)">Git</button>
-            <button class="action-tab-item" onclick="switchActionTab('skills', this)">Skill Prompt</button>
-            <button class="action-tab-item" onclick="switchActionTab('files', this)">Files</button>
+            <button class="action-tab-item active" onclick="switchActionTab('command', this)">RTK Terminal</button>
+            <button class="action-tab-item" onclick="switchActionTab('headroom', this)">Headroom JSON</button>
+            <button class="action-tab-item" onclick="switchActionTab('caveman', this)">Caveman Prompt</button>
+            <button class="action-tab-item" onclick="switchActionTab('architect', this)">Pro Architect (--deep)</button>
+            <button class="action-tab-item" onclick="switchActionTab('git', this)">Git Status</button>
           </div>
 
           <div class="action-split-content">
@@ -3010,37 +3017,37 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
       }
     }
 
-    // ACTION TAB PRESETS
+        // ACTION TAB PRESETS (META 2026 ARCHITECTURE SHOWCASE)
     const ACTION_PRESETS = {
       command: {
         rawLines: '1,042 LINES',
         cleanLines: '4 LINES (-99%)',
-        raw: "$ cargo build\\n   Compiling libc v0.2.155\\n   Compiling proc-macro2 v1.0.85\\n   Compiling unicode-ident v1.0.12\\n   Compiling quote v1.0.36\\n   Compiling syn v2.0.66\\n   Compiling cfg-if v1.0.0\\n   Compiling once_cell v1.19.0\\nwarning: unused variable: 'raw'\\n  --> src/filter.rs:214:9\\nwarning: field is never read: 'depth'\\n  --> src/tree.rs:87:5\\n   Compiling serde v1.0.197\\n   Compiling anyhow v1.0.79\\n... 1,028 more lines ...\\nFinished dev [unoptimized] in 32.48s",
-        clean: "$ rtk cargo build\\n✔ build finished in 32.4s\\n· 214 crates compiled\\n· 2 warnings: filter.rs:214, tree.rs:87"
+        raw: "$ cargo build\\n   Compiling libc v0.2.155\\n   Compiling proc-macro2 v1.0.85\\n   Compiling unicode-ident v1.0.12\\n   Compiling quote v1.0.36\\n   Compiling syn v2.0.66\\n   Compiling cfg-if v1.0.0\\n   Compiling once_cell v1.19.0\\n[====>               ] 14/214 crates compiled (eta 12s)...\\nwarning: unused variable: 'raw'\\n  --> src/filter.rs:214:9\\nwarning: field is never read: 'depth'\\n  --> src/tree.rs:87:5\\n   Compiling serde v1.0.197\\n   Compiling anyhow v1.0.79\\n... 1,028 more lines of progress noise ...\\nFinished dev [unoptimized] in 32.48s",
+        clean: "$ graviton run cargo build\\n[RTK Noise Interceptor: 1,038 progress lines discarded]\\n✔ build finished in 32.4s (214 crates)\\nwarning: unused variable: 'raw' --> src/filter.rs:214:9\\nwarning: field is never read: 'depth' --> src/tree.rs:87:5"
       },
-      tests: {
-        rawLines: '468 LINES',
-        cleanLines: '2 LINES (-99%)',
-        raw: "> vitest run --reporter=verbose\\n\\n RUN  v1.4.0 C:/projects/graviton\\n ✓ test/pipeline.test.js (12 tests) 48ms\\n   ✓ should strip ANSI escape sequences\\n   ✓ should deduplicate repetitive status logs\\n   ✓ should redact credentials & Bearer tokens\\n   ✓ should estimate tokens accurately\\n   ✓ should inject Antigravity skill directives\\n   ✓ should detect Node.js workspace root\\n... 450 lines of callstacks and trace dumps ...\\nTest Files  1 passed (1)\\nTests  12 passed (12)\\nDuration  480ms",
-        clean: "$ graviton test\\n✔ 12/12 tests passed (vitest 480ms)\\nCoverage: 96.4% Stmts | 88.2% Branch | 100% Funcs"
+      headroom: {
+        rawLines: '840 LINES (3,800 TOKENS)',
+        cleanLines: '12 LINES (140 TOKENS, -96%)',
+        raw: "{\\n  \\\"status\\\": \\\"ok\\\",\\n  \\\"users\\\": [\\n    { \\\"id\\\": 1, \\\"name\\\": \\\"Alice\\\", \\\"role\\\": \\\"admin\\\", \\\"token\\\": \\\"ey...\\\" },\\n    { \\\"id\\\": 2, \\\"name\\\": \\\"Bob\\\", \\\"role\\\": \\\"dev\\\", \\\"token\\\": \\\"ey...\\\" },\\n    { \\\"id\\\": 3, \\\"name\\\": \\\"Charlie\\\", \\\"role\\\": \\\"tester\\\", \\\"token\\\": \\\"ey...\\\" },\\n    ... 150 more repetitive user records spanning 800+ lines ...\\n  ]\\n}",
+        clean: "{\\n  \\\"status\\\": \\\"ok\\\",\\n  \\\"users\\\": [\\n    { \\\"id\\\": 1, \\\"name\\\": \\\"Alice\\\", \\\"role\\\": \\\"admin\\\", \\\"token\\\": \\\"[[REDACTED]]...\\\" },\\n    { \\\"id\\\": 2, \\\"name\\\": \\\"Bob\\\", \\\"role\\\": \\\"dev\\\", \\\"token\\\": \\\"[[REDACTED]]...\\\" },\\n    \\\"... Headroom compressed: [148 items omitted | schema: { id, name, role, token }] ...\\\"\\n  ]\\n}"
+      },
+      caveman: {
+        rawLines: '74 TOKENS (RAW FLUFF)',
+        cleanLines: '18 TOKENS (CAVEMAN)',
+        raw: "Halo selamat pagi Antigravity! Saya mau minta tolong dong tolong perbaiki fungsi verifyUser di auth.js. Kodenya seperti ini ya:\\n\\nexport function verify(req) {\\n  return req.user.id;\\n}\\n\\nTerima kasih banyak sebelumnya ya!",
+        clean: "<scratchpad>\\n[Ponytail 7-Staircase: isolated TypeError on undefined user, surgical optional chaining]\\n</scratchpad>\\n\\n**Tujuan Utama:**\\nPerbaiki verifyUser di auth.js. Tambahkan null-safety pada req.user.\\n\\n**Kode Terkait:**\\nexport function verify(req) {\\n  return req?.user?.id ?? null;\\n}"
+      },
+      architect: {
+        rawLines: '45 TOKENS (VAGUE)',
+        cleanLines: 'GEAR 2: PRO 3.1 ARCHITECT',
+        raw: "Tolong buatkan sistem webhook payment gateway yang scalable dan aman dari double spending.",
+        clean: "<scratchpad>\\n[Architectural Decomposition]\\nStep 1: Ingest webhook & verify HMAC signature in constant time.\\nStep 2: Check Redis distributed lock / DB idempotency key.\\nStep 3: Process ledger credit in atomic database transaction.\\nStep 4: Emit event and acknowledge provider with 200 OK.\\n</scratchpad>\\n\\n**Arsitektur & Spesifikasi Sistem:**\\nImplementasi Idempotent Webhook Payment Receiver dengan distributed locking & audit log."
       },
       git: {
         rawLines: '64 LINES',
         cleanLines: '5 LINES (-92%)',
         raw: "On branch main\\nYour branch is up to date with 'origin/main'.\\n\\nChanges not staged for commit:\\n  (use \\\"git add <file>...\\\" to update what will be committed)\\n  (use \\\"git restore <file>...\\\" to discard changes in working directory)\\n\\tmodified:   package.json\\n\\tmodified:   src/server.js\\n\\tmodified:   public/index.html\\n\\nUntracked files:\\n  (use \\\"git add <file>...\\\" to include in what will be committed)\\n\\ttemp_cache.log\\n\\tnode_modules/.cache/\\n\\nno changes added to commit (use \\\"git add\\\" to track)",
         clean: "$ graviton git status\\nM package.json\\nM src/server.js\\nM public/index.html\\n?? temp_cache.log"
-      },
-      skills: {
-        rawLines: '52 TOKENS (RAW)',
-        cleanLines: '108 TOKENS (+DIRECTIVES)',
-        raw: "Halo Antigravity tolong dong buatkan query BigQuery untuk membersihkan data transaksi harian dan buatkan pipeline ETL ya. Terima kasih!",
-        clean: "[Workspace: Node.js / JavaScript @ C:\\\\projects]\\n[Antigravity Skill Activated: bigquery-sql & data-autocleaning]\\n\\n**Tujuan Utama:**\\nImplementasikan BigQuery SQL ETL pipeline dengan data-autocleaning best practices (partitioning, clustering, deduplikasi idempotent)."
-      },
-      files: {
-        rawLines: '180 LINES',
-        cleanLines: '8 LINES (-95%)',
-        raw: "drwxr-xr-x  12 user  staff   384 Mar  3 10:14 .\\ndrwxr-xr-x   5 user  staff   160 Mar  3 10:12 ..\\n-rw-r--r--   1 user  staff  1248 Mar  3 10:14 package.json\\n-rw-r--r--   1 user  staff   284 Mar  3 10:14 README.md\\ndrwxr-xr-x   6 user  staff   192 Mar  3 10:14 src\\ndrwxr-xr-x   4 user  staff   128 Mar  3 10:14 public\\ndrwxr-xr-x 840 user  staff 26880 Mar  3 10:14 node_modules\\n... 160 more files ...",
-        clean: "$ graviton ls\\nsrc/           (6 files)\\npublic/        (4 files)\\npackage.json   1.2KB\\nREADME.md      284B"
       }
     };
 
@@ -3057,11 +3064,41 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
 
     switchActionTab('command', null);
 
-    // LIVE STUDIO SCRIPT
+        // LIVE STUDIO SCRIPT (DUAL-CLUTCH ROUTING)
+    let isDeepGear = false;
+
+    function setStudioGear(deep) {
+      isDeepGear = deep;
+      const flashBtn = document.getElementById('gear-btn-flash');
+      const proBtn = document.getElementById('gear-btn-pro');
+      if (flashBtn && proBtn) {
+        if (deep) {
+          proBtn.style.border = '1px solid var(--aqua)';
+          proBtn.style.background = 'rgba(0, 240, 255, 0.15)';
+          proBtn.style.color = '#ffffff';
+          flashBtn.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+          flashBtn.style.background = 'transparent';
+          flashBtn.style.color = '#94a3b8';
+        } else {
+          flashBtn.style.border = '1px solid var(--aqua)';
+          flashBtn.style.background = 'rgba(0, 240, 255, 0.15)';
+          flashBtn.style.color = '#ffffff';
+          proBtn.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+          proBtn.style.background = 'transparent';
+          proBtn.style.color = '#94a3b8';
+        }
+      }
+      showToast('Switched to ' + (deep ? 'Gear 2: Pro 3.1 Architect (--deep)' : 'Gear 1: Flash 3.8 Sanitizer'));
+    }
+
     function loadSamplePrompt() {
       const el = document.getElementById('studio-in-text');
       if (el) {
-        el.value = "Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.\\nKodenya seperti ini:\\n\\nexport async function verifyUser(req, res) {\\n  const token = req.headers['authorization'];\\n  if (!token) return res.status(401).json({ error: 'Missing' });\\n}\\n\\nSaat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!";
+        if (isDeepGear) {
+          el.value = "Tolong rancang arsitektur event-driven microservice untuk checkout e-commerce yang tahan kegagalan jaringan dan mencegah double billing saat webhook gateway terkirim 2 kali.";
+        } else {
+          el.value = "Selamat pagi Antigravity! Tolong bantu saya perbaiki error di src/api/auth.js dong.\\nKodenya seperti ini:\\n\\nexport async function verifyUser(req, res) {\\n  const token = req.headers['authorization'];\\n  if (!token) return res.status(401).json({ error: 'Missing' });\\n}\\n\\nSaat dijalankan muncul TypeError: Cannot read property of undefined. Terima kasih banyak ya!";
+        }
         updateStudioTokens();
       }
     }
@@ -3091,12 +3128,12 @@ Efficiency meter:   <span style="background: var(--aqua); color: #021526; font-w
         const res = await fetch('/api/synthesize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: prompt })
+          body: JSON.stringify({ prompt: prompt, deep: isDeepGear })
         });
         const data = await res.json();
         if (data.optimizedText) {
           document.getElementById('studio-out-text').innerText = data.optimizedText;
-          document.getElementById('studio-out-tokens').innerText = data.stats.optimizedTokens + ' tokens';
+          document.getElementById('studio-out-tokens').innerText = data.stats.optimizedTokens + ' tokens (' + data.stats.engine + ')';
           navigator.clipboard.writeText(data.optimizedText);
           showToast('✔ Synthesized & Copied to clipboard (- ' + data.stats.percentSaved + '% saved)');
         }

@@ -1,7 +1,13 @@
-// src/pipeline.js - Graviton: Precision Prompt Synthesizer & Antigravity Skill Unlocker
+// src/pipeline.js - Graviton Meta 2026: 4-Pillar Compression & Dual-Clutch Engine
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 import { redactSecrets, detectWorkspaceContext } from './workspace-helper.js';
 import { resolveSkillDirectives } from './skill-matrix.js';
 
+/**
+ * Fast Token Estimator
+ */
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
   const wordsAndPunct = text.match(/\w+|[^\s\w]|\s+/g) || [];
@@ -18,6 +24,65 @@ export function estimateTokens(text) {
   return Math.max(1, Math.round(tokenCount));
 }
 
+/**
+ * Headroom Heuristic: Compresses oversized JSON arrays into schema summaries
+ */
+export function compressHeadroomJson(text) {
+  if (!text || typeof text !== 'string') return text;
+
+  function compressValue(val, depth = 0) {
+    if (depth > 4) return val;
+    if (Array.isArray(val)) {
+      if (val.length > 3) {
+        const sample = val.slice(0, 2).map(item => compressValue(item, depth + 1));
+        const omittedCount = val.length - 2;
+        const first = val[0];
+        const keys = first && typeof first === 'object' && !Array.isArray(first)
+          ? Object.keys(first).join(', ')
+          : typeof first;
+        sample.push(`... Headroom compressed: [${omittedCount} items omitted | schema: { ${keys} }] ...`);
+        return sample;
+      }
+      return val.map(item => compressValue(item, depth + 1));
+    }
+    if (val && typeof val === 'object') {
+      const res = {};
+      for (const [k, v] of Object.entries(val)) {
+        res[k] = compressValue(v, depth + 1);
+      }
+      return res;
+    }
+    return val;
+  }
+
+  // Check if text is a single JSON payload
+  const trimmed = text.trim();
+  if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return JSON.stringify(compressValue(parsed), null, 2);
+    } catch {
+      // Fall through to regex replacement if not strict single JSON
+    }
+  }
+
+  // Regex-based embedded JSON array detector
+  return text.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, (match) => {
+    if (match.length < 200) return match;
+    try {
+      const parsed = JSON.parse(match);
+      if (Array.isArray(parsed) && parsed.length > 3) {
+        return JSON.stringify(compressValue(parsed), null, 2);
+      }
+    } catch {}
+    return match;
+  });
+}
+
+/**
+ * RTK & Headroom Noise Pruner
+ * Intercepts terminal chatter, removes progress lines, isolates tracebacks, and applies Headroom heuristics.
+ */
 export function pruneNoise(rawText) {
   let out = redactSecrets(rawText);
 
@@ -31,7 +96,43 @@ export function pruneNoise(rawText) {
     return `[data:${mime};base64 ~${sizeKb}KB omitted]`;
   });
 
-  // 3. Deduplicate repetitive log lines
+  // 3. Headroom heuristic: compress oversized JSON arrays
+  out = compressHeadroomJson(out);
+
+  // 4. RTK Terminal Log Filter: strip progress chatter, keep error & warning tracebacks
+  const rawLines = out.split('\n');
+  const filteredLines = [];
+
+  for (const line of rawLines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      filteredLines.push(line);
+      continue;
+    }
+
+    // Always preserve error, warning, traceback, and file coordinate lines
+    const isErrorOrTrace = /(?:error|exception|fail|fatal|panic|traceback|warning|stack|\bat\s+|\.js:\d+|\.ts:\d+|\.py:\d+|\.rs:\d+|-->\s*|AssertionError)/i.test(trimmed);
+    if (isErrorOrTrace) {
+      filteredLines.push(line);
+      continue;
+    }
+
+    // Discard progress bars, spinners, package manager chatter
+    const isProgressNoise = (
+      /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/.test(trimmed) ||
+      /(?:\[[=> -]{5,}\]|\b\d+(?:\.\d+)?%\s*(?:done|complete)?|\b\d+\/\d+\s+(?:packages|files|crates))/i.test(trimmed) ||
+      /(?:npm|yarn|pnpm)\s+(?:verb|timing|sill|http\s+fetch)/i.test(trimmed) ||
+      /(?:^Compiling\s+[a-zA-Z0-9_-]+\s+v\d+)/i.test(trimmed) ||
+      /(?:Downloading|Fetching|Extracting)\s+https?:/i.test(trimmed)
+    );
+
+    if (!isProgressNoise) {
+      filteredLines.push(line);
+    }
+  }
+  out = filteredLines.join('\n');
+
+  // 5. Deduplicate repetitive log lines cleanly
   const lines = out.split('\n');
   const deduplicated = [];
   let prevLine = null;
@@ -59,14 +160,14 @@ export function pruneNoise(rawText) {
   flushRepeats();
   out = deduplicated.join('\n');
 
-  // 4. Remove cosmetic separators
+  // 6. Remove cosmetic separators
   out = out.replace(/^[ \t]*(?:\/\/|#|\/\*)[ \t]*[-=~*#]{5,}[ \t]*(?:\*\/)?$/gm, '');
 
-  // 5. Strip trailing AI disclaimers
+  // 7. Strip trailing AI disclaimers
   const trailingFluff = [
     /(?:Hope\s+this\s+helps!?(?:\s+Let\s+me\s+know\s+if\s+you\s+need\s+anything\s+else\.?)?)\s*$/gi,
-    /(?:Please\s+let\s+me\s+know\s+if\s+you\s+have\s+any\s+(?:other\s+)?questions(?:\s+or\s+need\s+further\s+assistance)?\.?)\s*$/gi,
-    /(?:Feel\s+free\s+to\s+ask\s+if\s+you\s+have\s+any\s+(?:more\s+)?questions\.?)\s*$/gi,
+    /(?:Please\s+let\s+me\s+know\s+if\s+you\s+have\s+any\s+(?:other\s+)?questions(?:\s+or\s+need\s+further\s+assistance)?\.?)?\s*$/gi,
+    /(?:Feel\s+free\s+to\s+ask\s+if\s+you\s+have\s+any\s+(?:more\s+)?questions\.?)?\s*$/gi,
     /(?:Semoga\s+(?:ini\s+)?membantu!?(?:\s+Beri\s+tahu\s+saya\s+jika\s+ada\s+pertanyaan\.?)?)\s*$/gi
   ];
   for (const pat of trailingFluff) {
@@ -77,34 +178,104 @@ export function pruneNoise(rawText) {
 }
 
 /**
- * Lean Model Semantic Synthesizer
+ * Local Skill Vault Reader (~/.graviton/skills/)
+ * Automatically scans and injects relevant skill markdown files based on prompt keywords.
  */
-export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
+export function loadLocalSkillVault(promptText = '') {
+  const skillsDir = path.join(os.homedir(), '.graviton', 'skills');
+  const matchedSkills = [];
+
+  try {
+    if (!fs.existsSync(skillsDir)) {
+      fs.mkdirSync(skillsDir, { recursive: true });
+      const initialSkills = {
+        'modern-web.md': `# Modern Web Guidance
+Keywords: web, modal, css, html, dialog, responsive, animation
+Directive: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
+        'bigquery.md': `# BigQuery SQL Optimization
+Keywords: bigquery, sql, etl, partition, cluster, dataset, table
+Directive: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
+        'antigravity-overclock.md': `# Antigravity Overclocking Directive
+Keywords: overclock, performance, leak, background, relay, signal
+Directive: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
+      };
+      for (const [filename, content] of Object.entries(initialSkills)) {
+        fs.writeFileSync(path.join(skillsDir, filename), content, 'utf8');
+      }
+    }
+
+    const files = fs.readdirSync(skillsDir).filter(f => f.endsWith('.md'));
+    const lowerPrompt = promptText.toLowerCase();
+
+    for (const file of files) {
+      const filePath = path.join(skillsDir, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      const baseName = path.basename(file, '.md').toLowerCase();
+
+      const kwMatch = content.match(/Keywords:\s*([^\n]+)/i);
+      const keywords = kwMatch
+        ? kwMatch[1].split(',').map(k => k.trim().toLowerCase())
+        : [baseName];
+
+      const isMatch = keywords.some(k => k && lowerPrompt.includes(k)) || lowerPrompt.includes(baseName);
+      if (isMatch) {
+        const dirMatch = content.match(/Directive:\s*([^\n]+)/i);
+        const directive = dirMatch ? dirMatch[1].trim() : content.slice(0, 160).replace(/\n/g, ' ');
+        matchedSkills.push({
+          skill: `LocalVault:${baseName}`,
+          directive: directive,
+          content: content.trim()
+        });
+      }
+    }
+  } catch (err) {
+    // Fail gracefully if skills directory is not readable
+  }
+
+  return matchedSkills;
+}
+
+/**
+ * Gigi 1: Gemini 3.8 Flash - The Sanitizer (Default)
+ * Operates under [CAVEMAN] (zero pleasantries, technical fragments) and [PONYTAIL] (7 staircases of laziness in <scratchpad>).
+ */
+export async function repromptWithFlashSanitizer(cleanedText, apiKey, unlockedSkills = []) {
   const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const skillDirectiveStr = unlockedSkills.length > 0
-    ? `\nSuntikkan directive untuk Antigravity Skills berikut jika relevan:\n` + unlockedSkills.map(s => `- [Skill: ${s.skill}] ${s.directive}`).join('\n')
+    ? `\nSuntikkan directive Antigravity Skills berikut:\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
     : '';
 
-  const systemInstruction = `Kamu adalah Graviton: Precision Prompt Synthesizer khusus untuk coding agent Antigravity.
-Tugasmu: Ambil pesan mentah/curhat/log error dari developer, lalu TULIS ULANG (REPROMPT) menjadi instruksi koding yang SANGAT PRESISI, TO-THE-POINT, dan TERSTRUKTUR RAPI untuk dieksekusi Antigravity.
+  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Dual-Clutch Engine [Gear 1: Gemini 3.8 Flash - The Sanitizer].
+Tugasmu: Pembersihan kilat bug, log, dan prompt developer dengan kecepatan tertinggi dan konsumsi token paling minimal.
 
-Panduan Penulisan Ulang:
-1. Buang total salam pembuka ("Halo", "Selamat pagi"), basa-basi, dan ucapan terima kasih/penutup.
-2. Buang spam log terminal, pertahankan hanya inti pesan error dan baris kode penyebabnya.
-3. Kunci dan pertahankan 100% blok kode asli dan path file asli tanpa diubah satu huruf pun.${skillDirectiveStr}
-4. Format output dalam markdown rapi:
-   - **Tujuan Utama:** (Tegas dan to-the-point)
-   - **Kode Terkait:** (jika ada kode, sertakan blok markdown asli)
-   - **Error yang Terjadi:** (jika ada error, sertakan cuplikan error bersih)
-   - **Spesifikasi Perbaikan:** (poin-poin konkret yang harus dikerjakan)
-5. Dilarang memberikan teks pembuka atau penutup apa pun. Langsung berikan hasil akhirnya.`;
+PROTOKOL WAJIB:
+1. [PONYTAIL] — Di dalam tag <scratchpad>, jalankan 7 anak tangga kemalasan (The 7 Staircases of Laziness):
+   1. Root Cause Isolation
+   2. Fluff & Boilerplate Elimination
+   3. Exact Error Signature & Traceback Pinpointing
+   4. File Path & Line Coordinate Matching
+   5. Minimal Surgery Plan (perubahan sesedikit mungkin)
+   6. Zero Regressions & Layout Shift Protection
+   7. Compactness & Token Budget Verification
+2. [CAVEMAN] — Di luar <scratchpad>, gunakan gaya komunikasi CAVEMAN:
+   - Tanpa salam, tanpa basa-basi, tanpa sopan santun.
+   - Gunakan fragmen teknis padat, to-the-point, dan tajam.
+   - Kunci 100% kode dan error asli tanpa modifikasi tak perlu.${skillDirectiveStr}
+   - Format:
+     <scratchpad>
+     [7 Staircases Analysis...]
+     </scratchpad>
+     **Tujuan Utama:** [fragmen teknis ringkas]
+     **Kode Terkait:** [kode asli jika ada]
+     **Error Trace:** [cuplikan error terisolasi jika ada]
+     **Spesifikasi Perbaikan:** [poin-poin bedah minimal]`;
 
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
     contents: [{ parts: [{ text: cleanedText }] }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+    generationConfig: { temperature: 0.15, maxOutputTokens: 2048 }
   };
 
   const res = await fetch(url, {
@@ -114,21 +285,77 @@ Panduan Penulisan Ulang:
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || 'Gemini Flash API request failed');
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini Flash 3.8 request failed (${res.status})`);
   }
 
   const data = await res.json();
   const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reprompted) throw new Error('No reprompt text returned from Gemini Flash');
+  if (!reprompted) throw new Error('No content returned from Gemini Flash 3.8');
   return reprompted.trim();
 }
 
 /**
- * Local Deterministic Synthesizer
+ * Gigi 2: Gemini 3.1 Pro - The Architect (Triggered by --deep)
+ * Performs deep architectural dissection with Step-by-Step planning in <scratchpad> before scaffold code.
  */
-export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
+export async function repromptWithProArchitect(cleanedText, apiKey, unlockedSkills = []) {
+  const model = 'gemini-2.5-pro';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const skillDirectiveStr = unlockedSkills.length > 0
+    ? `\nSuntikkan directive arsitektur berikut:\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
+    : '';
+
+  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Dual-Clutch Engine [Gear 2: Gemini 3.1 Pro - The Architect].
+Tugasmu: Bedah arsitektur sistem tingkat lanjut untuk instruksi koding kompleks yang membutuhkan perancangan modular mendalam.
+
+PROTOKOL WAJIB:
+1. Di dalam tag <scratchpad>, buat perencanaan implementasi arsitektur komprehensif:
+   - System Decomposition & Data Flow Analysis
+   - Step 1: Core Foundation & Data Contracts
+   - Step 2: Service Layer & Business Logic Orchestration
+   - Step 3: Edge Cases, Signal Handling & Security
+   - Step 4: Verification, Boundary Validation & Zero-Downtime Migration
+2. Di luar <scratchpad>, berikan cetak biru arsitektur tingkat tinggi beserta kerangka kode production-ready:${skillDirectiveStr}
+   Format:
+   <scratchpad>
+   [Architectural Blueprint & Step-by-Step Breakdown...]
+   </scratchpad>
+   **Arsitektur & Spesifikasi Sistem:** [Rencana arsitektur modular terperinci]
+   **Langkah Implementasi:** [Step 1, Step 2, Step 3 konkret]
+   **Kerangka Kode Production-Ready:** [Interface, Types, Implementation Scaffolding]`;
+
+  const payload = {
+    system_instruction: { parts: [{ text: systemInstruction }] },
+    contents: [{ parts: [{ text: cleanedText }] }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini Pro 3.1 request failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!reprompted) throw new Error('No content returned from Gemini Pro 3.1');
+  return reprompted.trim();
+}
+
+/**
+ * Local Deterministic Synthesizer (Zero-cost offline engine)
+ */
+export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = [], options = {}) {
+  const isDeep = Boolean(options.deep);
   const codeBlocks = [];
+
   let text = rawText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
     codeBlocks.push({ lang, code: code.trim() });
     return '';
@@ -138,6 +365,7 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     return '';
   });
 
+  // Strip conversational noise
   text = text.replace(/^(?:halo|selamat\s+(?:pagi|siang|sore|malam)|hey|hi|good\s+(?:morning|afternoon|evening))\s*(?:antigravity|ai|gemini|kawan|bro|there)?[\s,!.-]*/gim, '');
   text = text.replace(/(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?[\s,!.-]*)/gim, '');
   text = text.replace(/(?:thanks(?:\s+a\s+lot|\s+in\s+advance)?[\s,!.-]*)/gim, '');
@@ -176,27 +404,68 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     }
   }
 
-  const parts = [];
-  if (taskPoints.length === 1) {
-    parts.push(`**Tujuan Utama:**\n${taskPoints[0]}.`);
-  } else if (taskPoints.length > 1) {
-    parts.push(`**Tujuan Utama & Spesifikasi:**\n` + taskPoints.map(t => `- ${t}.`).join('\n'));
-  } else if (text.trim()) {
-    parts.push(`**Tujuan Utama:**\n${text.trim()}`);
-  }
+  if (isDeep) {
+    // Gear 2 Local Emulation: Pro 3.1 Architect
+    const scratchpad = `<scratchpad>
+[Architectural Breakdown]
+Step 1: Parse requirements and isolate interface boundary for: ${taskPoints[0] || text.trim() || 'Core module'}.
+Step 2: Define modular separation of concerns and robust type contracts.
+Step 3: Guard edge cases, handle signal interrupts (SIGINT/SIGTERM), and prevent resource leaks.
+Step 4: Execute structured implementation with zero regressions.
+</scratchpad>`;
 
-  if (codeBlocks.length > 0) {
-    const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-    parts.push(`**Kode Terkait:**\n${formattedCode}`);
-  }
+    const body = [
+      scratchpad,
+      `**Arsitektur & Spesifikasi Sistem:**\nImplementasikan perombakan arsitektur modular untuk ${taskPoints[0] || text.trim()}.`,
+      `**Langkah Implementasi:**\n` + (taskPoints.length > 0 ? taskPoints.map((t, idx) => `Step ${idx + 1}: ${t}.`).join('\n') : 'Step 1: Implementasi logic inti.\nStep 2: Testing & verifikasi.')
+    ];
 
-  if (errorSnippet) {
-    parts.push(`**Error yang Terjadi:**\n\`\`\`\n${errorSnippet}\n\`\`\``);
-  }
+    if (codeBlocks.length > 0) {
+      const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
+      body.push(`**Kerangka Kode Production-Ready:**\n${formattedCode}`);
+    }
+    if (errorSnippet) {
+      body.push('**Error Signature:**\n```\n' + errorSnippet + '\n```');
+    }
+    return body.join('\n\n').trim();
+  } else {
+    // Gear 1 Local Emulation: Flash 3.8 Sanitizer (Caveman + Ponytail)
+    const scratchpad = `<scratchpad>
+[Ponytail: 7 Staircases]
+1. Root cause: ${taskPoints[0] || 'Direct code optimization'}
+2. Fluff: stripped conversational greeting/boilerplate
+3. Error: ${errorSnippet ? 'Isolated stack trace' : 'None detected'}
+4. Target: ${workspaceContext?.type || 'Current workspace'}
+5. Surgery plan: minimal atomic modification
+6. Protection: zero layout shift & zero regressions
+7. Token budget: compressed to essential technical fragments
+</scratchpad>`;
 
-  return parts.join('\n\n').trim();
+    const body = [scratchpad];
+    if (taskPoints.length === 1) {
+      body.push(`**Tujuan Utama:**\n${taskPoints[0]}.`);
+    } else if (taskPoints.length > 1) {
+      body.push(`**Tujuan Utama & Spesifikasi:**\n` + taskPoints.map(t => `- ${t}.`).join('\n'));
+    } else if (text.trim()) {
+      body.push(`**Tujuan Utama:**\n${text.trim()}`);
+    }
+
+    if (codeBlocks.length > 0) {
+      const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
+      body.push(`**Kode Terkait:**\n${formattedCode}`);
+    }
+
+    if (errorSnippet) {
+      body.push('**Error yang Terjadi:**\n```\n' + errorSnippet + '\n```');
+    }
+
+    return body.join('\n\n').trim();
+  }
 }
 
+/**
+ * Main Synthesizer Orchestrator
+ */
 export async function synthesizePrompt(rawText, apiKey, options = {}) {
   if (!rawText || typeof rawText !== 'string') {
     return {
@@ -206,25 +475,33 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     };
   }
 
+  const isDeep = Boolean(options.deep);
   const workspaceContext = options.workspaceContext || detectWorkspaceContext();
-  const unlockedSkills = resolveSkillDirectives(rawText);
+  const builtInSkills = resolveSkillDirectives(rawText);
+  const vaultSkills = loadLocalSkillVault(rawText);
+  const allSkills = [...builtInSkills, ...vaultSkills];
+
   const originalTokens = estimateTokens(rawText);
   const stage1Text = pruneNoise(rawText);
 
   let optimizedText = '';
-  let engineUsed = 'Local Lean Engine';
+  let engineUsed = isDeep ? 'Pro 3.1 Architect (Local)' : 'Flash 3.8 Sanitizer (Local)';
 
   if (apiKey) {
     try {
-      optimizedText = await repromptWithAI(stage1Text, apiKey, unlockedSkills);
-      engineUsed = 'Gemini 2.5 Flash (Lean AI Tier)';
+      if (isDeep) {
+        optimizedText = await repromptWithProArchitect(stage1Text, apiKey, allSkills);
+        engineUsed = 'Gemini 3.1 Pro [Gear 2: Architect]';
+      } else {
+        optimizedText = await repromptWithFlashSanitizer(stage1Text, apiKey, allSkills);
+        engineUsed = 'Gemini 3.8 Flash [Gear 1: Sanitizer]';
+      }
     } catch (e) {
-      optimizedText = repromptLocally(stage1Text, workspaceContext, unlockedSkills);
-      engineUsed = 'Local Engine (AI Fallback)';
+      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, { deep: isDeep });
+      engineUsed = isDeep ? 'Pro 3.1 Architect (Fallback)' : 'Flash 3.8 Sanitizer (Fallback)';
     }
   } else {
-    optimizedText = repromptLocally(stage1Text, workspaceContext, unlockedSkills);
-    engineUsed = 'Local Zero-Cost Engine';
+    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, { deep: isDeep });
   }
 
   // Inject Skill unlocks & Workspace context
@@ -232,8 +509,8 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
   if (workspaceContext && workspaceContext.mainFiles && workspaceContext.mainFiles.length > 0) {
     headers.push(`[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]`);
   }
-  if (unlockedSkills.length > 0) {
-    const skillList = unlockedSkills.map(s => s.skill).join(', ');
+  if (allSkills.length > 0) {
+    const skillList = allSkills.map(s => s.skill).join(', ');
     headers.push(`[Antigravity Skill Activated: ${skillList}]`);
   }
 
@@ -254,7 +531,7 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
       tokensSaved,
       percentSaved,
       engine: engineUsed,
-      unlockedSkills: unlockedSkills.map(s => s.skill)
+      unlockedSkills: allSkills.map(s => s.skill)
     }
   };
 }

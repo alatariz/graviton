@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
@@ -7,11 +7,12 @@ import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { synthesizePrompt, estimateTokens } from './pipeline.js';
 import { filterCliOutput } from './cli-filter.js';
+import { resolveAgyExecutable } from '../bin/graviton-relay.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const STATS_FILE = path.join(os.homedir(), '.graviton-stats.json');
-const AGY_PATH = 'C:\\Users\\WINDOWS\\.gemini\\bin\\agy.exe';
+const AGY_PATH = resolveAgyExecutable();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,11 +42,11 @@ app.get('/api/stats', (req, res) => {
 
 app.post('/api/synthesize', async (req, res) => {
   try {
-    const { prompt, apiKey } = req.body;
+    const { prompt, apiKey, deep } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
     const keyToUse = apiKey || process.env.GEMINI_API_KEY || null;
-    const result = await synthesizePrompt(prompt, keyToUse);
+    const result = await synthesizePrompt(prompt, keyToUse, { deep: Boolean(deep) });
 
     const stats = loadStats();
     stats.promptsOptimized = (stats.promptsOptimized || 0) + 1;
