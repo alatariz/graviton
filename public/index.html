@@ -1,0 +1,1027 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRAVITON — The Autonomous AI Control & Token Acceleration Layer for Antigravity</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <meta name="theme-color" content="#030712">
+  
+  <!-- Modern Developer Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #030712;
+      --surface-1: #090e1a;
+      --surface-2: #111827;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-subtle: rgba(255, 255, 255, 0.12);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --brand: #6366f1;
+      --brand-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #e879f9 100%);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.15);
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%),
+        radial-gradient(circle at 10% 40%, rgba(192, 132, 252, 0.05), transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05), transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Ambient noise & grid */
+    .grid-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1000px;
+      background-size: 60px 60px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* NAVBAR */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(20px);
+      background: rgba(3, 7, 18, 0.75);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0.9rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.04em;
+    }
+    .logo-gem {
+      width: 28px; height: 28px;
+      background: var(--brand-gradient);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+    .logo-gem svg { width: 16px; height: 16px; color: white; }
+    .brand-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .nav-menu a { transition: color 0.2s; }
+    .nav-menu a:hover { color: var(--text-main); }
+    .nav-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      padding: 0.55rem 1.15rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+    }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--border-subtle);
+    }
+    .btn-primary {
+      background: #4f46e5;
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover {
+      background: #4338ca;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.45);
+    }
+    .btn-gradient {
+      background: var(--brand-gradient);
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 4px 20px rgba(192, 132, 252, 0.3);
+    }
+    .btn-gradient:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(192, 132, 252, 0.45);
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 10;
+      max-width: 1100px;
+      margin: 5rem auto 3rem;
+      padding: 0 2rem;
+      text-align: center;
+    }
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.35rem 1rem;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #c7d2fe;
+      margin-bottom: 2rem;
+    }
+    .hero-pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+    .hero-title {
+      font-size: 4.2rem;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+      margin-bottom: 1.5rem;
+    }
+    .gradient-text {
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+    }
+
+    /* QUICK COMMAND INSTALL BAR */
+    .cli-install-box {
+      display: inline-flex;
+      align-items: center;
+      background: #090e17;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 0.5rem 0.6rem 0.5rem 1.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #93c5fd;
+      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7);
+      gap: 1.5rem;
+    }
+    .cli-install-box button {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .cli-install-box button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+    }
+
+    /* ARCHITECTURE PIPELINE FLOW */
+    .pipeline-section {
+      max-width: 1200px;
+      margin: 5.5rem auto 6rem;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    .section-head {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-tag {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #818cf8;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .section-h2 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      position: relative;
+    }
+    .pipe-step-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem 1.5rem;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .pipe-step-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+    }
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #a5b4fc;
+      margin-bottom: 1.25rem;
+      font-family: var(--font-mono);
+    }
+    .pipe-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+    .pipe-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* INTERACTIVE STUDIO / DUAL PANE */
+    .studio-section {
+      max-width: 1200px;
+      margin: 0 auto 6rem;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    .studio-card {
+      background: #080d16;
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+    .studio-topbar {
+      padding: 1rem 1.8rem;
+      background: rgba(255, 255, 255, 0.015);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .studio-dots {
+      display: flex;
+      gap: 7px;
+    }
+    .s-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .s-red { background: #ef4444; }
+    .s-yellow { background: #f59e0b; }
+    .s-green { background: #10b981; }
+    
+    .studio-panes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 480px;
+    }
+    .studio-pane {
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .studio-pane:first-child {
+      border-right: 1px solid var(--border);
+    }
+    .pane-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    textarea.studio-input {
+      flex: 1;
+      width: 100%;
+      background: #04070e;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+    textarea.studio-input:focus {
+      border-color: rgba(99, 102, 241, 0.5);
+    }
+    .studio-output {
+      flex: 1;
+      width: 100%;
+      background: #04070e;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      color: #93c5fd;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .studio-footer {
+      padding: 1.2rem 1.8rem;
+      background: rgba(255, 255, 255, 0.015);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* CLI SHOWCASE */
+    .cli-section {
+      max-width: 1200px;
+      margin: 0 auto 7rem;
+      padding: 0 2rem;
+    }
+    .cli-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .cli-cmd-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      transition: all 0.2s;
+    }
+    .cli-cmd-card:hover {
+      border-color: var(--border-subtle);
+      transform: translateY(-2px);
+    }
+    .cli-snippet {
+      font-family: var(--font-mono);
+      color: #a5b4fc;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .cli-explain {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 4rem 2rem;
+      background: #02040a;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: #10b981;
+      color: #064e3b;
+      font-weight: 700;
+      padding: 0.85rem 1.4rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 9999;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(15px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 900px) {
+      .hero-title { font-size: 2.8rem; }
+      .pipeline-grid { grid-template-columns: 1fr; }
+      .studio-panes { grid-template-columns: 1fr; }
+      .studio-pane:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+      .cli-grid { grid-template-columns: 1fr; }
+    }
+  
+    .token-flow-container {
+      max-width: 1080px;
+      margin: 4.5rem auto 6rem;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    .token-flow-box {
+      background: linear-gradient(180deg, #0a0f1d 0%, #060913 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 2.2rem;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.9);
+      position: relative;
+      overflow: hidden;
+    }
+    .flow-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .flow-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #818cf8;
+    }
+    .flow-diagram {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    .flow-col {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .flow-col-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .flow-token-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 5px;
+      margin-bottom: 1.2rem;
+    }
+    .t-cell {
+      height: 14px;
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    .t-waste { background: rgba(239, 68, 68, 0.65); }
+    .t-code { background: #38bdf8; }
+    .t-clean { background: #10b981; }
+    .t-empty { background: rgba(255, 255, 255, 0.05); }
+
+    .flow-arrow-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .flow-badge-core {
+      background: var(--brand-gradient);
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: white;
+      box-shadow: 0 0 25px rgba(192, 132, 252, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .flow-stat-strip {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 1.8rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: white;
+    }
+    .stat-name {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
+    }
+
+</style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- NAVBAR -->
+  <header>
+    <div class="nav-container">
+      <div class="brand-logo">
+        <div class="logo-gem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span>GRAVITON</span>
+        <span class="brand-badge">Antigravity AI Layer</span>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#pipeline">The Pipeline</a>
+        <a href="#studio">Live Studio</a>
+        <a href="#cli">CLI Commands</a>
+      </nav>
+
+      <div class="nav-cta-group">
+        <div class="account-pill" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.4rem 0.9rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: #34d399;">
+     <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+     <span>Google Account Sync Active</span>
+   </div>
+        <button class="btn btn-primary" onclick="scrollToStudio()">
+          Open Studio
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <main>
+    <section class="hero">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>Built Exclusively for Google Antigravity Coding Agents</span>
+      </div>
+
+      <h1 class="hero-title">
+        The Autonomous AI Control Layer.<br>
+        <span class="gradient-text">Zero Fluff. Zero Permission Friction.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Graviton synthesizes your unstructured developer thoughts using free lean models, purges thousands of lines of terminal noise, and relays the task directly to Antigravity with <strong>automatic continuous permission approval</strong>.
+      </p>
+
+      <div class="cli-install-box">
+        <span>$ graviton "perbaiki error login auth.js"</span>
+        <button onclick="copyCliExample()">Copy One-Liner</button>
+      </div>
+    </section>
+
+    <!-- SATISFYING INTERACTIVE TOKEN FLOW DIAGRAM (ALA RTK HERO) -->
+    <section id="diagram" class="token-flow-container">
+      <div class="token-flow-box">
+        <div class="flow-head">
+          <span class="flow-tag">Live Context Window Compression</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim);">86% Bloat ➔ 14% High-Density Context</span>
+        </div>
+
+        <div class="flow-diagram">
+          <!-- BEFORE -->
+          <div class="flow-col">
+            <div class="flow-col-title">
+              <span>Unfiltered Input</span>
+              <span style="color: #f87171;">86% Context Window</span>
+            </div>
+            <div class="flow-token-grid">
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div>
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div>
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div>
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-code"></div><div class="t-cell t-code"></div>
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div>
+              <div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div><div class="t-cell t-waste"></div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;">
+              Verbose greetings, conversational fluff, ANSI escapes, repetitive logs, and permission prompts choking the model.
+            </p>
+          </div>
+
+          <!-- ARROW -->
+          <div class="flow-arrow-center">
+            <div class="flow-badge-core">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              <span>GRAVITON</span>
+            </div>
+            <span style="font-size: 0.72rem; color: #34d399; font-weight: 700; font-family: var(--font-mono);">
+              -72% Saved
+            </span>
+          </div>
+
+          <!-- AFTER -->
+          <div class="flow-col">
+            <div class="flow-col-title">
+              <span>Graviton Synthesized</span>
+              <span style="color: #34d399;">14% Pure Signal</span>
+            </div>
+            <div class="flow-token-grid">
+              <div class="t-cell t-clean"></div><div class="t-cell t-clean"></div><div class="t-cell t-code"></div><div class="t-cell t-code"></div>
+              <div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div>
+              <div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div>
+              <div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div>
+              <div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div>
+              <div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div><div class="t-cell t-empty"></div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;">
+              Pure actionable task markdown, exact source code blocks preserved, clean errors, and zero permission stalls.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow-stat-strip">
+          <div>
+            <div class="stat-val">231,400+</div>
+            <div class="stat-name">Tokens Saved</div>
+          </div>
+          <div>
+            <div class="stat-val">~0 ms</div>
+            <div class="stat-name">CLI Output Filter</div>
+          </div>
+          <div>
+            <div class="stat-val">100%</div>
+            <div class="stat-name">Hands-Free Auto-Allow</div>
+          </div>
+          <div>
+            <div class="stat-val">1,500/day</div>
+            <div class="stat-name">Free Gemini Flash Tier</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PIPELINE ARCHITECTURE (THE 4 STEPS) -->
+    <section id="pipeline" class="pipeline-section">
+      <div class="section-head">
+        <div class="section-tag">Autonomous Architecture</div>
+        <h2 class="section-h2">How the Graviton Pipeline Executes</h2>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipe-step-card">
+          <div class="step-num">01</div>
+          <h3 class="pipe-title">Raw Developer Input</h3>
+          <p class="pipe-desc">Type your conversational query, paste raw stack traces, or pipe messy terminal logs directly into Graviton CLI.</p>
+        </div>
+
+        <div class="pipe-step-card">
+          <div class="step-num">02</div>
+          <h3 class="pipe-title">Free Lean Synthesis</h3>
+          <p class="pipe-desc">Gemini Flash / Smart Local Parser restructures the prompt into concise, high-context actionable tasks without spending main agent tokens.</p>
+        </div>
+
+        <div class="pipe-step-card">
+          <div class="step-num">03</div>
+          <h3 class="pipe-title">Auto-Forward Relay</h3>
+          <p class="pipe-desc">The synthesized prompt is piped immediately into your active Antigravity session using the same authenticated Google ecosystem profile.</p>
+        </div>
+
+        <div class="pipe-step-card" style="border-color: rgba(16, 185, 129, 0.4);">
+          <div class="step-num" style="color: #34d399; background: rgba(16, 185, 129, 0.1);">04</div>
+          <h3 class="pipe-title" style="color: #34d399;">Always-Allow Execution</h3>
+          <p class="pipe-desc">Continuous tool permission requests from Antigravity are auto-approved in the background, executing end-to-end without blocking.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE STUDIO / PLAYGROUND -->
+    <section id="studio" class="studio-section">
+      <div class="section-head">
+        <div class="section-tag">Interactive Playground</div>
+        <h2 class="section-h2">Experience the Synthesis Engine</h2>
+      </div>
+
+      <div class="studio-card">
+        <div class="studio-topbar">
+          <div class="studio-dots">
+            <div class="s-dot s-red"></div>
+            <div class="s-dot s-yellow"></div>
+            <div class="s-dot s-green"></div>
+          </div>
+          <div style="font-size: 0.85rem; font-weight: 600; color: #a5b4fc; font-family: var(--font-mono);">
+            graviton-pipeline.v2 [Active]
+          </div>
+          <button class="btn btn-ghost" onclick="loadBenchmarkPrompt()" style="padding: 0.35rem 0.8rem; font-size: 0.78rem;">
+            Load Complex Prompt
+          </button>
+        </div>
+
+        <div class="studio-panes">
+          <div class="studio-pane">
+            <div class="pane-meta">
+              <span>Developer Input</span>
+              <span id="input-token-label">0 tokens</span>
+            </div>
+            <textarea id="raw-prompt-box" class="studio-input" placeholder="Type or paste any messy prompt with code, logs, or pleasantries..."></textarea>
+          </div>
+
+          <div class="studio-pane">
+            <div class="pane-meta">
+              <span>Synthesized for Antigravity</span>
+              <span id="output-token-label" style="color: #34d399;">0 tokens</span>
+            </div>
+            <div id="synthesized-box" class="studio-output">// Press "Synthesize Prompt" or Ctrl + Enter to process...</div>
+          </div>
+        </div>
+
+        <div class="studio-footer">
+          <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="auto-copy-chk" checked>
+              <span>Auto-copy to clipboard</span>
+            </label>
+            <span id="savings-tag" style="display: none; color: #34d399; font-weight: 700; font-family: var(--font-mono);"></span>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button id="synth-btn" class="btn btn-primary" onclick="doSynthesize()">
+              ⚡ Synthesize Prompt (Ctrl+Enter)
+            </button>
+            <button class="btn btn-gradient" onclick="forwardToAntigravity()">
+              🚀 Launch Antigravity (Auto-Allow)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLI SHOWCASE -->
+    <section id="cli" class="cli-section">
+      <div class="section-head">
+        <div class="section-tag">Terminal Workflow</div>
+        <h2 class="section-h2">Engineered for the Command Line</h2>
+      </div>
+
+      <div class="cli-grid">
+        <div class="cli-cmd-card">
+          <div class="cli-snippet">graviton "&lt;prompt&gt;"</div>
+          <div class="cli-explain">The ultimate 1-shot command: synthesizes your prompt with the free tier, auto-copies, and launches Antigravity with continuous auto-allow.</div>
+        </div>
+        <div class="cli-cmd-card">
+          <div class="cli-cmd-card-body">
+            <div class="cli-snippet">graviton clean "&lt;prompt&gt;"</div>
+            <div class="cli-explain">Only synthesizes and places the crisp instruction into your OS clipboard without launching the Antigravity process.</div>
+          </div>
+        </div>
+        <div class="cli-cmd-card">
+          <div class="cli-snippet">graviton run &lt;command...&gt;</div>
+          <div class="cli-explain">Executes tests, git, or build tools with zero-latency RTK-style output pruning to keep your agent context clean.</div>
+        </div>
+        <div class="cli-cmd-card">
+          <div class="cli-snippet">graviton gain</div>
+          <div class="cli-explain">Audits and reports your lifetime tokens saved, lines filtered, and bandwidth preserved across all projects.</div>
+        </div>
+        <div class="cli-cmd-card">
+          <div class="cli-snippet">graviton git status</div>
+          <div class="cli-explain">Instant 1-line branch and modification digest without repetitive git help instructions.</div>
+        </div>
+        <div class="cli-cmd-card">
+          <div class="cli-snippet">graviton serve</div>
+          <div class="cli-explain">Runs this developer control dashboard locally on port 3000 for visual prompt synthesis.</div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- ECOSYSTEM SUPPORT STACK -->
+    <section class="stack-section" style="max-width: 1100px; margin: 0 auto 7rem; padding: 0 2rem; text-align: center;">
+      <div class="section-tag" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin-bottom: 0.5rem;">Native Ecosystem Integration</div>
+      <h3 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 0.6rem; letter-spacing: -0.03em;">Engineered for Your Entire Google AI Toolchain</h3>
+      <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 600px; margin: 0 auto 2.5rem;">One authenticated Google profile controls synthesis, execution, and cloud resources without juggling separate credentials.</p>
+
+      <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1.2rem;">
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 0.75rem 1.6rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 0.65rem;">
+          <span style="color: #818cf8;">●</span> Google Antigravity 2.0
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 0.75rem 1.6rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 0.65rem;">
+          <span style="color: #38bdf8;">●</span> Google Stitch MCP
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 0.75rem 1.6rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 0.65rem;">
+          <span style="color: #ec4899;">●</span> Gemini 2.5 Flash Free Tier
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 0.75rem 1.6rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 0.65rem;">
+          <span style="color: #10b981;">●</span> Google Cloud SDK
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div><strong>GRAVITON</strong> — Full-Spectrum AI Control & Token Acceleration Layer</div>
+      <div>Designed for Antigravity Developers · Google Ecosystem Integration</div>
+    </div>
+  </footer>
+
+  <!-- KEY MODAL -->
+  
+    </div>
+  </div>
+
+  <div id="toast">Copied to clipboard!</div>
+
+  <script>
+    function scrollToStudio() {
+      document.getElementById('studio').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2800);
+    }
+
+    function copyCliExample() {
+      navigator.clipboard.writeText('graviton "perbaiki error login auth.js"');
+      showToast('CLI command copied!');
+    }
+
+    function loadBenchmarkPrompt() {
+      document.getElementById('raw-prompt-box').value = `Selamat pagi Antigravity! Saya mau minta tolong banget perbaiki bug authentication di auth.js.
+Kodenya seperti di bawah ini ya:
+
+\`\`\`javascript
+export async function verifyUser(req, res) {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+  return true;
+}
+\`\`\`
+
+Saat user akses endpoint tanpa token atau token kosong, aplikasinya malah crash TypeError: Cannot read property of undefined. Tolong bantu saya perbaiki ya kawan. Terima kasih banyak sebelumnya!`;
+      onInputChange();
+    }
+
+    function onInputChange() {
+      const text = document.getElementById('raw-prompt-box').value;
+      const count = Math.round(text.length / 3.8);
+      document.getElementById('input-token-label').innerText = `${count} tokens`;
+    }
+
+    document.getElementById('raw-prompt-box').addEventListener('input', onInputChange);
+    document.getElementById('raw-prompt-box').addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') doSynthesize();
+    });
+
+    let currentOptimizedText = '';
+
+    async function doSynthesize() {
+      const prompt = document.getElementById('raw-prompt-box').value.trim();
+      if (!prompt) return;
+
+      const btn = document.getElementById('synth-btn');
+      btn.innerText = '⚡ Synthesizing...';
+      btn.disabled = true;
+
+      const apiKey = localStorage.getItem('graviton_gemini_key');
+
+      try {
+        const res = await fetch('/api/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, apiKey })
+        });
+        const data = await res.json();
+
+        if (data.optimizedText) {
+          currentOptimizedText = data.optimizedText;
+          document.getElementById('synthesized-box').innerText = data.optimizedText;
+          document.getElementById('output-token-label').innerText = `${data.stats.optimizedTokens} tokens`;
+
+          const tag = document.getElementById('savings-tag');
+          tag.innerText = `-${data.stats.percentSaved}% Saved (${data.stats.tokensSaved} tokens)`;
+          tag.style.display = 'inline-block';
+
+          if (document.getElementById('auto-copy-chk').checked) {
+            navigator.clipboard.writeText(data.optimizedText);
+            showToast('✔ Synthesized & Copied to Clipboard!');
+          }
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message);
+      } finally {
+        btn.innerText = '⚡ Synthesize Prompt (Ctrl+Enter)';
+        btn.disabled = false;
+      }
+    }
+
+    async function forwardToAntigravity() {
+      const textToSend = currentOptimizedText || document.getElementById('raw-prompt-box').value.trim();
+      if (!textToSend) {
+        showToast('Please synthesize or enter a prompt first!');
+        return;
+      }
+
+      showToast('Launching Antigravity with Auto-Allow in background...');
+      try {
+        await fetch('/api/forward-antigravity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: textToSend })
+        });
+      } catch (e) {
+        showToast('Relay Error: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>
