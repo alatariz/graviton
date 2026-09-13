@@ -1,5 +1,6 @@
-﻿// src/pipeline.js - Graviton: Precision Prompt Synthesizer for Antigravity
+﻿// src/pipeline.js - Graviton: Precision Prompt Synthesizer & Antigravity Skill Unlocker
 import { redactSecrets, detectWorkspaceContext } from './workspace-helper.js';
+import { resolveSkillDirectives } from './skill-matrix.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -66,9 +67,7 @@ export function pruneNoise(rawText) {
     /(?:Hope\s+this\s+helps!?(?:\s+Let\s+me\s+know\s+if\s+you\s+need\s+anything\s+else\.?)?)\s*$/gi,
     /(?:Please\s+let\s+me\s+know\s+if\s+you\s+have\s+any\s+(?:other\s+)?questions(?:\s+or\s+need\s+further\s+assistance)?\.?)\s*$/gi,
     /(?:Feel\s+free\s+to\s+ask\s+if\s+you\s+have\s+any\s+(?:more\s+)?questions\.?)\s*$/gi,
-    /(?:As\s+an\s+AI(?:\s+language\s+model)?,?\s+I\s+recommend\s+testing\s+this\s+before\s+production\.?)\s*$/gi,
-    /(?:Semoga\s+(?:ini\s+)?membantu!?(?:\s+Beri\s+tahu\s+saya\s+jika\s+ada\s+pertanyaan\.?)?)\s*$/gi,
-    /(?:Jika\s+ada\s+yang\s+kurang\s+jelas,\s+silakan\s+tanyakan\s+kembali\.?)\s*$/gi
+    /(?:Semoga\s+(?:ini\s+)?membantu!?(?:\s+Beri\s+tahu\s+saya\s+jika\s+ada\s+pertanyaan\.?)?)\s*$/gi
   ];
   for (const pat of trailingFluff) {
     out = out.replace(pat, '');
@@ -78,11 +77,15 @@ export function pruneNoise(rawText) {
 }
 
 /**
- * Lean Model Semantic Synthesizer (Gemini Flash Free Tier)
+ * Lean Model Semantic Synthesizer
  */
-export async function repromptWithAI(cleanedText, apiKey) {
+export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
   const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const skillDirectiveStr = unlockedSkills.length > 0
+    ? `\nSuntikkan directive untuk Antigravity Skills berikut jika relevan:\n` + unlockedSkills.map(s => `- [Skill: ${s.skill}] ${s.directive}`).join('\n')
+    : '';
 
   const systemInstruction = `Kamu adalah Graviton: Precision Prompt Synthesizer khusus untuk coding agent Antigravity.
 Tugasmu: Ambil pesan mentah/curhat/log error dari developer, lalu TULIS ULANG (REPROMPT) menjadi instruksi koding yang SANGAT PRESISI, TO-THE-POINT, dan TERSTRUKTUR RAPI untuk dieksekusi Antigravity.
@@ -90,13 +93,13 @@ Tugasmu: Ambil pesan mentah/curhat/log error dari developer, lalu TULIS ULANG (R
 Panduan Penulisan Ulang:
 1. Buang total salam pembuka ("Halo", "Selamat pagi"), basa-basi, dan ucapan terima kasih/penutup.
 2. Buang spam log terminal, pertahankan hanya inti pesan error dan baris kode penyebabnya.
-3. Kunci dan pertahankan 100% blok kode asli dan path file asli tanpa diubah satu huruf pun.
+3. Kunci dan pertahankan 100% blok kode asli dan path file asli tanpa diubah satu huruf pun.${skillDirectiveStr}
 4. Format output dalam markdown rapi:
    - **Tujuan Utama:** (Tegas dan to-the-point)
    - **Kode Terkait:** (jika ada kode, sertakan blok markdown asli)
    - **Error yang Terjadi:** (jika ada error, sertakan cuplikan error bersih)
    - **Spesifikasi Perbaikan:** (poin-poin konkret yang harus dikerjakan)
-5. Dilarang memberikan teks pembuka ("Berikut promptnya:") atau penutup apa pun. Langsung berikan hasil akhirnya.`;
+5. Dilarang memberikan teks pembuka atau penutup apa pun. Langsung berikan hasil akhirnya.`;
 
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
@@ -122,9 +125,9 @@ Panduan Penulisan Ulang:
 }
 
 /**
- * Local Deterministic Synthesizer (Instant 0ms, Zero Cost)
+ * Local Deterministic Synthesizer
  */
-export function repromptLocally(rawText, workspaceContext = null) {
+export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
   const codeBlocks = [];
   let text = rawText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
     codeBlocks.push({ lang, code: code.trim() });
@@ -136,15 +139,10 @@ export function repromptLocally(rawText, workspaceContext = null) {
   });
 
   text = text.replace(/^(?:halo|selamat\s+(?:pagi|siang|sore|malam)|hey|hi|good\s+(?:morning|afternoon|evening))\s*(?:antigravity|ai|gemini|kawan|bro|there)?[\s,!.-]*/gim, '');
-  text = text.replace(/(?:hope\s+you\s+(?:are\s+doing\s+well|have\s+a\s+great\s+day)[\s,!.-]*)/gim, '');
-  text = text.replace(/(?:semoga\s+harimu\s+menyenangkan[\s,!.-]*)/gim, '');
   text = text.replace(/(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?[\s,!.-]*)/gim, '');
   text = text.replace(/(?:thanks(?:\s+a\s+lot|\s+in\s+advance)?[\s,!.-]*)/gim, '');
-  text = text.replace(/(?:thank\s+you(?:\s+so\s+much|\s+very\s+much)?(?:\s+in\s+advance)?[\s,!.-]*)/gim, '');
   text = text.replace(/[,]?\s*(?:ya\s*|dong\s*|deh\s*)[.!?,]*$/gim, '');
   text = text.replace(/(?:saya\s+ingin\s+(?:kamu\s+|anda\s+)?(?:tolong\s+)?(?:bantu\s+saya\s+untuk\s+)?)/gim, '');
-  text = text.replace(/(?:bisakah\s+(?:kamu\s+|anda\s+)?(?:tolong\s+)?)/gim, '');
-  text = text.replace(/(?:tolong\s+(?:bantu\s+saya\s+untuk\s+)?)/gim, '');
   text = text.replace(/(?:kodenya\s+(?:seperti\s+ini|adalah)[\s:]*)/gim, '');
 
   let errorSnippet = null;
@@ -209,6 +207,7 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
   }
 
   const workspaceContext = options.workspaceContext || detectWorkspaceContext();
+  const unlockedSkills = resolveSkillDirectives(rawText);
   const originalTokens = estimateTokens(rawText);
   const stage1Text = pruneNoise(rawText);
 
@@ -217,20 +216,29 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
 
   if (apiKey) {
     try {
-      optimizedText = await repromptWithAI(stage1Text, apiKey);
+      optimizedText = await repromptWithAI(stage1Text, apiKey, unlockedSkills);
       engineUsed = 'Gemini 2.5 Flash (Lean AI Tier)';
     } catch (e) {
-      optimizedText = repromptLocally(stage1Text, workspaceContext);
+      optimizedText = repromptLocally(stage1Text, workspaceContext, unlockedSkills);
       engineUsed = 'Local Engine (AI Fallback)';
     }
   } else {
-    optimizedText = repromptLocally(stage1Text, workspaceContext);
+    optimizedText = repromptLocally(stage1Text, workspaceContext, unlockedSkills);
     engineUsed = 'Local Zero-Cost Engine';
   }
 
-  // Inject workspace hint if available
+  // Inject Skill unlocks & Workspace context
+  const headers = [];
   if (workspaceContext && workspaceContext.mainFiles && workspaceContext.mainFiles.length > 0) {
-    optimizedText = `[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]\n\n` + optimizedText;
+    headers.push(`[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]`);
+  }
+  if (unlockedSkills.length > 0) {
+    const skillList = unlockedSkills.map(s => s.skill).join(', ');
+    headers.push(`[Antigravity Skill Activated: ${skillList}]`);
+  }
+
+  if (headers.length > 0) {
+    optimizedText = headers.join('\n') + '\n\n' + optimizedText;
   }
 
   const optimizedTokens = estimateTokens(optimizedText);
@@ -245,7 +253,8 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
       optimizedTokens,
       tokensSaved,
       percentSaved,
-      engine: engineUsed
+      engine: engineUsed,
+      unlockedSkills: unlockedSkills.map(s => s.skill)
     }
   };
 }

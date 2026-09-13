@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -236,6 +236,24 @@ $ git status | graviton
 $ graviton gain
       </div>
 
+      <h2 id="skill-matrix" class="docs-h2">Antigravity Skill Unlocker Matrix</h2>
+      <p class="docs-p">
+        Standard models often struggle or truncate solutions when given open-ended instructions. Graviton's internal skill resolver maps keywords directly to your installed Antigravity capabilities and injects specialized directives:
+      </p>
+      <div class="code-block">
+Intent: "buat modal dialog responsive"
+↳ [Antigravity Skill Activated: modern-web-guidance]
+  Directive: Inject modern web standards (:has, container queries, zero-layout-shift, high-performance CSS)
+
+Intent: "buat query BigQuery transaksi"
+↳ [Antigravity Skill Activated: bigquery-sql & data-autocleaning]
+  Directive: Apply high-efficiency BigQuery optimization and automated data cleaning best practices
+
+Intent: "buat mobile app widget"
+↳ [Antigravity Skill Activated: flutter-apply-architecture-best-practices]
+  Directive: Apply layered reactive Flutter architecture (UI, Domain, Data) and automated unit test mocks
+      </div>
+
       <h2 id="privacy" class="docs-h2">Privacy & Secret Redaction</h2>
       <p class="docs-p">
         Before any prompt is synthesized or relayed to the model, Graviton scrubs API keys, JWT tokens, and database passwords into <code>[REDACTED_SECRET]</code>, guaranteeing that sensitive keys are never saved in conversation history.
@@ -248,6 +266,7 @@ $ graviton gain
       <a href="#how-it-works" class="toc-link">How it works</a>
       <a href="#installation" class="toc-link">Installation</a>
       <a href="#cli-quickstart" class="toc-link">CLI Quickstart</a>
+      <a href="#skill-matrix" class="toc-link">Skill Matrix</a>
       <a href="#privacy" class="toc-link">Privacy & Redaction</a>
     </aside>
   </div>
