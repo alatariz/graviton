@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.5 Singularity Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.5.1 Interceptor Autonomous Execution Layer
 
 import { spawn } from 'child_process';
 import fs from 'fs';
@@ -138,12 +138,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.5.0';
+    let version = '1.5.1';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.5 Singularity Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.5.1 Interceptor Architecture)`);
     process.exit(0);
   }
 

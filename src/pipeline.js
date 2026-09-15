@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { spawn } from 'child_process';
 import { redactSecrets } from './workspace-helper.js';
 
 export function estimateTokens(text) {
@@ -122,6 +123,14 @@ export function compressJsonArray(text) {
  */
 export function pruneNoise(rawText) {
   if (!rawText || typeof rawText !== 'string') return '';
+
+  // 0. Rate Limit Interceptor (Fatal Alarm)
+  const RATE_LIMIT_REGEX = /429|Too Many Requests|Quota Exceeded|exhausted/i;
+  if (RATE_LIMIT_REGEX.test(rawText)) {
+    console.error('\x1b[1m\x1b[31m[🚨 FATAL: ANTIGRAVITY API RATE LIMIT EXCEEDED. TAKE A BREAK.]\x1b[0m');
+    process.exit(1);
+  }
+
   let out = redactSecrets(rawText);
 
   // 1. Remove ANSI escape sequences
@@ -445,14 +454,23 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 }
 
 /**
- * File Truncation (Anti-Bom File)
- * Reads file content and splits by lines (\n).
- * If lines exceed 500, takes first 500 lines and appends:
- * \n// [...FILE TRUNCATED: MAX 500 LINES EXCEEDED...]
+ * File Truncation & Minified Protection (Anti-Bom File)
+ * Checks if the file extension is .min.js, .min.css, or if the first line exceeds 1000 characters.
+ * If minified, returns a token-safe placeholder.
+ * Otherwise, splits by lines (\n) and caps at maxLines (500).
  */
 export function readAndTruncateFile(filePath, maxLines = 500) {
   try {
+    const fileName = path.basename(filePath).toLowerCase();
+    if (fileName.endsWith('.min.js') || fileName.endsWith('.min.css')) {
+      return '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]';
+    }
     const raw = fs.readFileSync(filePath, 'utf8');
+    const firstLineEnd = raw.indexOf('\n');
+    const firstLine = firstLineEnd === -1 ? raw : raw.slice(0, firstLineEnd);
+    if (firstLine.length > 1000) {
+      return '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]';
+    }
     const lines = raw.replace(/\r\n/g, '\n').split('\n');
     if (lines.length > maxLines) {
       return lines.slice(0, maxLines).join('\n') + '\n// [...FILE TRUNCATED: MAX 500 LINES EXCEEDED...]';
@@ -502,34 +520,46 @@ export function createShadowBackup(filePaths, cwd = process.cwd()) {
 }
 
 /**
- * Self-Cleaning Shadow Backup
- * Asynchronously purges backup files older than 7 days from ~/.graviton/backups/
- * Uses stat.mtime to evaluate file age.
- * Non-blocking, fire-and-forget, zero latency impact.
+ * Synchronous-Detached Garbage Collection (Self-Cleaning Shadow Backup)
+ * Spawns a completely detached background node process using child_process.spawn
+ * with detached: true and stdio: 'ignore'. Calls unref() on the child.
+ * Ensures the OS finishes purging expired backups (> 7 days) even if Graviton instantly exits.
  */
-export async function purgeOldBackups(backupDir = path.join(os.homedir(), '.graviton', 'backups'), maxAgeDays = 7) {
+export function purgeOldBackups(backupDir = path.join(os.homedir(), '.graviton', 'backups'), maxAgeDays = 7) {
   try {
-    if (!fs.existsSync(backupDir)) return [];
-    const entries = await fs.promises.readdir(backupDir, { withFileTypes: true });
-    const now = Date.now();
-    const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
-    const purged = [];
+    if (!fs.existsSync(backupDir)) return null;
 
-    for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith('.bak')) {
-        const filePath = path.join(backupDir, entry.name);
-        try {
-          const stats = await fs.promises.stat(filePath);
-          if (stats.mtime && (now - stats.mtime.getTime()) > maxAgeMs) {
-            await fs.promises.unlink(filePath);
-            purged.push(filePath);
+    const cleanScript = `
+      const fs = require('fs');
+      const path = require('path');
+      const dir = ${JSON.stringify(backupDir)};
+      const maxAgeMs = ${maxAgeDays} * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const e of entries) {
+          if (e.isFile() && e.name.endsWith('.bak')) {
+            const p = path.join(dir, e.name);
+            try {
+              const s = fs.statSync(p);
+              if (s.mtime && (now - s.mtime.getTime()) > maxAgeMs) {
+                fs.unlinkSync(p);
+              }
+            } catch {}
           }
-        } catch {}
-      }
-    }
-    return purged;
+        }
+      } catch {}
+    `.replace(/\s+/g, ' ').trim();
+
+    const child = spawn(process.execPath, ['-e', cleanScript], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    });
+    child.unref();
+    return child;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -752,30 +782,32 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
             `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedContent}\n\`\`\``
           );
 
-          // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1)
-          const rawFileContent = fs.readFileSync(resolved, 'utf8');
-          const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/|@\/|~\/)[^'"\s]+)/g;
-          const detectedDeps = [];
-          let match;
-          while ((match = depRegex.exec(rawFileContent)) !== null) {
-            const depImport = match[1] ? match[1].replace(/['";]+$/, '').trim() : null;
-            if (depImport && !detectedDeps.includes(depImport)) {
-              detectedDeps.push(depImport);
+          // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1; skip for minified)
+          if (cappedContent !== '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]') {
+            const rawFileContent = fs.readFileSync(resolved, 'utf8');
+            const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/|@\/|~\/)[^'"\s]+)/g;
+            const detectedDeps = [];
+            let match;
+            while ((match = depRegex.exec(rawFileContent)) !== null) {
+              const depImport = match[1] ? match[1].replace(/['";]+$/, '').trim() : null;
+              if (depImport && !detectedDeps.includes(depImport)) {
+                detectedDeps.push(depImport);
+              }
             }
-          }
 
-          const fileDir = path.dirname(resolved);
-          for (const depImport of detectedDeps) {
-            const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
-            if (resolvedDep && !handledPaths.has(resolvedDep)) {
-              handledPaths.add(resolvedDep);
-              const depContent = readAndTruncateFile(resolvedDep, 500);
-              if (depContent !== null) {
-                const depExt = path.extname(resolvedDep).slice(1) || '';
-                const relDepPath = path.relative(currentCwd, resolvedDep).replace(/\\/g, '/');
-                injectedDependencies.push(
-                  `[AUTO-INJECTED DEPENDENCY: ${relDepPath}]\n\`\`\`${depExt}\n${depContent}\n\`\`\``
-                );
+            const fileDir = path.dirname(resolved);
+            for (const depImport of detectedDeps) {
+              const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
+              if (resolvedDep && !handledPaths.has(resolvedDep)) {
+                handledPaths.add(resolvedDep);
+                const depContent = readAndTruncateFile(resolvedDep, 500);
+                if (depContent !== null) {
+                  const depExt = path.extname(resolvedDep).slice(1) || '';
+                  const relDepPath = path.relative(currentCwd, resolvedDep).replace(/\\/g, '/');
+                  injectedDependencies.push(
+                    `[AUTO-INJECTED DEPENDENCY: ${relDepPath}]\n\`\`\`${depExt}\n${depContent}\n\`\`\``
+                  );
+                }
               }
             }
           }
