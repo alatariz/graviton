@@ -25,27 +25,34 @@ export function estimateTokens(text) {
 }
 
 /**
- * Headroom Heuristic: Compresses oversized JSON arrays into schema summaries
+ * Headroom Heuristic: Compresses oversized JSON arrays (> 3 elements)
+ * Replaces middle section with string `[... HEADROOM COMPRESSION: X items truncated ...]`,
+ * preserving only the first and last elements.
  */
 export function compressHeadroomJson(text) {
   if (!text || typeof text !== 'string') return text;
 
-  function compressValue(val, depth = 0) {
-    if (depth > 4) return val;
-    if (Array.isArray(val)) {
-      if (val.length > 3) {
-        const sample = val.slice(0, 2).map(item => compressValue(item, depth + 1));
-        const omittedCount = val.length - 2;
-        const first = val[0];
-        const keys = first && typeof first === 'object' && !Array.isArray(first)
-          ? Object.keys(first).join(', ')
-          : typeof first;
-        sample.push(`... Headroom compressed: [${omittedCount} items omitted | schema: { ${keys} }] ...`);
-        return sample;
-      }
-      return val.map(item => compressValue(item, depth + 1));
+  function compressArray(arr, depth = 0) {
+    if (!Array.isArray(arr)) return arr;
+    if (arr.length > 3) {
+      const truncatedCount = arr.length - 2;
+      const first = compressValue(arr[0], depth + 1);
+      const last = compressValue(arr[arr.length - 1], depth + 1);
+      return [
+        first,
+        `[... HEADROOM COMPRESSION: ${truncatedCount} items truncated ...]`,
+        last
+      ];
     }
-    if (val && typeof val === 'object') {
+    return arr.map(item => compressValue(item, depth + 1));
+  }
+
+  function compressValue(val, depth = 0) {
+    if (depth > 6) return val;
+    if (Array.isArray(val)) {
+      return compressArray(val, depth);
+    }
+    if (val && typeof val === 'object' && val !== null) {
       const res = {};
       for (const [k, v] of Object.entries(val)) {
         res[k] = compressValue(v, depth + 1);
@@ -55,33 +62,79 @@ export function compressHeadroomJson(text) {
     return val;
   }
 
-  // Check if text is a single JSON payload
+  // 1. Check if text is a single JSON payload (array or object)
   const trimmed = text.trim();
   if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
     try {
       const parsed = JSON.parse(trimmed);
       return JSON.stringify(compressValue(parsed), null, 2);
-    } catch {
-      // Fall through to regex replacement if not strict single JSON
-    }
+    } catch {}
   }
 
-  // Regex-based embedded JSON array detector
-  return text.replace(/\[\s*\{[\s\S]*?\}\s*\]/g, (match) => {
-    if (match.length < 200) return match;
-    try {
-      const parsed = JSON.parse(match);
-      if (Array.isArray(parsed) && parsed.length > 3) {
-        return JSON.stringify(compressValue(parsed), null, 2);
+  // 2. Balanced bracket scanner for embedded JSON arrays within freeform text
+  let result = '';
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === '[') {
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+      let j = i;
+      let found = false;
+
+      for (; j < text.length; j++) {
+        const char = text[j];
+        if (escape) {
+          escape = false;
+          continue;
+        }
+        if (char === '\\') {
+          escape = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = !inString;
+          continue;
+        }
+        if (!inString) {
+          if (char === '[') depth++;
+          else if (char === ']') {
+            depth--;
+            if (depth === 0) {
+              found = true;
+              break;
+            }
+          }
+        }
       }
-    } catch {}
-    return match;
-  });
+
+      if (found) {
+        const candidate = text.slice(i, j + 1);
+        try {
+          const parsed = JSON.parse(candidate);
+          if (Array.isArray(parsed) && parsed.length > 3) {
+            const compressed = compressArray(parsed);
+            result += JSON.stringify(compressed, null, 2);
+            i = j + 1;
+            continue;
+          }
+        } catch {}
+      }
+    }
+    result += text[i];
+    i++;
+  }
+
+  return result;
 }
 
 /**
  * RTK & Headroom Noise Pruner
- * Intercepts terminal chatter, removes progress lines, isolates tracebacks, and applies Headroom heuristics.
+ * Pure heuristic & regex string filter executed BEFORE text reaches the AI Synthesizer.
+ * Enforces:
+ * - [HEADROOM LOGIC]: JSON array compression (> 3 elements) to first and last items.
+ * - [RTK LOGIC]: Detection & destruction of terminal noise (npm WARN, npm notice, info, Downloaded, Compiling, Building).
+ * - [RTK LOGIC]: Exclusive preservation of critical error lines (TypeError, ReferenceError, Exception, panic, FATAL, at stack trace).
  */
 export function pruneNoise(rawText) {
   let out = redactSecrets(rawText);
@@ -96,10 +149,24 @@ export function pruneNoise(rawText) {
     return `[data:${mime};base64 ~${sizeKb}KB omitted]`;
   });
 
-  // 3. Headroom heuristic: compress oversized JSON arrays
+  // 3. [HEADROOM LOGIC] Compress oversized JSON arrays (> 3 elements)
   out = compressHeadroomJson(out);
 
-  // 4. RTK Terminal Log Filter: strip progress chatter, keep error & warning tracebacks
+  // 4. [RTK LOGIC] Terminal Log Filter
+  // Exclusively preserve: TypeError, ReferenceError, Exception, panic, FATAL, or at  (stack trace)
+  const RTK_EXCLUSIVE_ERROR_REGEX = /(?:TypeError|ReferenceError|Exception|panic|FATAL|^\s*at\s+|\bat\s+(?:[A-Za-z0-9_$.<>]+\s+)?\([^)]+:\d+:\d+\))/i;
+
+  // Detect and destroy: npm WARN, npm notice, info, Downloaded, Compiling, Building, plus spinners/progress bars
+  const RTK_NOISE_REGEX = (
+    /(?:npm\s+WARN|npm\s+notice|(?:^\s*|[\[:]|\b(?:npm|yarn|pnpm)\s+)info\b|Downloaded|Compiling|Building)/i
+  );
+  const PROGRESS_NOISE_REGEX = (
+    /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/ ||
+    /(?:\[[=> -]{5,}\]|\b\d+(?:\.\d+)?%\s*(?:done|complete)?|\b\d+\/\d+\s+(?:packages|files|crates))/i ||
+    /(?:npm|yarn|pnpm)\s+(?:verb|timing|sill|http\s+fetch)/i ||
+    /(?:Downloading|Fetching|Extracting)\s+https?:/i
+  );
+
   const rawLines = out.split('\n');
   const filteredLines = [];
 
@@ -110,25 +177,19 @@ export function pruneNoise(rawText) {
       continue;
     }
 
-    // Always preserve error, warning, traceback, and file coordinate lines
-    const isErrorOrTrace = /(?:error|exception|fail|fatal|panic|traceback|warning|stack|\bat\s+|\.js:\d+|\.ts:\d+|\.py:\d+|\.rs:\d+|-->\s*|AssertionError)/i.test(trimmed);
-    if (isErrorOrTrace) {
+    // 1. Exclusively preserve critical error & traceback lines
+    if (RTK_EXCLUSIVE_ERROR_REGEX.test(trimmed)) {
       filteredLines.push(line);
       continue;
     }
 
-    // Discard progress bars, spinners, package manager chatter
-    const isProgressNoise = (
-      /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/.test(trimmed) ||
-      /(?:\[[=> -]{5,}\]|\b\d+(?:\.\d+)?%\s*(?:done|complete)?|\b\d+\/\d+\s+(?:packages|files|crates))/i.test(trimmed) ||
-      /(?:npm|yarn|pnpm)\s+(?:verb|timing|sill|http\s+fetch)/i.test(trimmed) ||
-      /(?:^Compiling\s+[a-zA-Z0-9_-]+\s+v\d+)/i.test(trimmed) ||
-      /(?:Downloading|Fetching|Extracting)\s+https?:/i.test(trimmed)
-    );
-
-    if (!isProgressNoise) {
-      filteredLines.push(line);
+    // 2. Detect and destroy noise lines
+    if (RTK_NOISE_REGEX.test(trimmed) || PROGRESS_NOISE_REGEX.test(trimmed)) {
+      // Completely destroyed / dropped
+      continue;
     }
+
+    filteredLines.push(line);
   }
   out = filteredLines.join('\n');
 
@@ -331,7 +392,7 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
 
   // 2. Extract Error Traceback if present
   let errorSnippet = null;
-  const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range|URI)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+|error\[E\d+\]:[^\n]+(?:\n\s+-->\s+[^\n]+)+|AssertionError[^\n]+)/i);
+  const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range|URI)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bException:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bpanic:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bFATAL:[^\n]+|error\[E\d+\]:[^\n]+(?:\n\s+-->\s+[^\n]+)+|AssertionError[^\n]+)/i);
   if (errorMatch) {
     const rawError = errorMatch[0].trim();
     const errLines = rawError.split('\n');
