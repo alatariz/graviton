@@ -19,14 +19,15 @@
   </p>
 
   <p align="center">
-    <a href="#-overview">Overview</a> &bull;
-    <a href="#-the-vision">Vision</a> &bull;
-    <a href="#-core-architecture">Architecture</a> &bull;
-    <a href="#-empirical-benchmarks">Benchmarks</a> &bull;
-    <a href="#-skill-unlocker-matrix">Skill Matrix</a> &bull;
-    <a href="#-quickstart--installation">Quickstart</a> &bull;
-    <a href="#-cli-reference">CLI Reference</a> &bull;
-    <a href="#-license">License</a>
+    <a href="#overview">Overview</a> &bull;
+    <a href="#the-vision">Vision</a> &bull;
+    <a href="#core-architecture">Architecture</a> &bull;
+    <a href="#empirical-benchmarks">Benchmarks</a> &bull;
+    <a href="#skill-unlocker-matrix">Skill Matrix</a> &bull;
+    <a href="#quickstart--installation">Quickstart</a> &bull;
+    <a href="#cli-command-reference">CLI Reference</a> &bull;
+    <a href="#security--privacy">Security</a> &bull;
+    <a href="#license">License</a>
   </p>
 
 </div>
@@ -39,7 +40,7 @@
 
 ---
 
-## ⚡ Quick Comparison
+<h2 id="overview">Overview: Quick Comparison</h2>
 
 | Capability | Standard Antigravity CLI (`agy`) | With Graviton (`graviton` / `grav`) | Efficiency Gain |
 | :--- | :--- | :--- | :--- |
@@ -52,7 +53,7 @@
 
 ---
 
-## 🔭 The Vision (The Unix Philosophy)
+<h2 id="the-vision">The Vision: The Unix Philosophy</h2>
 
 Modern AI development tooling frequently suffers from **context bloat, latency overhead, and token waste**. Intermediate cloud models, verbose conversational wrappers, and unfiltered terminal spew drain LLM context windows before actionable engineering even begins.
 
@@ -77,7 +78,7 @@ Graviton rejects this paradigm by embodying the classic **Unix Philosophy**:
 
 ---
 
-## 🛠️ Core Architecture (Technical Pillars)
+<h2 id="core-architecture">Core Architecture: Technical Pillars</h2>
 
 Graviton's engine operates completely within local Node.js standard libraries (`fs`, `path`, `child_process`), executing multi-stage heuristic pipelines before passing sanitized payloads to the Antigravity CLI.
 
@@ -114,7 +115,7 @@ Graviton's engine operates completely within local Node.js standard libraries (`
 
 ---
 
-## 📊 Empirical Benchmarks
+<h2 id="empirical-benchmarks">Empirical Benchmarks</h2>
 
 Real-world token savings measured across common terminal workflows:
 
@@ -128,7 +129,7 @@ Real-world token savings measured across common terminal workflows:
 
 ---
 
-## 🧩 Skill Unlocker Matrix
+<h2 id="skill-unlocker-matrix">Skill Unlocker Matrix</h2>
 
 Graviton dynamically detects task intents in your prompts and automatically injects specialized directives to unlock your installed Antigravity capabilities:
 
@@ -142,7 +143,7 @@ Graviton dynamically detects task intents in your prompts and automatically inje
 
 ---
 
-## 🚀 Quickstart & Installation
+<h2 id="quickstart--installation">Quickstart & Installation</h2>
 
 ### Prerequisites
 1. **Node.js**: Version `>= 18.0.0` (Native ES Modules runtime).
@@ -202,7 +203,7 @@ graviton status
 
 ---
 
-## 📋 CLI Command Reference
+<h2 id="cli-command-reference">CLI Command Reference</h2>
 
 | Command | Shorthand | Purpose |
 | :--- | :--- | :--- |
@@ -216,7 +217,7 @@ graviton status
 
 ---
 
-## 🛡️ Security & Privacy
+<h2 id="security--privacy">Security & Privacy</h2>
 
 - **100% Offline Local Execution**: Graviton does not make network requests, phone home, or transmit your code to third-party endpoints.
 - **Zero API Keys**: Operates strictly via standard Node.js stdlib without external dependencies.
@@ -225,7 +226,7 @@ graviton status
 
 ---
 
-## 🤝 Contributing
+<h2 id="contributing">Contributing</h2>
 
 Contributions are welcome! If you'd like to improve noise pruners, add new skill triggers, or optimize AST traversal:
 
@@ -237,7 +238,7 @@ Contributions are welcome! If you'd like to improve noise pruners, add new skill
 
 ---
 
-## 📄 License
+<h2 id="license">License</h2>
 
 Released under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
 
