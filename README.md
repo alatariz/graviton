@@ -60,16 +60,31 @@ Modern AI development tooling frequently suffers from **context bloat, latency o
 Graviton rejects this paradigm by embodying the classic **Unix Philosophy**:
 
 ```
- ┌─────────────────┐       ┌────────────────────────┐       ┌────────────────────────┐       ┌──────────────────────┐
- │  Developer Raw  │ ────► │ Surgical Regex Pruner  │ ────► │ Local Workspace & File │ ────► │  Autonomous Launch   │
- │ Prompt / Pipe   │       │ & The Minified Shield  │       │ Hydration Engine       │       │ (Antigravity 'agy')  │
- └─────────────────┘       └────────────────────────┘       └────────────────────────┘       └──────────────────────┘
-                                                                        │
-                                                                        ▼
-                                                            ┌────────────────────────┐
-                                                            │ Detached Shadow Backup │
-                                                            │ (~/.graviton/backups/) │
-                                                            └────────────────────────┘
+  ┌────────────────────────────────────────────────────────┐
+  │                 Developer Raw Request                  │
+  │                 (Terminal Pipe / CLI)                  │
+  └───────────────────────────┬────────────────────────────┘
+                              │
+                              ▼
+  ┌────────────────────────────────────────────────────────┐
+  │                 Surgical Regex Pruner                  │
+  │                 & The Minified Shield                  │
+  │      • Strips ANSI & deduplicates progress noise       │
+  │      • Blocks .min.js / .min.css token bombs           │
+  └───────────────────────────┬────────────────────────────┘
+                              │
+                              ▼
+  ┌────────────────────────────────────────────────────────┐
+  │        Local Workspace & File Hydration Engine         │
+  │      • 500-line bounded AST dependency scraping        │
+  │      • Path Traversal Jail (process.cwd() bounds)      │
+  └─────────────┬────────────────────────────┬─────────────┘
+                │                            │
+                ▼ (Pre-run Mirror)           ▼ (Synthesized Task)
+  ┌──────────────────────────┐ ┌───────────────────────────┐
+  │  Detached Shadow Backup  │ │     Autonomous Launch     │
+  │  (~/.graviton/backups/)  │ │    (Antigravity 'agy')    │
+  └──────────────────────────┘ └───────────────────────────┘
 ```
 
 1. **Write programs that do one thing and do it well**: Graviton does not generate code itself. It sanitizes, bounds, and structures context so Antigravity can code without distraction.
@@ -180,7 +195,8 @@ grav Fix TypeError in src/auth.js
 When tackling complex refactors, distributed locks, or state machine redesigns, use `--deep` to instruct Antigravity to operate in high-rigor planning mode:
 
 ```bash
-grav --deep Architect an idempotent payment webhook processor with HMAC validation
+# High-rigor planning mode
+grav --deep Architect an idempotent webhook processor with HMAC
 ```
 
 #### 3. Piped Terminal Ingestion
