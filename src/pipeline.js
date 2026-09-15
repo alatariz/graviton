@@ -116,13 +116,11 @@ export function compressJsonArray(text) {
 
 
 /**
- * Graviton Core Noise Filter
- * Aggressive pure heuristic & regex string filter executed BEFORE text reaches the AI Synthesizer.
- * Enforces:
- * - JSON array compression (> 3 elements) to first and last items.
- * - Terminal Noise Killer: Removes lines starting with or containing noise keywords.
- * - Blank Line Remover: Cleans up excessive empty lines.
- * - Fluff Trimmer: Strips conversational fluff words for longer inputs (>= 200 chars).
+ * Graviton Core Safe Noise Filter
+ * Splits input into lines and applies strict Whitelist vs Blacklist rules:
+ * - [WHITELIST]: Preserves lines containing: TypeError, Exception, Error:, at , ReferenceError
+ * - [BLACKLIST]: Drops lines ONLY IF starting with: npm WARN, info , warning:, npm notice
+ * - [FAILSAFE]: If pruned result is empty, returns original rawText intact!
  */
 export function pruneNoise(rawText) {
   if (!rawText || typeof rawText !== 'string') return '';
@@ -141,77 +139,50 @@ export function pruneNoise(rawText) {
   // 3. Compress oversized JSON arrays (> 3 elements)
   out = compressJsonArray(out);
 
-  // 4. Terminal Noise Killer:
-  // Remove an entire line if it begins with or contains noise keywords.
-  // Regex pattern specified:
-  const TERMINAL_NOISE_REGEX = /^(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|info\s+|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building).*$/gim;
-  out = out.replace(TERMINAL_NOISE_REGEX, '');
+  // 4. Split input into lines
+  const rawLines = out.replace(/\r\n/g, '\n').split('\n');
 
-  // Also catch lines with leading whitespace or lines containing noise keywords
-  const WHITESPACE_NOISE_REGEX = /^\s*(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|info\s+|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building).*$/gim;
-  out = out.replace(WHITESPACE_NOISE_REGEX, '');
+  // [WHITELIST]: Jika baris mengandung kata TypeError, Exception, Error:, at , atau ReferenceError,
+  // baris tersebut WAJIB DIPERTAHANKAN (jangan dipotong regex apa pun).
+  const WHITELIST_REGEX = /(?:TypeError|ReferenceError|Exception|Error:|\bat\s+)/;
 
-  const CONTAINS_NOISE_REGEX = /^.*?\b(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building)\b.*$/gim;
-  out = out.replace(CONTAINS_NOISE_REGEX, '');
+  // [BLACKLIST]: Jika tidak masuk whitelist, hapus baris HANYA JIKA dimulai dengan (atau dominan berisi):
+  // npm WARN, info , warning:, npm notice, serta bracketed tags/build logs
+  const BLACKLIST_REGEX = /^\s*(?:\[(?:info|warn|warning|notice)\]\s*|\[.*?\]\s*info\s+|npm WARN|info\s+|warning:|npm notice|downloading|downloaded|compiling|building)/i;
 
-  // 5. Blank Line Remover: Clean up excessive blank lines
-  out = out.replace(/^\s*[\r\n]/gm, '');
+  const filteredLines = [];
 
-  // 6. Fluff Trimmer (Only for inputs >= 200 chars; ignored if input is short < 200 chars)
-  if (out.length >= 200) {
-    const fluffKeywords = ['tolong', 'bantu', 'bro', 'pusing', 'thanks', 'terima kasih', 'halo'];
-    for (const kw of fluffKeywords) {
-      const kwRegex = new RegExp(`\\b${kw}\\b`, 'gi');
-      out = out.replace(kwRegex, '');
-    }
-    out = out.replace(/[ \t]{2,}/g, ' ');
-  }
-
-  // 7. Deduplicate repetitive log lines cleanly
-  const lines = out.split('\n');
-  const deduplicated = [];
-  let prevLine = null;
-  let repeatCount = 0;
-
-  const flushRepeats = () => {
-    if (repeatCount > 2) {
-      deduplicated.push(`   ↳ [Repeated ${repeatCount}x: "${prevLine.slice(0, 50)}..."]`);
-    } else if (repeatCount > 0) {
-      for (let i = 0; i < repeatCount; i++) deduplicated.push(prevLine);
-    }
-  };
-
-  for (const line of lines) {
+  for (const line of rawLines) {
     const trimmed = line.trim();
-    if (trimmed && trimmed === prevLine) {
-      repeatCount++;
-    } else {
-      flushRepeats();
-      prevLine = trimmed;
-      repeatCount = 0;
-      deduplicated.push(line);
+    if (!trimmed) continue;
+
+    // 1. [WHITELIST] rule
+    if (WHITELIST_REGEX.test(line)) {
+      filteredLines.push(line);
+      continue;
     }
-  }
-  flushRepeats();
-  out = deduplicated.join('\n');
 
-  // 8. Remove cosmetic separators
-  out = out.replace(/^[ \t]*(?:\/\/|#|\/\*)[ \t]*[-=~*#]{5,}[ \t]*(?:\*\/)?$/gm, '');
+    // 2. [BLACKLIST] rule
+    if (BLACKLIST_REGEX.test(line)) {
+      continue;
+    }
 
-  // 9. Strip trailing AI disclaimers
-  const trailingFluff = [
-    /(?:Hope\s+this\s+helps!?(?:\s+Let\s+me\s+know\s+if\s+you\s+need\s+anything\s+else\.?)?)\s*$/gi,
-    /(?:Please\s+let\s+me\s+know\s+if\s+you\s+have\s+any\s+(?:other\s+)?questions(?:\s+or\s+need\s+further\s+assistance)?\.?)?\s*$/gi,
-    /(?:Feel\s+free\s+to\s+ask\s+if\s+you\s+have\s+any\s+(?:more\s+)?questions\.?)?\s*$/gi,
-    /(?:Semoga\s+(?:ini\s+)?membantu!?(?:\s+Beri\s+tahu\s+saya\s+jika\s+ada\s+pertanyaan\.?)?)\s*$/gi
-  ];
-  for (const pat of trailingFluff) {
-    out = out.replace(pat, '');
+    filteredLines.push(line);
   }
 
-  // Final blank line removal & trim
-  out = out.replace(/^\s*[\r\n]/gm, '');
-  return out.trim();
+  // 5. Rejoin array into string
+  let result = filteredLines.join('\n');
+
+  // 6. Clean excessive blank lines
+  result = result.replace(/^\s*[\r\n]/gm, '').trim();
+
+  // 7. [FAILSAFE KRUSIAL]: Jika hasil akhir pemotongan ternyata kosong (result.trim() === ''),
+  // maka kembalikan input aslinya secara utuh! Jangan pernah mengembalikan string kosong ke AI.
+  if (!result || result.trim() === '') {
+    return rawText.trim();
+  }
+
+  return result.trim();
 }
 
 /**
