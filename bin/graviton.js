@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -80,7 +80,7 @@ async function main() {
         console.log(filtered);
         process.exit(0);
       } else {
-        const res = await synthesizePrompt(rawPiped, process.env.GEMINI_API_KEY || null, { deep: isDeep });
+        const res = await synthesizePrompt(rawPiped);
         copyToClipboard(res.optimizedText);
         console.log(res.optimizedText);
         process.exit(0);
@@ -93,7 +93,7 @@ async function main() {
   // =========================================================================
   // Intercept and route internal Graviton utility commands immediately.
   // Native commands MUST execute internal logic and call process.exit(0).
-  // Under NO circumstances should native commands be sent to repromptWithAI
+  // Under NO circumstances should native commands be sent to constructSuperPrompt
   // or relayed to the Antigravity child process!
   // =========================================================================
 
@@ -225,10 +225,10 @@ async function main() {
       console.error('\x1b[31mError: Please provide prompt text.\x1b[0m');
       process.exit(1);
     }
-    const result = await synthesizePrompt(input, process.env.GEMINI_API_KEY || null, { deep: isDeep });
-    copyToClipboard(result.optimizedText);
-    console.log(result.optimizedText);
-    console.error(`\n\x1b[32m✔ Synthesized & Copied to clipboard!\x1b[0m \x1b[90m(-${result.stats.percentSaved}% tokens saved via ${result.stats.engine})\x1b[0m`);
+    const superPrompt = constructSuperPrompt(input, process.cwd());
+    copyToClipboard(superPrompt);
+    console.log(superPrompt);
+    console.error(`\n\x1b[32m✔ SuperPrompt assembled & Copied to clipboard!\x1b[0m \x1b[90m(Graviton Zero-Token Middleware)\x1b[0m`);
     process.exit(0);
   }
 
@@ -271,7 +271,7 @@ async function main() {
     return;
   }
 
-  // PROMPT SYNTHESIS & EXECUTION FLOW
+  // ZERO-TOKEN SUPERPROMPT ASSEMBLY & EXECUTION FLOW
   let input = command === 'prompt' ? filteredArgs.slice(1).join(' ') : filteredArgs.join(' ');
   if (!input && !process.stdin.isTTY) {
     input = fs.readFileSync(0, 'utf-8');
@@ -281,44 +281,36 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mGraviton Core\x1b[0m (Workspace Hydrated)...`);
+  console.log(`\x1b[35m[1/2 GRAVITON]\x1b[0m Assembling Zero-Token SuperPrompt (Workspace Hydrated)...`);
 
-  const apiKey = process.env.GEMINI_API_KEY || null;
-  const result = await synthesizePrompt(input, apiKey, { deep: isDeep });
+  const currentCwd = process.cwd();
+  const superPrompt = constructSuperPrompt(input, currentCwd);
 
   const stats = loadStats();
   stats.promptsOptimized++;
-  stats.tokensSaved += result.stats.tokensSaved;
   saveStats(stats);
 
-  copyToClipboard(result.optimizedText);
+  copyToClipboard(superPrompt);
 
   // DRY-RUN / GAIN FORECASTER
   if (isDryRun) {
     console.log(`\n\x1b[33m[DRY-RUN PREVIEW]\x1b[0m Execution bypassed (--dry-run active)`);
-    console.log(`\x1b[1mRaw: ${result.stats.originalTokens} tokens -> Graviton: ${result.stats.optimizedTokens} tokens. Saved: ${result.stats.percentSaved}%.\x1b[0m`);
-    console.log(`\x1b[90mEngine: ${result.stats.engine}\x1b[0m`);
-    if (result.workspaceMap) {
-      const depMatch = result.workspaceMap.match(/\[EXISTING DEPENDENCIES:\s*([^\]]+)\]/);
-      if (depMatch) {
-        console.log(`\x1b[36mWorkspace Dependencies: ${depMatch[1]}\x1b[0m`);
-      }
-    }
+    console.log(`\x1b[1mEngine: Graviton Zero-Token Middleware (0 LLM API Tokens Used)\x1b[0m`);
     console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-    console.log(result.optimizedText);
+    console.log(superPrompt);
     console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-    console.log(`\x1b[32m✔ Synthesized prompt copied to clipboard!\x1b[0m\n`);
+    console.log(`\x1b[32m✔ SuperPrompt assembled & copied to clipboard!\x1b[0m\n`);
     process.exit(0);
   }
 
-  console.log(`\x1b[32m[2/3 PROMPT SYNTHESIZED]\x1b[0m Saved ${result.stats.tokensSaved} tokens (-${result.stats.percentSaved}% via ${result.stats.engine}). Copied to clipboard.`);
+  console.log(`\x1b[32m[✔ SUPERPROMPT ASSEMBLED]\x1b[0m Zero LLM tokens consumed. Prompt copied to clipboard.`);
   console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-  console.log(result.optimizedText);
+  console.log(superPrompt);
   console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
 
-  console.log(`\x1b[36m[3/3 RELAYING TO ANTIGRAVITY]\x1b[0m Forwarding to Antigravity in \x1b[1mAuto-Allow Mode\x1b[0m...`);
+  console.log(`\x1b[36m[2/2 RELAYING TO ANTIGRAVITY]\x1b[0m Forwarding to Antigravity with Auto-Allow (--dangerously-skip-permissions)...`);
 
-  const child = runAntigravityWithAutoAllow(result.optimizedText, {
+  const child = runAntigravityWithAutoAllow(superPrompt, {
     continueSession: isContinue
   });
 

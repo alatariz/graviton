@@ -380,7 +380,7 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
   const treeStructure = treeLines.length > 0 ? treeLines.join('\n') : '(empty)';
   const depListStr = dependencies.length > 0 ? dependencies.join(', ') : 'none';
 
-  const formatted = `[WORKSPACE MAP:\n${treeStructure}\n]\n[EXISTING DEPENDENCIES: ${depListStr}]`;
+  const formatted = `[WORKSPACE MAP]:\n${treeStructure}\n\n[DEPENDENCIES]: ${depListStr}`;
 
   if (options.asObject) {
     return {
@@ -396,291 +396,65 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 }
 
 /**
- * Graviton Core Precision Synthesizer (Gemini API Engine)
- * Maximizes Signal-to-Noise ratio, removes fluff, smartly expands technical specs, and enforces native-first.
+ * Graviton Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
+ * Zero token cost, zero external API calls.
  */
-export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = [], workspaceMap = null) {
-  const currentCwd = process.cwd();
-  const model = 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+export function constructSuperPrompt(userInput, cwd = process.cwd()) {
+  const currentCwd = cwd || process.cwd();
+  const cleanedInput = pruneNoise(userInput || '');
+  const workspaceInfo = buildWorkspaceMap(currentCwd);
 
-  const skillDirectiveStr = unlockedSkills.length > 0
-    ? `\nAdditional Skill Directives (execute natively):\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
-    : '';
+  const systemDirective = `You are Antigravity, executed via Graviton. Act as a Ruthless Editor. Remove conversational fluff. Think in <graviton_plan> before coding. Strictly prioritize native/stdlib over external dependencies. Output absolute minimal code.`;
 
-  const systemInstruction = `Role: You are the Graviton Core Synthesizer. Your job is to maximize the Signal-to-Noise ratio of the user's prompt.
+  return `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
-Rule 1 (Remove Fluff): Completely remove all conversational fluff, emotions, and greetings.
+[CWD]: ${currentCwd}
 
-Rule 2 (Smart Expansion): If the user's technical request is ambiguous, EXPAND and clarify the technical specifications. Add necessary constraints (e.g., error handling, edge cases) to ensure the execution is precise. The final output can be longer than the input if it prevents execution errors.
+${workspaceInfo}
 
-Rule 3 (Native-First): Strictly prohibit the use of external libraries (like moment.js, lodash) if the task can be efficiently solved with standard language APIs (Native/Stdlib).
-
-Rule 4 (Context Alignment): Analyze the [WORKSPACE MAP] and [EXISTING DEPENDENCIES]. Your [TARGET SPECIFICATIONS] MUST seamlessly align with the existing project structure. Do not suggest creating new files if appropriate files already exist. Do not prohibit external libraries if they are already listed in the [EXISTING DEPENDENCIES].
-
-Location Rule: Always use the path specified in [CWD] as the root execution directory for reading, editing, or creating files. Do NOT use temporary or sandbox scratchpaths unless explicitly requested.${skillDirectiveStr}
-
-Output Format:
-Your output must strictly and exclusively follow this format (in English):
-
-[CWD: ${currentCwd}]
-
-<graviton_plan>: 1-2 sentences explaining the minimal, native-first technical approach.
-
-[TARGET SPECIFICATIONS]: The highly precise, clarified task instructions.
-
-[ERROR LOG]: (Only if present, heavily truncated to strictly show tracebacks).`;
-
-  const wsMapStr = workspaceMap || buildWorkspaceMap(currentCwd);
-  const userContent = `[CWD: ${currentCwd}]\n\n${wsMapStr}\n\n${cleanedText}`;
-
-  const payload = {
-    system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ parts: [{ text: userContent }] }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
-  };
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Graviton Core Synthesizer request failed (${res.status})`);
-  }
-
-  const data = await res.json();
-  const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reprompted) throw new Error('No content returned from Graviton Core Synthesizer');
-
-  const trimmed = reprompted.trim();
-  return trimmed.startsWith('[CWD:') ? trimmed : `[CWD: ${currentCwd}]\n\n${trimmed}`;
+[USER INSTRUCTION & ERROR LOG]:
+${cleanedInput}`.trim();
 }
 
 /**
- * Local Deterministic Synthesizer (Graviton Core Offline Precision Synthesizer)
- * Emulates Rule 1 (Remove Fluff), Rule 2 (Smart Expansion), Rule 3 (Native-First), and exact format.
+ * Local Deterministic Synthesizer (Graviton Zero-Token Middleware Wrapper)
  */
 export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = [], workspaceMap = null) {
   const currentCwd = process.cwd();
-  const wsMap = workspaceMap || buildWorkspaceMap(currentCwd);
-  const codeBlocks = [];
-
-  // 1. Extract code blocks
-  let text = rawText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    codeBlocks.push({ lang, code: code.trim() });
-    return '';
-  });
-  text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)$/g, (match, lang, code) => {
-    codeBlocks.push({ lang, code: code.trim() });
-    return '';
-  });
-
-  // 2. Extract Error Traceback if present (heavily truncated to strictly show tracebacks)
-  let errorSnippet = null;
-  const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range|URI)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bException:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bpanic:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bFATAL:[^\n]+|error\[E\d+\]:[^\n]+(?:\n\s+-->\s+[^\n]+)+|AssertionError[^\n]+)/i);
-  if (errorMatch) {
-    const rawError = errorMatch[0].trim();
-    const errLines = rawError.split('\n');
-    const cleanErrLines = [errLines[0].trim()];
-    for (let i = 1; i < errLines.length; i++) {
-      const line = errLines[i].trim();
-      if (!line.includes('node:internal') && !line.includes('node_modules')) {
-        cleanErrLines.push('  ' + line);
-      }
-      if (cleanErrLines.length >= 3) break;
-    }
-    errorSnippet = cleanErrLines.join('\n');
-    text = text.replace(errorMatch[0], '');
-  }
-
-  // 3. Rule 4 (Context Alignment) & Rule 3 (Native-First): Check for external library requests
-  const depMatch = wsMap.match(/\[EXISTING DEPENDENCIES:\s*([^\]]*)\]/i);
-  const existingDeps = depMatch && depMatch[1].trim() !== 'none'
-    ? depMatch[1].split(',').map(d => d.trim().toLowerCase())
-    : [];
-
-  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import|use|add)\s+(?:library\s+|package\s+|module\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk|express|ws)\b/i;
-  const libMatch = rawText.match(externalLibRegex);
-  const requestedLib = libMatch ? libMatch[1].toLowerCase().replace(/\.js$/, '') : null;
-  const isAlreadyInstalled = requestedLib && existingDeps.includes(requestedLib);
-  const hasExternalLib = requestedLib && !isAlreadyInstalled;
-
-  // 4. Rule 1 (Remove Fluff): Completely remove conversational fluff, emotions, and greetings
-  const fluffPatterns = [
-    /\b(?:halo|hai|hey|hi|hello|selamat\s+(?:pagi|siang|sore|malam)|good\s+(?:morning|afternoon|evening))\b/gi,
-    /\b(?:antigravity|ai|gemini|assistant|bot)\b/gi,
-    /\b(?:bro|kawan|gan|bang|mas|mbak|pak|bu|guys|there|teman|dude|mate)\b/gi,
-    /\b(?:tolong(?:in)?|bantu(?:an)?|bantu\s+saya|mohon|please|help|could\s+you|can\s+you)\b/gi,
-    /\b(?:pusing|bingung|mumet|capek|stress|curhat|kesel|error\s+terus|kenapa\s+ya|frustrated|stuck)\b/gi,
-    /\b(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?|makasih|thanks(?:\s+a\s+lot|\s+in\s+advance)?|thank\s+you)\b/gi,
-    /\b(?:dong|deh|sih|nih|tuh|kan|lah|ya|kok|banget|bener|amat|sekali)\b/gi,
-    /\b(?:saya\s+ingin|saya\s+mau|aku\s+mau|aku\s+ingin|mau|ingin|i\s+want\s+to|i\s+need\s+to|would\s+like\s+to)\b/gi,
-    /\b(?:kodenya\s+(?:seperti\s+ini|adalah)|seperti\s+ini|begini(?:\s+kodenya)?|here\s+is\s+the\s+code)\b/gi
-  ];
-
-  for (const pat of fluffPatterns) {
-    text = text.replace(pat, '');
-  }
-
-  if (hasExternalLib) {
-    text = text.replace(externalLibRegex, '');
-  }
-
-  text = text.replace(/^[,\s.!?;:]+|[,\s.!?;:]+$/g, '').replace(/\s+/g, ' ').trim();
-
-  // Extract file names (filtering out external library keywords)
-  const fileNames = (rawText.match(/\b[\w./\\-]+\.(?:js|ts|jsx|tsx|py|rs|go|html|css|json|md|yaml|yml)\b/gi) || [])
-    .filter(f => !/^(?:moment|lodash|underscore|dayjs|date-fns|axios|tailwind|jquery|chalk|express|ws)(?:\.js)?$/i.test(f));
-  const uniqueFiles = Array.from(new Set(fileNames));
-
-  // Context Alignment: match mentioned terms against workspace map files if none found explicitly
-  if (uniqueFiles.length === 0) {
-    const wsFiles = Array.from(wsMap.matchAll(/(?:├──|└──|\/)\s*([a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)/g)).map(m => m[1]);
-    for (const f of wsFiles) {
-      const baseNoExt = f.replace(/\.[^.]+$/, '').toLowerCase();
-      if (baseNoExt.length > 2 && text.toLowerCase().includes(baseNoExt)) {
-        uniqueFiles.push(f);
-        break;
-      }
-    }
-  }
-
-  // 5. Rule 2 (Smart Expansion) & Rule 4 (Context Alignment): Clarify and expand technical specifications
-  let targetSpecs = '';
-  if (hasExternalLib) {
-    targetSpecs = 'Strictly prohibit the use of external libraries. Solve the requirement natively using standard runtime APIs.';
-    if (text) {
-      targetSpecs += ' ' + text.charAt(0).toUpperCase() + text.slice(1) + '.';
-    }
-    targetSpecs += ' Enforce native language features, robust input validation, and zero external dependency footprint.';
-  } else if (isAlreadyInstalled) {
-    targetSpecs = `Utilize the existing '${requestedLib}' dependency configured in project dependencies.`;
-    if (text) {
-      targetSpecs += ' ' + text.charAt(0).toUpperCase() + text.slice(1) + '.';
-    }
-    targetSpecs += ' Seamlessly align with existing workspace architecture and conventions.';
-  } else if (text) {
-    let cleanText = text.replace(/^memperbaiki\b/i, 'Fix')
-                        .replace(/^membuat(?:kan)?\b/i, 'Implement')
-                        .replace(/^menambahkan\b/i, 'Add')
-                        .replace(/^mengubah\b/i, 'Refactor')
-                        .replace(/^perbaiki\b/i, 'Fix')
-                        .replace(/^buat\b/i, 'Implement');
-    targetSpecs = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
-    if (!targetSpecs.endsWith('.')) targetSpecs += '.';
-    
-    // Smart expansion: append necessary precision constraints if ambiguous
-    if (errorSnippet || /fix|perbaiki|error|bug/i.test(targetSpecs)) {
-      targetSpecs += ' Ensure defensive null-checks, proper error handling, and robust edge-case validation.';
-    } else {
-      targetSpecs += ' Follow standard language idioms, modular structure, and prevent runtime regressions.';
-    }
-  } else if (uniqueFiles.length > 0) {
-    targetSpecs = `Refactor and resolve code in ${uniqueFiles.join(', ')}. Ensure strict type safety, input validation, and defensive error handling.`;
-  } else {
-    targetSpecs = 'Resolve technical task natively with strict error handling and input validation.';
-  }
-
-  if (uniqueFiles.length > 0 && !targetSpecs.includes(uniqueFiles[0])) {
-    targetSpecs += ` Target file(s): ${uniqueFiles.join(', ')}.`;
-  }
-
-  if (codeBlocks.length > 0) {
-    const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-    targetSpecs += '\n\nRelated Code:\n' + formattedCode;
-  }
-
-  // 6. Plan Statement (1-2 sentences explaining minimal native-first technical approach)
-  let planText = '';
-  if (hasExternalLib) {
-    planText = 'Implement the solution exclusively with standard runtime APIs, avoiding third-party packages. Execute minimal, targeted changes with strict error handling.';
-  } else if (isAlreadyInstalled) {
-    planText = `Leverage existing project dependency '${requestedLib}' aligned with the current workspace architecture without adding redundant packages.`;
-  } else if (errorSnippet) {
-    planText = 'Isolate and resolve the root cause of the error traceback using native language facilities. Apply defensive guard clauses to ensure edge-case stability.';
-  } else {
-    planText = 'Execute the requested specifications using native standard APIs with minimal structural changes. Validate inputs and handle edge cases cleanly.';
-  }
-
-  // 7. Assemble standardized Graviton Core format
-  const lines = [
-    `[CWD: ${currentCwd}]`,
-    '',
-    `<graviton_plan>: ${planText}`,
-    '',
-    `[TARGET SPECIFICATIONS]: ${targetSpecs}`
-  ];
-
-  if (errorSnippet) {
-    lines.push('');
-    lines.push('[ERROR LOG]:');
-    lines.push('```\n' + errorSnippet + '\n```');
-  }
-
-  return lines.join('\n').trim();
+  return constructSuperPrompt(rawText, currentCwd);
 }
 
 /**
- * Main Synthesizer Orchestrator
+ * Main Synthesizer Orchestrator (Zero-Token Middleware)
  */
-export async function synthesizePrompt(rawText, apiKey, options = {}) {
+export async function synthesizePrompt(rawText, apiKey = null, options = {}) {
   if (!rawText || typeof rawText !== 'string') {
     return {
       originalText: '',
       optimizedText: '',
+      superPrompt: '',
       workspaceMap: '',
-      stats: { originalTokens: 0, optimizedTokens: 0, tokensSaved: 0, percentSaved: 0, engine: 'None' }
+      stats: { originalTokens: 0, optimizedTokens: 0, tokensSaved: 0, percentSaved: 0, engine: 'Graviton Zero-Token Middleware' }
     };
   }
 
   const currentCwd = options.cwd || process.cwd();
+  const superPrompt = constructSuperPrompt(rawText, currentCwd);
   const workspaceMap = options.workspaceMap || buildWorkspaceMap(currentCwd);
-  const workspaceContext = options.workspaceContext || detectWorkspaceContext(currentCwd);
-  const builtInSkills = resolveSkillDirectives(rawText);
-  const vaultSkills = loadLocalSkillVault(rawText);
-  const allSkills = [...builtInSkills, ...vaultSkills];
-
   const originalTokens = estimateTokens(rawText);
-  const stage1Text = pruneNoise(rawText);
-
-  let optimizedText = '';
-  let engineUsed = 'Graviton Core Synthesizer (Local)';
-
-  if (apiKey) {
-    try {
-      optimizedText = await repromptWithAI(stage1Text, apiKey, allSkills, workspaceMap);
-      engineUsed = 'Graviton Core Synthesizer (Gemini)';
-    } catch (e) {
-      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, workspaceMap);
-      engineUsed = 'Graviton Core Synthesizer (Local Fallback)';
-    }
-  } else {
-    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, workspaceMap);
-  }
-
-  // Ensure [CWD: ...] is at the very top
-  if (!optimizedText.startsWith('[CWD:')) {
-    optimizedText = `[CWD: ${currentCwd}]\n\n` + optimizedText.trim();
-  }
-
-  const optimizedTokens = estimateTokens(optimizedText);
-  const tokensSaved = Math.max(0, originalTokens - optimizedTokens);
-  const percentSaved = originalTokens > 0 ? Math.round((tokensSaved / originalTokens) * 100) : 0;
+  const optimizedTokens = estimateTokens(superPrompt);
 
   return {
     originalText: rawText,
-    optimizedText,
+    optimizedText: superPrompt,
+    superPrompt,
     workspaceMap,
     stats: {
       originalTokens,
       optimizedTokens,
-      tokensSaved,
-      percentSaved,
-      engine: engineUsed,
-      unlockedSkills: allSkills.map(s => s.skill)
+      tokensSaved: Math.max(0, originalTokens - optimizedTokens),
+      percentSaved: originalTokens > 0 ? Math.max(0, Math.round(((originalTokens - optimizedTokens) / originalTokens) * 100)) : 0,
+      engine: 'Graviton Zero-Token Middleware'
     }
   };
 }

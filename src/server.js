@@ -45,8 +45,7 @@ app.post('/api/synthesize', async (req, res) => {
     const { prompt, apiKey, deep } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
-    const keyToUse = apiKey || process.env.GEMINI_API_KEY || null;
-    const result = await synthesizePrompt(prompt, keyToUse, { deep: Boolean(deep) });
+    const result = await synthesizePrompt(prompt);
 
     const stats = loadStats();
     stats.promptsOptimized = (stats.promptsOptimized || 0) + 1;
