@@ -243,6 +243,7 @@ Directive: Enforce zero memory leaks, signal forwarding, and autonomous task exe
  * - [HEADROOM]: Tambahkan direktif "Be terse, don't restate context, and minimize output tokens." di akhir instruksi.
  */
 export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
+  const currentCwd = process.cwd();
   const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -252,6 +253,8 @@ export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
 
   const systemInstruction = `Kamu adalah Graviton Meta 2026 — Unified AI Acceleration & Token Optimization Engine.
 Tugasmu: Melakukan kompresi dan re-sintesis prompt developer menjadi instruksi teknis bedah presisi tinggi dengan konsumsi token seminimal mungkin.
+
+Aturan Lokasi: Selalu gunakan path dari [CWD] sebagai direktori utama untuk membuat, mengedit, atau membaca file. DILARANG menggunakan direktori scratch/sandbox bawaan kecuali diminta.
 
 ATURAN 4 PILAR WAJIB (EXECUTE SIMULTANEOUSLY):
 1. [PONYTAIL] — Buka tag <scratchpad> di awal output untuk memvalidasi 7 anak tangga efisiensi:
@@ -288,9 +291,11 @@ ATURAN 4 PILAR WAJIB (EXECUTE SIMULTANEOUSLY):
 4. [HEADROOM] — Di akhir instruksi, selalu pastikan:
 Be terse, don't restate context, and minimize output tokens.`;
 
+  const userContent = `[CWD: ${currentCwd}]\n\n${cleanedText}`;
+
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ parts: [{ text: cleanedText }] }],
+    contents: [{ parts: [{ text: userContent }] }],
     generationConfig: { temperature: 0.15, maxOutputTokens: 2048 }
   };
 
@@ -308,7 +313,9 @@ Be terse, don't restate context, and minimize output tokens.`;
   const data = await res.json();
   const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!reprompted) throw new Error('No content returned from Gemini Unified Engine');
-  return reprompted.trim();
+
+  const trimmed = reprompted.trim();
+  return trimmed.startsWith('[CWD:') ? trimmed : `[CWD: ${currentCwd}]\n\n${trimmed}`;
 }
 
 /**
@@ -439,8 +446,9 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
   }
 
-  // Inject Skill unlocks & Workspace context headers
-  const headers = [];
+  // Inject CWD, Workspace context & Skill unlocks headers
+  const currentCwd = process.cwd();
+  const headers = [`[CWD: ${currentCwd}]`];
   if (workspaceContext && workspaceContext.mainFiles && workspaceContext.mainFiles.length > 0) {
     headers.push(`[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]`);
   }
@@ -448,6 +456,9 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     const skillList = allSkills.map(s => s.skill).join(', ');
     headers.push(`[Antigravity Skill Activated: ${skillList}]`);
   }
+
+  // Remove any redundant [CWD: ...] from beginning of optimizedText to prevent duplicates
+  optimizedText = optimizedText.replace(/^\[CWD:[^\]]+\]\s*/i, '').trim();
 
   if (headers.length > 0) {
     optimizedText = headers.join('\n') + '\n\n' + optimizedText;
