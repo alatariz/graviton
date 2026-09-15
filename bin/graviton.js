@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -116,6 +116,7 @@ async function main() {
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
   \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
   \x1b[32mgain\x1b[0m, \x1b[32mstats\x1b[0m             Display aggregate tokens & lines pruned across sessions
+  \x1b[32mmap\x1b[0m                     Display workspace directory tree and detected dependencies
   \x1b[32mclean\x1b[0m "<raw_text>"       Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with streamlined terminal output filtering
   \x1b[32mgit\x1b[0m <git_args...>        Shorthand for "graviton run git <git_args>"
@@ -199,7 +200,16 @@ async function main() {
     process.exit(0);
   }
 
-  // 5. SERVE WEB STUDIO
+  // 5. MAP & WORKSPACE HYDRATION
+  if (command === 'map' || command === '--map') {
+    const wsMap = buildWorkspaceMap(process.cwd());
+    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON WORKSPACE HYDRATION ===\x1b[0m`);
+    console.log(wsMap);
+    console.log(`\x1b[90mActive working directory mapped with depth 2.\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  // 6. SERVE WEB STUDIO
   if (command === 'serve' || command === '--serve') {
     import('../src/server.js');
     return;
@@ -271,7 +281,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mGraviton Core\x1b[0m...`);
+  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mGraviton Core\x1b[0m (Workspace Hydrated)...`);
 
   const apiKey = process.env.GEMINI_API_KEY || null;
   const result = await synthesizePrompt(input, apiKey, { deep: isDeep });
@@ -288,6 +298,12 @@ async function main() {
     console.log(`\n\x1b[33m[DRY-RUN PREVIEW]\x1b[0m Execution bypassed (--dry-run active)`);
     console.log(`\x1b[1mRaw: ${result.stats.originalTokens} tokens -> Graviton: ${result.stats.optimizedTokens} tokens. Saved: ${result.stats.percentSaved}%.\x1b[0m`);
     console.log(`\x1b[90mEngine: ${result.stats.engine}\x1b[0m`);
+    if (result.workspaceMap) {
+      const depMatch = result.workspaceMap.match(/\[EXISTING DEPENDENCIES:\s*([^\]]+)\]/);
+      if (depMatch) {
+        console.log(`\x1b[36mWorkspace Dependencies: ${depMatch[1]}\x1b[0m`);
+      }
+    }
     console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
     console.log(result.optimizedText);
     console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);

@@ -292,10 +292,114 @@ export function loadLocalSkillVault(promptText = '') {
 }
 
 /**
+ * Graviton Core Workspace Hydration: Builds a high-speed, context-aware directory tree
+ * and extracts installed dependencies from package.json, requirements.txt, etc.
+ * Ignores heavy noise directories (node_modules, .git, dist, build, etc.) and caps depth at 2 levels.
+ */
+export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
+  const maxDepth = options.maxDepth || 2;
+  const ignoreDirs = new Set([
+    'node_modules', '.git', 'dist', 'build', '__pycache__',
+    '.gemini', 'coverage', '.next', 'target', '.turbo',
+    '.cache', 'venv', '.venv', '.idea', '.vscode'
+  ]);
+
+  const treeLines = [];
+  const dependencies = [];
+
+  // 1. Extract installed dependencies
+  try {
+    const pkgPath = path.join(cwd, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      const deps = Object.keys(pkg.dependencies || {});
+      const devDeps = Object.keys(pkg.devDependencies || {});
+      for (const d of [...deps, ...devDeps]) {
+        if (!dependencies.includes(d)) dependencies.push(d);
+      }
+    }
+  } catch {}
+
+  try {
+    const reqPath = path.join(cwd, 'requirements.txt');
+    if (fs.existsSync(reqPath)) {
+      const lines = fs.readFileSync(reqPath, 'utf8').split('\n');
+      for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) continue;
+        const name = line.split(/[=<>~!@\s]/)[0].trim();
+        if (name && !dependencies.includes(name)) dependencies.push(name);
+      }
+    }
+  } catch {}
+
+  // 2. Traverse directory tree
+  function scan(dir, depth, prefix = '') {
+    if (depth > maxDepth) return;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    entries.sort((a, b) => {
+      if (a.isDirectory() && !b.isDirectory()) return -1;
+      if (!a.isDirectory() && b.isDirectory()) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    const filtered = entries.filter(e => {
+      if (e.name.startsWith('.') && e.name !== '.env.example') return false;
+      if (e.isDirectory() && ignoreDirs.has(e.name)) return false;
+      return true;
+    });
+
+    const limit = 20;
+    const items = filtered.slice(0, limit);
+
+    items.forEach((item, index) => {
+      const isLast = index === items.length - 1 && filtered.length <= limit;
+      const pointer = isLast ? '└── ' : '├── ';
+
+      if (item.isDirectory()) {
+        treeLines.push(`${prefix}${pointer}${item.name}/`);
+        scan(path.join(dir, item.name), depth + 1, prefix + (isLast ? '    ' : '│   '));
+      } else {
+        treeLines.push(`${prefix}${pointer}${item.name}`);
+      }
+    });
+
+    if (filtered.length > limit) {
+      treeLines.push(`${prefix}└── ... and ${filtered.length - limit} more items`);
+    }
+  }
+
+  scan(cwd, 1, '');
+
+  const treeStructure = treeLines.length > 0 ? treeLines.join('\n') : '(empty)';
+  const depListStr = dependencies.length > 0 ? dependencies.join(', ') : 'none';
+
+  const formatted = `[WORKSPACE MAP:\n${treeStructure}\n]\n[EXISTING DEPENDENCIES: ${depListStr}]`;
+
+  if (options.asObject) {
+    return {
+      tree: treeStructure,
+      map: treeStructure,
+      dependencies,
+      dependenciesStr: depListStr,
+      formatted
+    };
+  }
+
+  return formatted;
+}
+
+/**
  * Graviton Core Precision Synthesizer (Gemini API Engine)
  * Maximizes Signal-to-Noise ratio, removes fluff, smartly expands technical specs, and enforces native-first.
  */
-export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
+export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = [], workspaceMap = null) {
   const currentCwd = process.cwd();
   const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -312,6 +416,8 @@ Rule 2 (Smart Expansion): If the user's technical request is ambiguous, EXPAND a
 
 Rule 3 (Native-First): Strictly prohibit the use of external libraries (like moment.js, lodash) if the task can be efficiently solved with standard language APIs (Native/Stdlib).
 
+Rule 4 (Context Alignment): Analyze the [WORKSPACE MAP] and [EXISTING DEPENDENCIES]. Your [TARGET SPECIFICATIONS] MUST seamlessly align with the existing project structure. Do not suggest creating new files if appropriate files already exist. Do not prohibit external libraries if they are already listed in the [EXISTING DEPENDENCIES].
+
 Location Rule: Always use the path specified in [CWD] as the root execution directory for reading, editing, or creating files. Do NOT use temporary or sandbox scratchpaths unless explicitly requested.${skillDirectiveStr}
 
 Output Format:
@@ -325,7 +431,8 @@ Your output must strictly and exclusively follow this format (in English):
 
 [ERROR LOG]: (Only if present, heavily truncated to strictly show tracebacks).`;
 
-  const userContent = `[CWD: ${currentCwd}]\n\n${cleanedText}`;
+  const wsMapStr = workspaceMap || buildWorkspaceMap(currentCwd);
+  const userContent = `[CWD: ${currentCwd}]\n\n${wsMapStr}\n\n${cleanedText}`;
 
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
@@ -356,8 +463,9 @@ Your output must strictly and exclusively follow this format (in English):
  * Local Deterministic Synthesizer (Graviton Core Offline Precision Synthesizer)
  * Emulates Rule 1 (Remove Fluff), Rule 2 (Smart Expansion), Rule 3 (Native-First), and exact format.
  */
-export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
+export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = [], workspaceMap = null) {
   const currentCwd = process.cwd();
+  const wsMap = workspaceMap || buildWorkspaceMap(currentCwd);
   const codeBlocks = [];
 
   // 1. Extract code blocks
@@ -388,9 +496,17 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     text = text.replace(errorMatch[0], '');
   }
 
-  // 3. Rule 3 (Native-First): Check for external library requests
-  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import|use|add)\s+(?:library\s+|package\s+|module\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk)\b/i;
-  const hasExternalLib = externalLibRegex.test(rawText);
+  // 3. Rule 4 (Context Alignment) & Rule 3 (Native-First): Check for external library requests
+  const depMatch = wsMap.match(/\[EXISTING DEPENDENCIES:\s*([^\]]*)\]/i);
+  const existingDeps = depMatch && depMatch[1].trim() !== 'none'
+    ? depMatch[1].split(',').map(d => d.trim().toLowerCase())
+    : [];
+
+  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import|use|add)\s+(?:library\s+|package\s+|module\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk|express|ws)\b/i;
+  const libMatch = rawText.match(externalLibRegex);
+  const requestedLib = libMatch ? libMatch[1].toLowerCase().replace(/\.js$/, '') : null;
+  const isAlreadyInstalled = requestedLib && existingDeps.includes(requestedLib);
+  const hasExternalLib = requestedLib && !isAlreadyInstalled;
 
   // 4. Rule 1 (Remove Fluff): Completely remove conversational fluff, emotions, and greetings
   const fluffPatterns = [
@@ -417,10 +533,22 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
 
   // Extract file names (filtering out external library keywords)
   const fileNames = (rawText.match(/\b[\w./\\-]+\.(?:js|ts|jsx|tsx|py|rs|go|html|css|json|md|yaml|yml)\b/gi) || [])
-    .filter(f => !/^(?:moment|lodash|underscore|dayjs|date-fns|axios|tailwind|jquery|chalk)(?:\.js)?$/i.test(f));
+    .filter(f => !/^(?:moment|lodash|underscore|dayjs|date-fns|axios|tailwind|jquery|chalk|express|ws)(?:\.js)?$/i.test(f));
   const uniqueFiles = Array.from(new Set(fileNames));
 
-  // 5. Rule 2 (Smart Expansion): Clarify and expand technical specifications with precision constraints
+  // Context Alignment: match mentioned terms against workspace map files if none found explicitly
+  if (uniqueFiles.length === 0) {
+    const wsFiles = Array.from(wsMap.matchAll(/(?:├──|└──|\/)\s*([a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+)/g)).map(m => m[1]);
+    for (const f of wsFiles) {
+      const baseNoExt = f.replace(/\.[^.]+$/, '').toLowerCase();
+      if (baseNoExt.length > 2 && text.toLowerCase().includes(baseNoExt)) {
+        uniqueFiles.push(f);
+        break;
+      }
+    }
+  }
+
+  // 5. Rule 2 (Smart Expansion) & Rule 4 (Context Alignment): Clarify and expand technical specifications
   let targetSpecs = '';
   if (hasExternalLib) {
     targetSpecs = 'Strictly prohibit the use of external libraries. Solve the requirement natively using standard runtime APIs.';
@@ -428,6 +556,12 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
       targetSpecs += ' ' + text.charAt(0).toUpperCase() + text.slice(1) + '.';
     }
     targetSpecs += ' Enforce native language features, robust input validation, and zero external dependency footprint.';
+  } else if (isAlreadyInstalled) {
+    targetSpecs = `Utilize the existing '${requestedLib}' dependency configured in project dependencies.`;
+    if (text) {
+      targetSpecs += ' ' + text.charAt(0).toUpperCase() + text.slice(1) + '.';
+    }
+    targetSpecs += ' Seamlessly align with existing workspace architecture and conventions.';
   } else if (text) {
     let cleanText = text.replace(/^memperbaiki\b/i, 'Fix')
                         .replace(/^membuat(?:kan)?\b/i, 'Implement')
@@ -463,6 +597,8 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
   let planText = '';
   if (hasExternalLib) {
     planText = 'Implement the solution exclusively with standard runtime APIs, avoiding third-party packages. Execute minimal, targeted changes with strict error handling.';
+  } else if (isAlreadyInstalled) {
+    planText = `Leverage existing project dependency '${requestedLib}' aligned with the current workspace architecture without adding redundant packages.`;
   } else if (errorSnippet) {
     planText = 'Isolate and resolve the root cause of the error traceback using native language facilities. Apply defensive guard clauses to ensure edge-case stability.';
   } else {
@@ -495,11 +631,14 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     return {
       originalText: '',
       optimizedText: '',
+      workspaceMap: '',
       stats: { originalTokens: 0, optimizedTokens: 0, tokensSaved: 0, percentSaved: 0, engine: 'None' }
     };
   }
 
-  const workspaceContext = options.workspaceContext || detectWorkspaceContext();
+  const currentCwd = options.cwd || process.cwd();
+  const workspaceMap = options.workspaceMap || buildWorkspaceMap(currentCwd);
+  const workspaceContext = options.workspaceContext || detectWorkspaceContext(currentCwd);
   const builtInSkills = resolveSkillDirectives(rawText);
   const vaultSkills = loadLocalSkillVault(rawText);
   const allSkills = [...builtInSkills, ...vaultSkills];
@@ -512,18 +651,17 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
 
   if (apiKey) {
     try {
-      optimizedText = await repromptWithAI(stage1Text, apiKey, allSkills);
+      optimizedText = await repromptWithAI(stage1Text, apiKey, allSkills, workspaceMap);
       engineUsed = 'Graviton Core Synthesizer (Gemini)';
     } catch (e) {
-      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
+      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, workspaceMap);
       engineUsed = 'Graviton Core Synthesizer (Local Fallback)';
     }
   } else {
-    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
+    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, workspaceMap);
   }
 
   // Ensure [CWD: ...] is at the very top
-  const currentCwd = process.cwd();
   if (!optimizedText.startsWith('[CWD:')) {
     optimizedText = `[CWD: ${currentCwd}]\n\n` + optimizedText.trim();
   }
@@ -535,6 +673,7 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
   return {
     originalText: rawText,
     optimizedText,
+    workspaceMap,
     stats: {
       originalTokens,
       optimizedTokens,
