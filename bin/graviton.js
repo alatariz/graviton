@@ -271,8 +271,7 @@ async function main() {
     process.exit(1);
   }
 
-  const gearLabel = isDeep ? 'Gear 2: Pro 3.1 Architect' : 'Gear 1: Flash 3.8 Sanitizer';
-  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1m${gearLabel}\x1b[0m...`);
+  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mUnified Meta 2026 Engine\x1b[0m...`);
 
   const apiKey = process.env.GEMINI_API_KEY || null;
   const result = await synthesizePrompt(input, apiKey, { deep: isDeep });
@@ -301,7 +300,7 @@ async function main() {
   console.log(result.optimizedText);
   console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
 
-  console.log(`\x1b[36m[3/3 RELAYING TO ANTIGRAVITY]\x1b[0m Launching Antigravity with \x1b[1mAutonomous Auto-Allow Relay\x1b[0m...`);
+  console.log(`\x1b[36m[3/3 RELAYING TO ANTIGRAVITY]\x1b[0m Launching Antigravity in \x1b[1mOne-Shot Auto-Allow Mode\x1b[0m...`);
 
   const child = runAntigravityWithAutoAllow(result.optimizedText, {
     continueSession: isContinue

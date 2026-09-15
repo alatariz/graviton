@@ -1,4 +1,4 @@
-// bin/graviton-relay.js - Graviton Meta 2026: Autonomous Auto-Allow Relay
+// bin/graviton-relay.js - Graviton Meta 2026: One-Shot Autonomous Relay via Stdin
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -54,9 +54,9 @@ export function resolveAgyExecutable() {
 }
 
 /**
- * Executes Antigravity with autonomous Auto-Allow bypass.
- * Programmatically intercepts stdout/stderr for interactive approval prompts ([Y/n], Allow this?, Press Enter)
- * and feeds affirmative response to stdin for 100% autonomous operation.
+ * Executes Antigravity in pure One-Shot mode via Stdin.
+ * Writes promptText to child.stdin and immediately closes it (stdin.end()),
+ * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
   const agyExecutable = resolveAgyExecutable();
@@ -71,58 +71,20 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args.push('--continue');
   }
 
-  if (options.printOnly) {
-    args.push('--print', promptText);
-  } else {
-    args.push('--prompt-interactive', promptText);
-  }
-
-  console.log(`\x1b[35m[GRAVITON ➔ ANTIGRAVITY RELAY]\x1b[0m Auto-Allow Active (--dangerously-skip-permissions)`);
+  console.log(`\x1b[35m[GRAVITON ➔ ANTIGRAVITY ONE-SHOT]\x1b[0m Auto-Allow Active (--dangerously-skip-permissions)`);
 
   const child = spawn(agyExecutable, args, {
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: ['pipe', process.stdout, process.stderr],
     shell: false
   });
 
-  // Relay process.stdin to child
-  if (process.stdin.isTTY) {
-    process.stdin.setRawMode?.(true);
-    process.stdin.resume();
-    process.stdin.pipe(child.stdin);
+  // Programmatically write promptText into child.stdin and close stream
+  if (promptText) {
+    child.stdin.write(promptText);
   }
+  child.stdin.end();
 
-  // Approval prompt patterns
-  const approvalPromptRegex = /(?:\[[Yy]\/[Nn]\]|\([Yy]\/[Nn]\)|Allow\s+(?:this|once|always)|Press\s+Enter|Do\s+you\s+want\s+to\s+proceed|Confirm\?|Approve\?)/i;
-  const pressEnterRegex = /Press\s+Enter/i;
-
-  let streamBuffer = '';
-
-  function handleOutputChunk(chunk, targetStream) {
-    targetStream.write(chunk);
-    const text = chunk.toString();
-    streamBuffer += text;
-
-    // Retain only last 500 characters to check prompt
-    if (streamBuffer.length > 500) {
-      streamBuffer = streamBuffer.slice(-500);
-    }
-
-    if (approvalPromptRegex.test(streamBuffer)) {
-      if (pressEnterRegex.test(streamBuffer)) {
-        child.stdin.write('\n');
-        process.stdout.write('\n\x1b[33m[GRAVITON AUTO-ALLOW]\x1b[0m Auto-pressed Enter.\n');
-      } else {
-        child.stdin.write('y\n');
-        process.stdout.write('\n\x1b[33m[GRAVITON AUTO-ALLOW]\x1b[0m Auto-confirmed with "y".\n');
-      }
-      streamBuffer = '';
-    }
-  }
-
-  child.stdout.on('data', (chunk) => handleOutputChunk(chunk, process.stdout));
-  child.stderr.on('data', (chunk) => handleOutputChunk(chunk, process.stderr));
-
-  // Forward termination signals
+  // Forward termination signals to child process
   const forwardSignal = (signal) => {
     if (child && !child.killed) {
       try {
@@ -140,10 +102,6 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   process.on('SIGTERM', sigtermHandler);
 
   child.on('exit', (code, signal) => {
-    if (process.stdin.isTTY) {
-      process.stdin.setRawMode?.(false);
-      process.stdin.pause();
-    }
     process.removeListener('SIGINT', sigintHandler);
     process.removeListener('SIGTERM', sigtermHandler);
     if (code !== null) {

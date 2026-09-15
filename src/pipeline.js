@@ -1,4 +1,4 @@
-// src/pipeline.js - Graviton Meta 2026: 4-Pillar Compression & Dual-Clutch Engine
+// src/pipeline.js - Graviton Meta 2026: Unified 4-Pillar Compression Engine
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -236,10 +236,13 @@ Directive: Enforce zero memory leaks, signal forwarding, and autonomous task exe
 }
 
 /**
- * Gigi 1: Gemini 3.8 Flash - The Sanitizer (Default)
- * Operates under [CAVEMAN] (zero pleasantries, technical fragments) and [PONYTAIL] (7 staircases of laziness in <scratchpad>).
+ * Unified Meta 2026 Engine: Single solid system prompt uniting all 4 pillars
+ * - [CAVEMAN]: "Why use many token when few do trick." Buang basa-basi, pertahankan kode/path/error secara absolut.
+ * - [PONYTAIL]: Wajib buka <scratchpad> untuk memvalidasi 7 anak tangga efisiensi:
+ *   (YAGNI, Reuse, Stdlib, Native, Dependency, One-liner, Minimum that works).
+ * - [HEADROOM]: Tambahkan direktif "Be terse, don't restate context, and minimize output tokens." di akhir instruksi.
  */
-export async function repromptWithFlashSanitizer(cleanedText, apiKey, unlockedSkills = []) {
+export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
   const model = 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -247,30 +250,43 @@ export async function repromptWithFlashSanitizer(cleanedText, apiKey, unlockedSk
     ? `\nSuntikkan directive Antigravity Skills berikut:\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
     : '';
 
-  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Dual-Clutch Engine [Gear 1: Gemini 3.8 Flash - The Sanitizer].
-Tugasmu: Pembersihan kilat bug, log, dan prompt developer dengan kecepatan tertinggi dan konsumsi token paling minimal.
+  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Unified AI Acceleration & Token Optimization Engine.
+Tugasmu: Melakukan kompresi dan re-sintesis prompt developer menjadi instruksi teknis bedah presisi tinggi dengan konsumsi token seminimal mungkin.
 
-PROTOKOL WAJIB:
-1. [PONYTAIL] — Di dalam tag <scratchpad>, jalankan 7 anak tangga kemalasan (The 7 Staircases of Laziness):
-   1. Root Cause Isolation
-   2. Fluff & Boilerplate Elimination
-   3. Exact Error Signature & Traceback Pinpointing
-   4. File Path & Line Coordinate Matching
-   5. Minimal Surgery Plan (perubahan sesedikit mungkin)
-   6. Zero Regressions & Layout Shift Protection
-   7. Compactness & Token Budget Verification
-2. [CAVEMAN] — Di luar <scratchpad>, gunakan gaya komunikasi CAVEMAN:
-   - Tanpa salam, tanpa basa-basi, tanpa sopan santun.
-   - Gunakan fragmen teknis padat, to-the-point, dan tajam.
-   - Kunci 100% kode dan error asli tanpa modifikasi tak perlu.${skillDirectiveStr}
-   - Format:
-     <scratchpad>
-     [7 Staircases Analysis...]
-     </scratchpad>
-     **Tujuan Utama:** [fragmen teknis ringkas]
-     **Kode Terkait:** [kode asli jika ada]
-     **Error Trace:** [cuplikan error terisolasi jika ada]
-     **Spesifikasi Perbaikan:** [poin-poin bedah minimal]`;
+ATURAN 4 PILAR WAJIB (EXECUTE SIMULTANEOUSLY):
+1. [PONYTAIL] — Buka tag <scratchpad> di awal output untuk memvalidasi 7 anak tangga efisiensi:
+   1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.
+   2. Reuse: Manfaatkan struktur kode/fungsi yang sudah ada.
+   3. Stdlib: Utamakan built-in/standar runtime daripada kode kustom berbelit.
+   4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.
+   5. Dependency: Hindari penambahan library/package eksternal baru.
+   6. One-liner: Sederhanakan ekspresi jika memungkinkan tanpa mengurangi readability.
+   7. Minimum that works: Tentukan intervensi teknis paling minimal yang langsung menyelesaikan tugas.
+
+2. [CAVEMAN] — Di luar <scratchpad>, terapkan prinsip "Why use many token when few do trick":
+   - Hapus semua salam pembuka, penutup, basa-basi, dan permohonan maaf.
+   - Gunakan fragmen teknis super padat, tajam, dan langsung to-the-point.
+   - Kunci 100% kode, file path, line numbers, dan traceback error asli secara absolut tanpa diubah atau dirangkum jika esensial.${skillDirectiveStr}
+
+3. Format Output:
+<scratchpad>
+[Ponytail: 7 Staircases of Efficiency]
+1. YAGNI: ...
+2. Reuse: ...
+3. Stdlib: ...
+4. Native: ...
+5. Dependency: ...
+6. One-liner: ...
+7. Minimum that works: ...
+</scratchpad>
+
+**Tujuan Utama:** [Fragmen teknis instruksi]
+**Kode Terkait:** [Kode asli jika ada]
+**Error Trace:** [Cuplikan traceback terisolasi jika ada]
+**Spesifikasi Perbaikan:** [Poin-poin bedah minimal]
+
+4. [HEADROOM] — Di akhir instruksi, selalu pastikan:
+Be terse, don't restate context, and minimize output tokens.`;
 
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
@@ -286,74 +302,20 @@ PROTOKOL WAJIB:
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Gemini Flash 3.8 request failed (${res.status})`);
+    throw new Error(err.error?.message || `Gemini Unified Engine request failed (${res.status})`);
   }
 
   const data = await res.json();
   const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reprompted) throw new Error('No content returned from Gemini Flash 3.8');
+  if (!reprompted) throw new Error('No content returned from Gemini Unified Engine');
   return reprompted.trim();
 }
 
 /**
- * Gigi 2: Gemini 3.1 Pro - The Architect (Triggered by --deep)
- * Performs deep architectural dissection with Step-by-Step planning in <scratchpad> before scaffold code.
+ * Local Deterministic Synthesizer (Zero-cost offline Unified Meta 2026 Engine)
+ * Emulates [PONYTAIL] 7-staircase validation, [CAVEMAN] zero-fluff extraction, and [HEADROOM] compactness.
  */
-export async function repromptWithProArchitect(cleanedText, apiKey, unlockedSkills = []) {
-  const model = 'gemini-2.5-pro';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  const skillDirectiveStr = unlockedSkills.length > 0
-    ? `\nSuntikkan directive arsitektur berikut:\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
-    : '';
-
-  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Dual-Clutch Engine [Gear 2: Gemini 3.1 Pro - The Architect].
-Tugasmu: Bedah arsitektur sistem tingkat lanjut untuk instruksi koding kompleks yang membutuhkan perancangan modular mendalam.
-
-PROTOKOL WAJIB:
-1. Di dalam tag <scratchpad>, buat perencanaan implementasi arsitektur komprehensif:
-   - System Decomposition & Data Flow Analysis
-   - Step 1: Core Foundation & Data Contracts
-   - Step 2: Service Layer & Business Logic Orchestration
-   - Step 3: Edge Cases, Signal Handling & Security
-   - Step 4: Verification, Boundary Validation & Zero-Downtime Migration
-2. Di luar <scratchpad>, berikan cetak biru arsitektur tingkat tinggi beserta kerangka kode production-ready:${skillDirectiveStr}
-   Format:
-   <scratchpad>
-   [Architectural Blueprint & Step-by-Step Breakdown...]
-   </scratchpad>
-   **Arsitektur & Spesifikasi Sistem:** [Rencana arsitektur modular terperinci]
-   **Langkah Implementasi:** [Step 1, Step 2, Step 3 konkret]
-   **Kerangka Kode Production-Ready:** [Interface, Types, Implementation Scaffolding]`;
-
-  const payload = {
-    system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ parts: [{ text: cleanedText }] }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
-  };
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Gemini Pro 3.1 request failed (${res.status})`);
-  }
-
-  const data = await res.json();
-  const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reprompted) throw new Error('No content returned from Gemini Pro 3.1');
-  return reprompted.trim();
-}
-
-/**
- * Local Deterministic Synthesizer (Zero-cost offline engine)
- */
-export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = [], options = {}) {
-  const isDeep = Boolean(options.deep);
+export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
   const codeBlocks = [];
 
   let text = rawText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
@@ -365,7 +327,7 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     return '';
   });
 
-  // Strip conversational noise
+  // [CAVEMAN] Strip conversational noise
   text = text.replace(/^(?:halo|selamat\s+(?:pagi|siang|sore|malam)|hey|hi|good\s+(?:morning|afternoon|evening))\s*(?:antigravity|ai|gemini|kawan|bro|there)?[\s,!.-]*/gim, '');
   text = text.replace(/(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?[\s,!.-]*)/gim, '');
   text = text.replace(/(?:thanks(?:\s+a\s+lot|\s+in\s+advance)?[\s,!.-]*)/gim, '');
@@ -404,63 +366,42 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     }
   }
 
-  if (isDeep) {
-    // Gear 2 Local Emulation: Pro 3.1 Architect
-    const scratchpad = `<scratchpad>
-[Architectural Breakdown]
-Step 1: Parse requirements and isolate interface boundary for: ${taskPoints[0] || text.trim() || 'Core module'}.
-Step 2: Define modular separation of concerns and robust type contracts.
-Step 3: Guard edge cases, handle signal interrupts (SIGINT/SIGTERM), and prevent resource leaks.
-Step 4: Execute structured implementation with zero regressions.
+  const targetTask = taskPoints[0] || text.trim() || 'Perbaikan kode dan optimasi';
+
+  // [PONYTAIL] 7 Staircases of Efficiency
+  const scratchpad = `<scratchpad>
+[Ponytail: 7 Staircases of Efficiency]
+1. YAGNI: Isolate core technical requirement: ${targetTask}.
+2. Reuse: Leverage existing codebase patterns in ${workspaceContext?.type || 'active workspace'}.
+3. Stdlib: Prefer standard runtime APIs and language built-ins.
+4. Native: Utilize idiomatic native constructs without over-engineering.
+5. Dependency: Zero extraneous external packages.
+6. One-liner: Keep modifications atomic and concise.
+7. Minimum that works: Surgical patch with zero regressions and zero layout shift.
 </scratchpad>`;
 
-    const body = [
-      scratchpad,
-      `**Arsitektur & Spesifikasi Sistem:**\nImplementasikan perombakan arsitektur modular untuk ${taskPoints[0] || text.trim()}.`,
-      `**Langkah Implementasi:**\n` + (taskPoints.length > 0 ? taskPoints.map((t, idx) => `Step ${idx + 1}: ${t}.`).join('\n') : 'Step 1: Implementasi logic inti.\nStep 2: Testing & verifikasi.')
-    ];
-
-    if (codeBlocks.length > 0) {
-      const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-      body.push(`**Kerangka Kode Production-Ready:**\n${formattedCode}`);
-    }
-    if (errorSnippet) {
-      body.push('**Error Signature:**\n```\n' + errorSnippet + '\n```');
-    }
-    return body.join('\n\n').trim();
-  } else {
-    // Gear 1 Local Emulation: Flash 3.8 Sanitizer (Caveman + Ponytail)
-    const scratchpad = `<scratchpad>
-[Ponytail: 7 Staircases]
-1. Root cause: ${taskPoints[0] || 'Direct code optimization'}
-2. Fluff: stripped conversational greeting/boilerplate
-3. Error: ${errorSnippet ? 'Isolated stack trace' : 'None detected'}
-4. Target: ${workspaceContext?.type || 'Current workspace'}
-5. Surgery plan: minimal atomic modification
-6. Protection: zero layout shift & zero regressions
-7. Token budget: compressed to essential technical fragments
-</scratchpad>`;
-
-    const body = [scratchpad];
-    if (taskPoints.length === 1) {
-      body.push(`**Tujuan Utama:**\n${taskPoints[0]}.`);
-    } else if (taskPoints.length > 1) {
-      body.push(`**Tujuan Utama & Spesifikasi:**\n` + taskPoints.map(t => `- ${t}.`).join('\n'));
-    } else if (text.trim()) {
-      body.push(`**Tujuan Utama:**\n${text.trim()}`);
-    }
-
-    if (codeBlocks.length > 0) {
-      const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-      body.push(`**Kode Terkait:**\n${formattedCode}`);
-    }
-
-    if (errorSnippet) {
-      body.push('**Error yang Terjadi:**\n```\n' + errorSnippet + '\n```');
-    }
-
-    return body.join('\n\n').trim();
+  const body = [scratchpad];
+  if (taskPoints.length === 1) {
+    body.push(`**Tujuan Utama:**\n${taskPoints[0]}.`);
+  } else if (taskPoints.length > 1) {
+    body.push(`**Tujuan Utama & Spesifikasi:**\n` + taskPoints.map(t => `- ${t}.`).join('\n'));
+  } else if (text.trim()) {
+    body.push(`**Tujuan Utama:**\n${text.trim()}`);
   }
+
+  if (codeBlocks.length > 0) {
+    const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
+    body.push(`**Kode Terkait:**\n${formattedCode}`);
+  }
+
+  if (errorSnippet) {
+    body.push('**Error Trace:**\n```\n' + errorSnippet + '\n```');
+  }
+
+  // [HEADROOM] Compactness directive
+  body.push(`Be terse, don't restate context, and minimize output tokens.`);
+
+  return body.join('\n\n').trim();
 }
 
 /**
@@ -475,7 +416,6 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     };
   }
 
-  const isDeep = Boolean(options.deep);
   const workspaceContext = options.workspaceContext || detectWorkspaceContext();
   const builtInSkills = resolveSkillDirectives(rawText);
   const vaultSkills = loadLocalSkillVault(rawText);
@@ -485,26 +425,21 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
   const stage1Text = pruneNoise(rawText);
 
   let optimizedText = '';
-  let engineUsed = isDeep ? 'Pro 3.1 Architect (Local)' : 'Flash 3.8 Sanitizer (Local)';
+  let engineUsed = 'Unified Meta 2026 Engine (Local)';
 
   if (apiKey) {
     try {
-      if (isDeep) {
-        optimizedText = await repromptWithProArchitect(stage1Text, apiKey, allSkills);
-        engineUsed = 'Gemini 3.1 Pro [Gear 2: Architect]';
-      } else {
-        optimizedText = await repromptWithFlashSanitizer(stage1Text, apiKey, allSkills);
-        engineUsed = 'Gemini 3.8 Flash [Gear 1: Sanitizer]';
-      }
+      optimizedText = await repromptWithAI(stage1Text, apiKey, allSkills);
+      engineUsed = 'Unified Meta 2026 Engine (Gemini)';
     } catch (e) {
-      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, { deep: isDeep });
-      engineUsed = isDeep ? 'Pro 3.1 Architect (Fallback)' : 'Flash 3.8 Sanitizer (Fallback)';
+      optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
+      engineUsed = 'Unified Meta 2026 Engine (Local Fallback)';
     }
   } else {
-    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills, { deep: isDeep });
+    optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
   }
 
-  // Inject Skill unlocks & Workspace context
+  // Inject Skill unlocks & Workspace context headers
   const headers = [];
   if (workspaceContext && workspaceContext.mainFiles && workspaceContext.mainFiles.length > 0) {
     headers.push(`[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]`);
