@@ -2,8 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { redactSecrets, detectWorkspaceContext } from './workspace-helper.js';
-import { resolveSkillDirectives } from './skill-matrix.js';
+import { redactSecrets } from './workspace-helper.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -185,57 +184,6 @@ export function pruneNoise(rawText) {
   return result.trim();
 }
 
-/**
- * Local Skill Vault Reader (~/.graviton/skills/)
- * Automatically scans and injects relevant skill markdown files based on prompt keywords.
- */
-export function loadLocalSkillVault(promptText = '') {
-  const skillsDir = path.join(os.homedir(), '.graviton', 'skills');
-  const matchedSkills = [];
-
-  try {
-    if (!fs.existsSync(skillsDir)) {
-      fs.mkdirSync(skillsDir, { recursive: true });
-      const initialSkills = {
-        'modern-web.md': `# Modern Web Guidance\nKeywords: web, modal, css, html, dialog, responsive, animation\nDirective: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
-        'bigquery.md': `# BigQuery SQL Optimization\nKeywords: bigquery, sql, etl, partition, cluster, dataset, table\nDirective: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
-        'antigravity-core.md': `# Antigravity Core Directive\nKeywords: performance, core, leak, background, relay, signal\nDirective: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
-      };
-      for (const [filename, content] of Object.entries(initialSkills)) {
-        fs.writeFileSync(path.join(skillsDir, filename), content, 'utf8');
-      }
-    }
-
-    const files = fs.readdirSync(skillsDir).filter(f => f.endsWith('.md'));
-    const lowerPrompt = promptText.toLowerCase();
-
-    for (const file of files) {
-      const filePath = path.join(skillsDir, file);
-      const content = fs.readFileSync(filePath, 'utf8');
-      const baseName = path.basename(file, '.md').toLowerCase();
-
-      const kwMatch = content.match(/Keywords:\s*([^\n]+)/i);
-      const keywords = kwMatch
-        ? kwMatch[1].split(',').map(k => k.trim().toLowerCase())
-        : [baseName];
-
-      const isMatch = keywords.some(k => k && lowerPrompt.includes(k)) || lowerPrompt.includes(baseName);
-      if (isMatch) {
-        const dirMatch = content.match(/Directive:\s*([^\n]+)/i);
-        const directive = dirMatch ? dirMatch[1].trim() : content.slice(0, 160).replace(/\n/g, ' ');
-        matchedSkills.push({
-          skill: `LocalVault:${baseName}`,
-          directive: directive,
-          content: content.trim()
-        });
-      }
-    }
-  } catch (err) {
-    // Fail gracefully if skills directory is not readable
-  }
-
-  return matchedSkills;
-}
 
 /**
  * Graviton Core Workspace Hydration: Builds a high-speed, context-aware directory tree
@@ -589,8 +537,8 @@ ${workspaceInfo}${injectedFilesBlock}
 [USER INSTRUCTION & ERROR LOG]:
 ${cleanedInput}`.trim();
 
-  // Local Trip Odometer: Record tokens for this assembly
-  const promptTokens = Math.ceil(finalPrompt.length / 4);
+  // Local Trip Odometer: Silently track tokens
+  const promptTokens = estimateTokens(finalPrompt);
   recordOdometer(promptTokens);
 
   return finalPrompt;

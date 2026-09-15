@@ -71,8 +71,6 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args.push('--continue');
   }
 
-  console.log(`\x1b[35m[GRAVITON ➔ ANTIGRAVITY]\x1b[0m Forwarding to Antigravity with Auto-Allow (--dangerously-skip-permissions)...`);
-
   const child = spawn(agyExecutable, args, {
     stdio: ['pipe', process.stdout, process.stderr],
     shell: false

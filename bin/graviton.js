@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, pruneNoise, readOdometer } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -52,19 +52,16 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // Parse boolean flags
-  let isDryRun = false;
   let isDeep = false;
   let isContinue = false;
   const filteredArgs = [];
 
   for (const arg of rawArgs) {
-    if (arg === '--dry-run') {
-      isDryRun = true;
-    } else if (arg === '--deep') {
+    if (arg === '--deep') {
       isDeep = true;
     } else if (arg === '-c' || arg === '--continue') {
       isContinue = true;
-    } else {
+    } else if (arg !== '--dry-run') {
       filteredArgs.push(arg);
     }
   }
@@ -108,7 +105,6 @@ async function main() {
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  \x1b[33m--dry-run\x1b[0m               Preview prompt synthesis and token metrics without launching Antigravity
   \x1b[33m--deep\x1b[0m                  Activate deep precision synthesis for complex technical architecture
   \x1b[33m-c, --continue\x1b[0m          Resume previous Antigravity session with synthesized prompt & auto-allow
 
@@ -130,9 +126,6 @@ async function main() {
 
   # Deep precision architecture synthesis:
   graviton --deep "Build webhook handler for Stripe payments"
-
-  # Dry-run token optimization preview:
-  graviton --dry-run "Write BigQuery query for daily active users"
 
   # Pipe terminal outputs to Graviton:
   git status | graviton
@@ -283,9 +276,7 @@ async function main() {
     process.exit(1);
   }
 
-  if (!isDryRun) {
-    console.log(`\x1b[35m[1/2 GRAVITON]\x1b[0m Assembling Zero-Token SuperPrompt (Workspace Hydrated)...`);
-  }
+  console.log(`\x1b[36m[GRAVITON]\x1b[0m Assembling SuperPrompt...`);
 
   const currentCwd = process.cwd();
   const superPrompt = constructSuperPrompt(input, currentCwd);
@@ -295,25 +286,6 @@ async function main() {
   saveStats(stats);
 
   copyToClipboard(superPrompt);
-
-  // DRY-RUN / GAIN FORECASTER
-  if (isDryRun) {
-    const origTokens = estimateTokens(input);
-    const prunedInput = pruneNoise(input);
-    const prunedTokens = estimateTokens(prunedInput);
-    const savedPct = origTokens > 0 ? Math.max(0, Math.round(((origTokens - prunedTokens) / origTokens) * 100)) : 0;
-
-    console.log(`Original: ~${origTokens} tokens -> Pruned: ~${prunedTokens} tokens. Saved: ${savedPct}%`);
-    console.log(superPrompt);
-    process.exit(0);
-  }
-
-  console.log(`\x1b[32m[✔ SUPERPROMPT ASSEMBLED]\x1b[0m Zero LLM tokens consumed. Prompt copied to clipboard.`);
-  console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-  console.log(superPrompt);
-  console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-
-  console.log(`\x1b[36m[2/2 RELAYING TO ANTIGRAVITY]\x1b[0m Forwarding to Antigravity with Auto-Allow (--dangerously-skip-permissions)...`);
 
   const child = runAntigravityWithAutoAllow(superPrompt, {
     continueSession: isContinue
