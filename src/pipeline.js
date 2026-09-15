@@ -117,13 +117,15 @@ export function compressJsonArray(text) {
 
 /**
  * Graviton Core Noise Filter
- * Pure heuristic & regex string filter executed BEFORE text reaches the AI Synthesizer.
+ * Aggressive pure heuristic & regex string filter executed BEFORE text reaches the AI Synthesizer.
  * Enforces:
  * - JSON array compression (> 3 elements) to first and last items.
- * - Detection & destruction of terminal noise (npm WARN, npm notice, info, Downloaded, Compiling, Building).
- * - Exclusive preservation of critical error lines (TypeError, ReferenceError, Exception, panic, FATAL, at stack trace).
+ * - Terminal Noise Killer: Removes lines starting with or containing noise keywords.
+ * - Blank Line Remover: Cleans up excessive empty lines.
+ * - Fluff Trimmer: Strips conversational fluff words for longer inputs (>= 200 chars).
  */
 export function pruneNoise(rawText) {
+  if (!rawText || typeof rawText !== 'string') return '';
   let out = redactSecrets(rawText);
 
   // 1. Remove ANSI escape sequences
@@ -139,48 +141,33 @@ export function pruneNoise(rawText) {
   // 3. Compress oversized JSON arrays (> 3 elements)
   out = compressJsonArray(out);
 
-  // 4. Terminal Log Filter
-  // Exclusively preserve: TypeError, ReferenceError, Exception, panic, FATAL, or at (stack trace)
-  const TERMINAL_EXCLUSIVE_ERROR_REGEX = /(?:TypeError|ReferenceError|Exception|panic|FATAL|^\s*at\s+|\bat\s+(?:[A-Za-z0-9_$.<>]+\s+)?\([^)]+:\d+:\d+\))/i;
+  // 4. Terminal Noise Killer:
+  // Remove an entire line if it begins with or contains noise keywords.
+  // Regex pattern specified:
+  const TERMINAL_NOISE_REGEX = /^(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|info\s+|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building).*$/gim;
+  out = out.replace(TERMINAL_NOISE_REGEX, '');
 
-  // Detect and destroy: npm WARN, npm notice, info, Downloaded, Compiling, Building, plus spinners/progress bars
-  const TERMINAL_NOISE_REGEX = (
-    /(?:npm\s+WARN|npm\s+notice|(?:^\s*|[\[:]|\b(?:npm|yarn|pnpm)\s+)info\b|Downloaded|Compiling|Building)/i
-  );
-  const PROGRESS_NOISE_REGEX = (
-    /^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/ ||
-    /(?:\[[=> -]{5,}\]|\b\d+(?:\.\d+)?%\s*(?:done|complete)?|\b\d+\/\d+\s+(?:packages|files|crates))/i ||
-    /(?:npm|yarn|pnpm)\s+(?:verb|timing|sill|http\s+fetch)/i ||
-    /(?:Downloading|Fetching|Extracting)\s+https?:/i
-  );
+  // Also catch lines with leading whitespace or lines containing noise keywords
+  const WHITESPACE_NOISE_REGEX = /^\s*(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|info\s+|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building).*$/gim;
+  out = out.replace(WHITESPACE_NOISE_REGEX, '');
 
-  const rawLines = out.split('\n');
-  const filteredLines = [];
+  const CONTAINS_NOISE_REGEX = /^.*?\b(?:npm WARN|npm notice|npm ERR! code ELIFECYCLE|\[.*?\]\s*info|warning:|downloading|downloaded|compiling|building)\b.*$/gim;
+  out = out.replace(CONTAINS_NOISE_REGEX, '');
 
-  for (const line of rawLines) {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      filteredLines.push(line);
-      continue;
+  // 5. Blank Line Remover: Clean up excessive blank lines
+  out = out.replace(/^\s*[\r\n]/gm, '');
+
+  // 6. Fluff Trimmer (Only for inputs >= 200 chars; ignored if input is short < 200 chars)
+  if (out.length >= 200) {
+    const fluffKeywords = ['tolong', 'bantu', 'bro', 'pusing', 'thanks', 'terima kasih', 'halo'];
+    for (const kw of fluffKeywords) {
+      const kwRegex = new RegExp(`\\b${kw}\\b`, 'gi');
+      out = out.replace(kwRegex, '');
     }
-
-    // 1. Exclusively preserve critical error & traceback lines
-    if (TERMINAL_EXCLUSIVE_ERROR_REGEX.test(trimmed)) {
-      filteredLines.push(line);
-      continue;
-    }
-
-    // 2. Detect and destroy noise lines
-    if (TERMINAL_NOISE_REGEX.test(trimmed) || PROGRESS_NOISE_REGEX.test(trimmed)) {
-      // Completely dropped
-      continue;
-    }
-
-    filteredLines.push(line);
+    out = out.replace(/[ \t]{2,}/g, ' ');
   }
-  out = filteredLines.join('\n');
 
-  // 5. Deduplicate repetitive log lines cleanly
+  // 7. Deduplicate repetitive log lines cleanly
   const lines = out.split('\n');
   const deduplicated = [];
   let prevLine = null;
@@ -208,10 +195,10 @@ export function pruneNoise(rawText) {
   flushRepeats();
   out = deduplicated.join('\n');
 
-  // 6. Remove cosmetic separators
+  // 8. Remove cosmetic separators
   out = out.replace(/^[ \t]*(?:\/\/|#|\/\*)[ \t]*[-=~*#]{5,}[ \t]*(?:\*\/)?$/gm, '');
 
-  // 7. Strip trailing AI disclaimers
+  // 9. Strip trailing AI disclaimers
   const trailingFluff = [
     /(?:Hope\s+this\s+helps!?(?:\s+Let\s+me\s+know\s+if\s+you\s+need\s+anything\s+else\.?)?)\s*$/gi,
     /(?:Please\s+let\s+me\s+know\s+if\s+you\s+have\s+any\s+(?:other\s+)?questions(?:\s+or\s+need\s+further\s+assistance)?\.?)?\s*$/gi,
@@ -222,6 +209,8 @@ export function pruneNoise(rawText) {
     out = out.replace(pat, '');
   }
 
+  // Final blank line removal & trim
+  out = out.replace(/^\s*[\r\n]/gm, '');
   return out.trim();
 }
 
@@ -522,19 +511,25 @@ export async function synthesizePrompt(rawText, apiKey = null, options = {}) {
   const currentCwd = options.cwd || process.cwd();
   const superPrompt = constructSuperPrompt(rawText, currentCwd);
   const workspaceMap = options.workspaceMap || buildWorkspaceMap(currentCwd);
+  const prunedText = pruneNoise(rawText);
   const originalTokens = estimateTokens(rawText);
+  const prunedTokens = estimateTokens(prunedText);
   const optimizedTokens = estimateTokens(superPrompt);
+  const tokensSaved = Math.max(0, originalTokens - prunedTokens);
+  const percentSaved = originalTokens > 0 ? Math.max(0, Math.round((tokensSaved / originalTokens) * 100)) : 0;
 
   return {
     originalText: rawText,
+    prunedText,
     optimizedText: superPrompt,
     superPrompt,
     workspaceMap,
     stats: {
       originalTokens,
+      prunedTokens,
       optimizedTokens,
-      tokensSaved: Math.max(0, originalTokens - optimizedTokens),
-      percentSaved: originalTokens > 0 ? Math.max(0, Math.round(((originalTokens - optimizedTokens) / originalTokens) * 100)) : 0,
+      tokensSaved,
+      percentSaved,
       engine: 'Graviton Zero-Token Middleware'
     }
   };
