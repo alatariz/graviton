@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.4 Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.5 Singularity Autonomous Execution Layer
 
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -51,6 +51,9 @@ function copyToClipboard(text) {
 const rawArgs = process.argv.slice(2);
 
 async function main() {
+  // Fire-and-forget self-cleaning shadow backup (zero latency impact)
+  purgeOldBackups();
+
   // Parse boolean flags
   let isDeep = false;
   let isContinue = false;
@@ -135,12 +138,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.4.0';
+    let version = '1.5.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.4 Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.5 Singularity Architecture)`);
     process.exit(0);
   }
 

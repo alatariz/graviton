@@ -152,8 +152,8 @@ export function pruneNoise(rawText) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    // 1. [WHITELIST RULE 1]: User JSON / Object log protection ({ or }) - NEVER prune
-    if (line.includes('{') || line.includes('}')) {
+    // 1. [WHITELIST RULE 1]: Bounded User JSON / Object log protection ({ or } AND length < 200)
+    if ((line.includes('{') || line.includes('}')) && line.length < 200) {
       filteredLines.push(line);
       continue;
     }
@@ -187,6 +187,57 @@ export function pruneNoise(rawText) {
   return result.trim();
 }
 
+
+// Recognized code extensions (language-agnostic: JS/TS, Python, Go, Rust, Java, C/C++, etc.)
+export const CODE_EXTENSIONS = new Set([
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.py', '.go', '.rs', '.java', '.cpp', '.c', '.h', '.hpp'
+]);
+
+// Static extensions (score 0)
+export const STATIC_EXTENSIONS = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.pdf', '.lock',
+  '.webp', '.woff', '.woff2', '.ttf', '.eot'
+]);
+
+/**
+ * Calculates code density ratio for a directory (language-agnostic)
+ */
+export function calculateDirCodeDensity(dirPath) {
+  try {
+    let codeCount = 0;
+    let totalCount = 0;
+
+    function countFiles(targetDir, depth = 0) {
+      try {
+        const subEntries = fs.readdirSync(targetDir, { withFileTypes: true });
+        for (const sub of subEntries) {
+          if (sub.name.startsWith('.') && sub.name !== '.env.example') continue;
+          if (/^(node_modules|\.git|dist|build|__pycache__|\.next|\.turbo|\.cache)$/i.test(sub.name)) continue;
+
+          if (sub.isDirectory()) {
+            if (depth < 1) {
+              countFiles(path.join(targetDir, sub.name), depth + 1);
+            }
+          } else {
+            totalCount++;
+            const ext = path.extname(sub.name).toLowerCase();
+            if (CODE_EXTENSIONS.has(ext)) {
+              codeCount++;
+            }
+          }
+        }
+      } catch {}
+    }
+
+    countFiles(dirPath, 0);
+
+    const ratio = totalCount > 0 ? (codeCount / totalCount) : 0;
+    return { ratio, codeCount, totalCount };
+  } catch {
+    return { ratio: 0, codeCount: 0, totalCount: 0 };
+  }
+}
 
 /**
  * Graviton Core Workspace Hydration: Builds a high-speed, context-aware directory tree
@@ -281,9 +332,6 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
       return;
     }
 
-    const PRIORITY_DIRS = /^(src|app|lib|components|utils)$/i;
-    const STATIC_DIRS = /^(assets|public|images|fonts|docs)$/i;
-
     const filtered = entries.filter(e => {
       if (e.name.startsWith('.') && e.name !== '.env.example') return false;
       const relItemPath = path.relative(cwd, path.join(dir, e.name)).replace(/\\/g, '/');
@@ -291,24 +339,60 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
       return true;
     });
 
-    // Smart Priority Sorting:
-    // 0: Priority folders (src, app, lib, components, utils)
-    // 1: Normal directories
-    // 2: Files
-    // 3: Static directories (assets, public, images, fonts, docs)
-    function getItemPriority(item) {
+    // Extension-Based Code-Density Sorting (Language-Agnostic):
+    // Calculate code density for each item in filtered
+    const itemScores = new Map();
+    for (const item of filtered) {
+      const fullPath = path.join(dir, item.name);
       if (item.isDirectory()) {
-        if (PRIORITY_DIRS.test(item.name)) return 0;
-        if (STATIC_DIRS.test(item.name)) return 3;
-        return 1;
+        const density = calculateDirCodeDensity(fullPath);
+        itemScores.set(item, {
+          isDir: true,
+          ratio: density.ratio,
+          codeCount: density.codeCount,
+          totalCount: density.totalCount,
+          isStatic: density.totalCount > 0 && density.codeCount === 0
+        });
+      } else {
+        const ext = path.extname(item.name).toLowerCase();
+        const isCode = CODE_EXTENSIONS.has(ext);
+        const isStatic = STATIC_EXTENSIONS.has(ext);
+        itemScores.set(item, {
+          isDir: false,
+          ratio: isCode ? 1.0 : (isStatic ? 0 : 0.5),
+          codeCount: isCode ? 1 : 0,
+          totalCount: 1,
+          isStatic
+        });
       }
-      return 2;
+    }
+
+    function getBucket(score) {
+      if (score.isDir) {
+        if (score.ratio > 0) return 0; // High code-density directories at the top
+        return 3; // Zero code / static directories at the bottom
+      } else {
+        if (score.isStatic) return 3; // Static files at the bottom (score 0)
+        if (score.ratio === 1.0) return 1; // Direct code files
+        return 2; // Config files, docs, markdown, etc.
+      }
     }
 
     filtered.sort((a, b) => {
-      const pA = getItemPriority(a);
-      const pB = getItemPriority(b);
-      if (pA !== pB) return pA - pB;
+      const sA = itemScores.get(a);
+      const sB = itemScores.get(b);
+      const bA = getBucket(sA);
+      const bB = getBucket(sB);
+
+      if (bA !== bB) return bA - bB;
+
+      // Within the same bucket:
+      if (sA.isDir && sB.isDir) {
+        if (sB.ratio !== sA.ratio) return sB.ratio - sA.ratio;
+        if (sB.codeCount !== sA.codeCount) return sB.codeCount - sA.codeCount;
+      } else if (!sA.isDir && !sB.isDir) {
+        if (sB.ratio !== sA.ratio) return sB.ratio - sA.ratio;
+      }
       return a.name.localeCompare(b.name);
     });
 
@@ -418,23 +502,112 @@ export function createShadowBackup(filePaths, cwd = process.cwd()) {
 }
 
 /**
+ * Self-Cleaning Shadow Backup
+ * Asynchronously purges backup files older than 7 days from ~/.graviton/backups/
+ * Uses stat.mtime to evaluate file age.
+ * Non-blocking, fire-and-forget, zero latency impact.
+ */
+export async function purgeOldBackups(backupDir = path.join(os.homedir(), '.graviton', 'backups'), maxAgeDays = 7) {
+  try {
+    if (!fs.existsSync(backupDir)) return [];
+    const entries = await fs.promises.readdir(backupDir, { withFileTypes: true });
+    const now = Date.now();
+    const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+    const purged = [];
+
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith('.bak')) {
+        const filePath = path.join(backupDir, entry.name);
+        try {
+          const stats = await fs.promises.stat(filePath);
+          if (stats.mtime && (now - stats.mtime.getTime()) > maxAgeMs) {
+            await fs.promises.unlink(filePath);
+            purged.push(filePath);
+          }
+        } catch {}
+      }
+    }
+    return purged;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Dynamic TSConfig / JSConfig Paths Loader
+ * Simple parser for compilerOptions.paths from tsconfig.json or jsconfig.json
+ * Strips comments safely and returns { paths, baseUrl }
+ */
+export function loadConfigAliasMap(cwd = process.cwd()) {
+  const rootDir = cwd || process.cwd();
+  const configFiles = ['tsconfig.json', 'jsconfig.json'];
+
+  for (const cf of configFiles) {
+    const configPath = path.join(rootDir, cf);
+    if (fs.existsSync(configPath)) {
+      try {
+        let content = fs.readFileSync(configPath, 'utf8');
+        // Strip single-line comments (//...) and multi-line comments (/* ... */)
+        content = content.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+        const parsed = JSON.parse(content);
+        const pathsObj = parsed?.compilerOptions?.paths;
+        const rawBaseUrl = parsed?.compilerOptions?.baseUrl || '.';
+        const baseUrl = path.resolve(rootDir, rawBaseUrl);
+        if (pathsObj && typeof pathsObj === 'object') {
+          return { paths: pathsObj, baseUrl };
+        }
+      } catch {}
+    }
+  }
+  return null;
+}
+
+/**
  * Shallow Dependency Resolver
  * Resolves relative local dependency paths (depth = 1) across JS/TS, Python, Go, Rust
- * Supports Path Aliases (@/ and ~/) by resolving against ./src/ and project root
+ * Supports Path Aliases (@/ and ~/) via dynamic tsconfig/jsconfig paths with fallback to ./src/
  */
 export function resolveLocalDependency(baseDir, relativeImport, cwd = process.cwd()) {
   try {
     const candidatePaths = [];
+    const rootDir = cwd || process.cwd();
 
     // 1. Path Alias Resolver (@/ and ~/)
     if (relativeImport.startsWith('@/') || relativeImport.startsWith('~/')) {
-      const unaliased = relativeImport.replace(/^[@~]\//, '');
-      const rootDir = cwd || process.cwd();
-      candidatePaths.push(path.resolve(rootDir, 'src', unaliased));
-      candidatePaths.push(path.resolve(rootDir, unaliased));
-      if (baseDir) {
-        candidatePaths.push(path.resolve(baseDir, 'src', unaliased));
-        candidatePaths.push(path.resolve(baseDir, unaliased));
+      const config = loadConfigAliasMap(rootDir);
+      let matchedConfigPath = false;
+
+      if (config && config.paths) {
+        for (const [aliasPattern, targetList] of Object.entries(config.paths)) {
+          const targets = Array.isArray(targetList) ? targetList : [targetList];
+          if (aliasPattern.endsWith('/*')) {
+            const prefix = aliasPattern.slice(0, -2) + '/';
+            if (relativeImport.startsWith(prefix)) {
+              const suffix = relativeImport.slice(prefix.length);
+              for (const target of targets) {
+                const targetBase = target.endsWith('/*') ? target.slice(0, -2) : target;
+                candidatePaths.push(path.resolve(config.baseUrl, targetBase, suffix));
+                matchedConfigPath = true;
+              }
+            }
+          } else if (relativeImport === aliasPattern) {
+            for (const target of targets) {
+              candidatePaths.push(path.resolve(config.baseUrl, target));
+              matchedConfigPath = true;
+            }
+          }
+        }
+      }
+
+      // Fallback to ./src/ if no config exists or alias not defined in paths
+      if (!matchedConfigPath) {
+        const unaliased = relativeImport.replace(/^[@~]\//, '');
+        candidatePaths.push(path.resolve(rootDir, 'src', unaliased));
+        candidatePaths.push(path.resolve(rootDir, unaliased));
+        if (baseDir) {
+          candidatePaths.push(path.resolve(baseDir, 'src', unaliased));
+          candidatePaths.push(path.resolve(baseDir, unaliased));
+        }
       }
     } else {
       candidatePaths.push(path.resolve(baseDir, relativeImport));
@@ -522,6 +695,9 @@ export function recordOdometer(sessionTokens) {
  * Zero token cost, zero external API calls.
  */
 export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {}) {
+  // Fire-and-forget self-cleaning shadow backup (zero latency impact)
+  purgeOldBackups();
+
   const currentCwd = cwd || process.cwd();
   const cleanedInput = pruneNoise(userInput || '');
   const workspaceInfo = buildWorkspaceMap(currentCwd);

@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { purgeOldBackups } from '../src/pipeline.js';
 
 /**
  * Dynamically resolves the agy executable path across Windows, macOS, and Linux
@@ -58,6 +59,9 @@ export function resolveAgyExecutable() {
  * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
+  // Fire-and-forget self-cleaning shadow backup (zero latency impact)
+  purgeOldBackups();
+
   const agyExecutable = resolveAgyExecutable();
 
   const args = [

@@ -1,7 +1,7 @@
 {
   "name": "graviton-ai",
-  "version": "1.4.0",
-  "description": "Graviton V1.4 - Autonomous Context & Execution Optimization Layer for Antigravity",
+  "version": "1.5.0",
+  "description": "Graviton V1.5 - Autonomous Context & Execution Optimization Layer for Antigravity",
   "main": "src/server.js",
   "type": "module",
   "bin": {
