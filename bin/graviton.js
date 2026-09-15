@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, pruneNoise } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -281,7 +281,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\x1b[35m[1/2 GRAVITON]\x1b[0m Assembling Zero-Token SuperPrompt (Workspace Hydrated)...`);
+  if (!isDryRun) {
+    console.log(`\x1b[35m[1/2 GRAVITON]\x1b[0m Assembling Zero-Token SuperPrompt (Workspace Hydrated)...`);
+  }
 
   const currentCwd = process.cwd();
   const superPrompt = constructSuperPrompt(input, currentCwd);
@@ -294,12 +296,13 @@ async function main() {
 
   // DRY-RUN / GAIN FORECASTER
   if (isDryRun) {
-    console.log(`\n\x1b[33m[DRY-RUN PREVIEW]\x1b[0m Execution bypassed (--dry-run active)`);
-    console.log(`\x1b[1mEngine: Graviton Zero-Token Middleware (0 LLM API Tokens Used)\x1b[0m`);
-    console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
+    const origTokens = estimateTokens(input);
+    const prunedInput = pruneNoise(input);
+    const prunedTokens = estimateTokens(prunedInput);
+    const savedPct = origTokens > 0 ? Math.max(0, Math.round(((origTokens - prunedTokens) / origTokens) * 100)) : 0;
+
+    console.log(`Original: ~${origTokens} tokens -> Pruned: ~${prunedTokens} tokens. Saved: ${savedPct}%`);
     console.log(superPrompt);
-    console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
-    console.log(`\x1b[32m✔ SuperPrompt assembled & copied to clipboard!\x1b[0m\n`);
     process.exit(0);
   }
 

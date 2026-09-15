@@ -5,23 +5,9 @@ import os from 'os';
 import { redactSecrets, detectWorkspaceContext } from './workspace-helper.js';
 import { resolveSkillDirectives } from './skill-matrix.js';
 
-/**
- * Fast Token Estimator
- */
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
-  const wordsAndPunct = text.match(/\w+|[^\s\w]|\s+/g) || [];
-  let tokenCount = 0;
-  for (const token of wordsAndPunct) {
-    if (/^\s+$/.test(token)) {
-      tokenCount += Math.ceil(token.length / 4);
-    } else if (/^[A-Za-z0-9_]+$/.test(token)) {
-      tokenCount += Math.ceil(token.length / 3.8);
-    } else {
-      tokenCount += Math.ceil(token.length / 1.5);
-    }
-  }
-  return Math.max(1, Math.round(tokenCount));
+  return Math.ceil(text.length / 4);
 }
 
 /**
@@ -303,6 +289,24 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
     '.gemini', 'coverage', '.next', 'target', '.turbo',
     '.cache', 'venv', '.venv', '.idea', '.vscode'
   ]);
+  const gitignorePatterns = [];
+
+  // Gitignore Respecter: Check and parse .gitignore from cwd
+  try {
+    const gitignorePath = path.join(cwd, '.gitignore');
+    if (fs.existsSync(gitignorePath)) {
+      const gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
+      for (let line of gitignoreContent.split('\n')) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) continue;
+        const normalized = line.replace(/^\/+|\/+$/g, '');
+        if (normalized) {
+          ignoreDirs.add(normalized);
+          gitignorePatterns.push(normalized);
+        }
+      }
+    }
+  } catch {}
 
   const treeLines = [];
   const dependencies = [];
@@ -333,6 +337,25 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
     }
   } catch {}
 
+  // Helper to test if name or relative path matches gitignore pattern
+  function isIgnored(name, relPath) {
+    if (ignoreDirs.has(name) || ignoreDirs.has(relPath)) return true;
+    for (const pattern of gitignorePatterns) {
+      if (name === pattern || relPath === pattern) return true;
+      if (pattern.includes('*') || pattern.includes('?')) {
+        const regexStr = '^' + pattern
+          .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+          .replace(/\*/g, '.*')
+          .replace(/\?/g, '.') + '$';
+        try {
+          const re = new RegExp(regexStr, 'i');
+          if (re.test(name) || re.test(relPath)) return true;
+        } catch {}
+      }
+    }
+    return false;
+  }
+
   // 2. Traverse directory tree
   function scan(dir, depth, prefix = '') {
     if (depth > maxDepth) return;
@@ -351,7 +374,8 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 
     const filtered = entries.filter(e => {
       if (e.name.startsWith('.') && e.name !== '.env.example') return false;
-      if (e.isDirectory() && ignoreDirs.has(e.name)) return false;
+      const relItemPath = path.relative(cwd, path.join(dir, e.name)).replace(/\\/g, '/');
+      if (isIgnored(e.name, relItemPath)) return false;
       return true;
     });
 
@@ -404,13 +428,70 @@ export function constructSuperPrompt(userInput, cwd = process.cwd()) {
   const cleanedInput = pruneNoise(userInput || '');
   const workspaceInfo = buildWorkspaceMap(currentCwd);
 
+  // Smart File Hydration: detect file names mentioned in userInput
+  const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh))\b/gi;
+  const matches = (userInput.match(fileRegex) || []).map(m => m.trim());
+  const uniqueFiles = Array.from(new Set(matches));
+
+  const injectedFiles = [];
+  const handledPaths = new Set();
+
+  for (const filename of uniqueFiles) {
+    if (filename.startsWith('http://') || filename.startsWith('https://')) continue;
+
+    let candidatePath = path.resolve(currentCwd, filename);
+    let resolved = null;
+
+    if (fs.existsSync(candidatePath) && fs.statSync(candidatePath).isFile()) {
+      resolved = candidatePath;
+    } else {
+      const baseName = path.basename(filename);
+      const searchDirs = [currentCwd];
+      try {
+        const topEntries = fs.readdirSync(currentCwd, { withFileTypes: true });
+        for (const e of topEntries) {
+          if (e.isDirectory() && !['node_modules', '.git', 'dist', 'build'].includes(e.name)) {
+            searchDirs.push(path.join(currentCwd, e.name));
+          }
+        }
+      } catch {}
+
+      for (const d of searchDirs) {
+        const p = path.join(d, baseName);
+        if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+          resolved = p;
+          break;
+        }
+      }
+    }
+
+    if (resolved && !handledPaths.has(resolved)) {
+      handledPaths.add(resolved);
+      try {
+        const content = fs.readFileSync(resolved, 'utf8');
+        const lines = content.split('\n');
+        const cappedLines = lines.slice(0, 300).join('\n');
+        const ext = path.extname(resolved).slice(1) || '';
+        const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
+
+        injectedFiles.push(
+          `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedLines}\n\`\`\``
+        );
+      } catch {}
+    }
+  }
+
+  const injectedFilesBlock = injectedFiles.length > 0
+    ? '\n\n' + injectedFiles.join('\n\n')
+    : '';
+
   const systemDirective = `You are Antigravity, executed via Graviton. Act as a Ruthless Editor. Remove conversational fluff. Think in <graviton_plan> before coding. Strictly prioritize native/stdlib over external dependencies. Output absolute minimal code.`;
 
   return `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
 
-${workspaceInfo}
+${workspaceInfo}${injectedFilesBlock}
 
 [USER INSTRUCTION & ERROR LOG]:
 ${cleanedInput}`.trim();
