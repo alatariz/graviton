@@ -1,11 +1,13 @@
 {
   "name": "graviton-ai",
-  "version": "1.5.1",
-  "description": "Graviton V1.5.1 - Autonomous Context & Execution Optimization Layer for Antigravity",
+  "version": "1.6.0",
+  "description": "Graviton V1.6.0 - Autonomous AI Acceleration Layer for Antigravity",
+  "license": "Apache-2.0",
   "main": "src/server.js",
   "type": "module",
   "bin": {
-    "graviton": "./bin/graviton.js"
+    "graviton": "./src/pipeline.js",
+    "grav": "./src/pipeline.js"
   },
   "scripts": {
     "start": "node src/server.js",

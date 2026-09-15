@@ -138,12 +138,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.5.1';
+    let version = '1.6.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.5.1 Interceptor Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.6.0 Open-Source Architecture)`);
     process.exit(0);
   }
 
