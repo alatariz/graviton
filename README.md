@@ -1,13 +1,13 @@
 <div align="center">
 
-  <img src="web/public/icon.svg" width="120" height="120" alt="Graviton Atom Logo" />
+  <img src="graviton-logo.png" width="140" alt="Graviton Logo" />
 
   # GRAVITON
 
   ### Autonomous AI Acceleration & Noise Pruning Layer for Google Antigravity
 
   <p align="center">
-    <b>Zero-Auth &bull; Zero-Token Overhead &bull; Pure Node.js V8 stdlib &bull; Sub-millisecond Relay</b>
+    <b>Zero-Auth &bull; Pure Node.js V8 stdlib &bull; Sub-millisecond Relay</b>
   </p>
 
   <p align="center">
@@ -15,16 +15,15 @@
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
-    <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/token%20overhead-0.00-00f0ff.svg?style=for-the-badge" alt="Zero Token Overhead" /></a>
   </p>
 
   <p align="center">
+    <a href="#quickstart--installation">Quickstart</a> &bull;
     <a href="#overview">Overview</a> &bull;
     <a href="#the-vision">Vision</a> &bull;
     <a href="#core-architecture">Architecture</a> &bull;
     <a href="#empirical-benchmarks">Benchmarks</a> &bull;
     <a href="#skill-unlocker-matrix">Skill Matrix</a> &bull;
-    <a href="#quickstart--installation">Quickstart</a> &bull;
     <a href="#cli-command-reference">CLI Reference</a> &bull;
     <a href="#security--privacy">Security</a> &bull;
     <a href="#license">License</a>
@@ -36,7 +35,68 @@
 
 > [!IMPORTANT]
 > **What is Graviton?**
-> Graviton is a zero-auth, zero-token autonomous CLI middleware wrapper built exclusively for the **Google Antigravity IDE (`agy`)**. It intercepts terminal spew, compresses giant logs, blocks minified context bombs, hydrates project dependency context, and launches non-blocking autonomous sessions in under **0.8ms**.
+> Graviton is a zero-auth autonomous CLI middleware wrapper built exclusively for the **Google Antigravity IDE (`agy`)**. It intercepts terminal spew, compresses giant logs, blocks minified context bombs, hydrates project dependency context, and launches non-blocking autonomous sessions in under **0.8ms**.
+
+---
+
+<h2 id="quickstart--installation">Quickstart & Installation</h2>
+
+### Prerequisites
+1. **Node.js**: Version `>= 18.0.0` (Native ES Modules runtime).
+2. **Google Antigravity CLI (`agy`)**: An authenticated installation of Antigravity is required. Ensure `agy` is in your `PATH` or at `~/.gemini/bin/agy`.
+
+### Global Installation
+
+Install globally via npm to register dual binaries (`graviton` and `grav`):
+
+```bash
+# Install globally from npm or local source
+npm install -g graviton
+
+# Verify installation
+graviton --version
+# or use the shorthand alias
+grav --version
+```
+
+### Dual-Command Usage
+
+#### 1. Direct Execution with Quote-Free Syntax
+Graviton seamlessly aggregates unquoted arguments so you don't have to fiddle with terminal quotes:
+
+```bash
+# Standard command
+graviton Fix TypeError in src/auth.js
+
+# Ultra-fast alias
+grav Fix TypeError in src/auth.js
+```
+
+#### 2. Deep Architecture Mode (`--deep`)
+When tackling complex refactors, distributed locks, or state machine redesigns, use `--deep` to instruct Antigravity to operate in high-rigor planning mode:
+
+```bash
+# High-rigor planning mode
+grav --deep Architect an idempotent webhook processor with HMAC
+```
+
+#### 3. Piped Terminal Ingestion
+Pipe compiler noise, failing tests, or git status directly into Graviton. It strips progress lines and isolates tracebacks before handing off to Antigravity:
+
+```bash
+# Pipe failing tests directly into Antigravity
+pytest 2>&1 | grav Fix failing assertion in test_auth.py
+
+# Pipe Git status for instant commit analysis
+git status | grav Commit these changes with conventional commit format
+```
+
+#### 4. Silent Trip Odometer
+Check how many tokens and milliseconds Graviton has saved in your local workspace:
+
+```bash
+graviton status
+```
 
 ---
 
@@ -89,7 +149,7 @@ Graviton rejects this paradigm by embodying the classic **Unix Philosophy**:
 
 1. **Write programs that do one thing and do it well**: Graviton does not generate code itself. It sanitizes, bounds, and structures context so Antigravity can code without distraction.
 2. **Silence is Golden**: No verbose greeting banners, no decorative progress bars, no intermediate AI chit-chat. Graviton executes in `< 0.8ms` and emits output strictly when execution concludes or exceptions require human attention.
-3. **Zero-Auth, Zero-Token Overhead**: Graviton requires no external API keys, accounts, subscriptions, or secondary LLM calls. Prompt transformation is 100% deterministic, offline, and native.
+3. **Zero-Auth, 100% Offline**: Graviton requires no external API keys, accounts, subscriptions, or secondary LLM calls. Prompt transformation is 100% deterministic, offline, and native.
 
 ---
 
@@ -155,67 +215,6 @@ Graviton dynamically detects task intents in your prompts and automatically inje
 | `"audit color contrast and accessibility"` | `a11y-debugging` | Enforces WCAG 2.2 AA standards, ARIA roles, and keyboard focus states |
 | `"profile memory leaks in Node.js"` | `memory-leak-debugging` | Analyzes heap allocations, detached DOM trees, and closure retention |
 | `"setup Firebase authentication flow"` | `firebase-auth-basics` | Configures client SDK, security rules, and auth state observers |
-
----
-
-<h2 id="quickstart--installation">Quickstart & Installation</h2>
-
-### Prerequisites
-1. **Node.js**: Version `>= 18.0.0` (Native ES Modules runtime).
-2. **Google Antigravity CLI (`agy`)**: An authenticated installation of Antigravity is required. Ensure `agy` is in your `PATH` or at `~/.gemini/bin/agy`.
-
-### Global Installation
-
-Install globally via npm to register dual binaries (`graviton` and `grav`):
-
-```bash
-# Install globally from npm or local source
-npm install -g graviton
-
-# Verify installation
-graviton --version
-# or use the shorthand alias
-grav --version
-```
-
-### Dual-Command Usage
-
-#### 1. Direct Execution with Quote-Free Syntax
-Graviton seamlessly aggregates unquoted arguments so you don't have to fiddle with terminal quotes:
-
-```bash
-# Standard command
-graviton Fix TypeError in src/auth.js
-
-# Ultra-fast alias
-grav Fix TypeError in src/auth.js
-```
-
-#### 2. Deep Architecture Mode (`--deep`)
-When tackling complex refactors, distributed locks, or state machine redesigns, use `--deep` to instruct Antigravity to operate in high-rigor planning mode:
-
-```bash
-# High-rigor planning mode
-grav --deep Architect an idempotent webhook processor with HMAC
-```
-
-#### 3. Piped Terminal Ingestion
-Pipe compiler noise, failing tests, or git status directly into Graviton. It strips progress lines and isolates tracebacks before handing off to Antigravity:
-
-```bash
-# Pipe failing tests directly into Antigravity
-pytest 2>&1 | grav Fix failing assertion in test_auth.py
-
-# Pipe Git status for instant commit analysis
-git status | grav Commit these changes with conventional commit format
-```
-
-#### 4. Silent Trip Odometer
-Check how many tokens and milliseconds Graviton has saved in your local workspace:
-
-```bash
-graviton status
-```
 
 ---
 
