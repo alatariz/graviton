@@ -5,7 +5,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
@@ -207,9 +207,14 @@ async function main() {
     process.exit(0);
   }
 
-  // 6. SERVE WEB STUDIO
+  // 6. SERVE WEB STUDIO (Optional Local Web Dashboard)
   if (command === 'serve' || command === '--serve') {
-    import('../src/server.js');
+    const webServerPath = path.join(__dirname, '..', 'web', 'server.js');
+    if (fs.existsSync(webServerPath)) {
+      import(pathToFileURL(webServerPath).href);
+    } else {
+      console.log('\x1b[33m[!] Graviton Studio (web) is not found in this environment.\x1b[0m');
+    }
     return;
   }
 

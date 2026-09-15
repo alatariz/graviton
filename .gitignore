@@ -1,4 +1,7 @@
-﻿node_modules/
+node_modules/
 .env
 .DS_Store
 *.log
+
+# Web Dashboard & Studio (Excluded from GitHub repository)
+web/
