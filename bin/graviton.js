@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.2 Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.3 Autonomous Execution Layer
 
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, createGitSavePoint } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -135,12 +135,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.2.0';
+    let version = '1.3.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.2 Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.3 Architecture)`);
     process.exit(0);
   }
 
@@ -286,6 +286,8 @@ async function main() {
   saveStats(stats);
 
   copyToClipboard(superPrompt);
+
+  createGitSavePoint(currentCwd);
 
   const child = runAntigravityWithAutoAllow(superPrompt, {
     continueSession: isContinue

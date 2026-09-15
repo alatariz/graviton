@@ -1,7 +1,7 @@
-// src/pipeline.js - Graviton Core: Precision Context & Execution Optimization Engine
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { execSync } from 'child_process';
 import { redactSecrets } from './workspace-helper.js';
 
 export function estimateTokens(text) {
@@ -141,13 +141,11 @@ export function pruneNoise(rawText) {
   // 4. Split input into lines
   const rawLines = out.replace(/\r\n/g, '\n').split('\n');
 
-  // [WHITELIST]: Jika baris mengandung kata TypeError, Exception, Error:, at , atau ReferenceError,
-  // baris tersebut WAJIB DIPERTAHANKAN (jangan dipotong regex apa pun).
-  const WHITELIST_REGEX = /(?:TypeError|ReferenceError|Exception|Error:|\bat\s+)/;
+  // [WHITELIST]: Universal Error Matcher across JS/TS, Python, Go, Rust, etc.
+  const WHITELIST_REGEX = /TypeError|Exception|Error:|at\s+|ReferenceError|Traceback|panic:|fatal error:/i;
 
-  // [BLACKLIST]: Jika tidak masuk whitelist, hapus baris HANYA JIKA dimulai dengan (atau dominan berisi):
-  // npm WARN, info , warning:, npm notice, serta bracketed tags/build logs
-  const BLACKLIST_REGEX = /^\s*(?:\[(?:info|warn|warning|notice)\]\s*|\[.*?\]\s*info\s+|npm WARN|info\s+|warning:|npm notice|downloading|downloaded|compiling|building)/i;
+  // [BLACKLIST]: Ecosystem-agnostic terminal noise (npm, pip, cargo, go, info/warning, build/download steps)
+  const BLACKLIST_REGEX = /^(?:npm|pip|cargo|go)\s+(?:WARN|notice|info)|^(?:info\s+|warning:|npm notice)|\[.*?\]\s*(?:info|debug)|downloading|compiling|building/i;
 
   const filteredLines = [];
 
@@ -162,7 +160,7 @@ export function pruneNoise(rawText) {
     }
 
     // 2. [BLACKLIST] rule
-    if (BLACKLIST_REGEX.test(line)) {
+    if (BLACKLIST_REGEX.test(trimmed)) {
       continue;
     }
 
@@ -264,9 +262,13 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
     return false;
   }
 
+  let fileCount = 0;
+  const MAX_FILES = 50;
+  let isTruncated = false;
+
   // 2. Traverse directory tree
   function scan(dir, depth, prefix = '') {
-    if (depth > maxDepth) return;
+    if (depth > maxDepth || isTruncated) return;
     let entries = [];
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -287,27 +289,35 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
       return true;
     });
 
-    const limit = 20;
-    const items = filtered.slice(0, limit);
-
-    items.forEach((item, index) => {
-      const isLast = index === items.length - 1 && filtered.length <= limit;
+    for (let index = 0; index < filtered.length; index++) {
+      if (fileCount >= MAX_FILES) {
+        isTruncated = true;
+        break;
+      }
+      const item = filtered[index];
+      const isLast = index === filtered.length - 1;
       const pointer = isLast ? '└── ' : '├── ';
 
       if (item.isDirectory()) {
         treeLines.push(`${prefix}${pointer}${item.name}/`);
         scan(path.join(dir, item.name), depth + 1, prefix + (isLast ? '    ' : '│   '));
+        if (isTruncated) break;
       } else {
+        fileCount++;
         treeLines.push(`${prefix}${pointer}${item.name}`);
+        if (fileCount >= MAX_FILES) {
+          isTruncated = true;
+          break;
+        }
       }
-    });
-
-    if (filtered.length > limit) {
-      treeLines.push(`${prefix}└── ... and ${filtered.length - limit} more items`);
     }
   }
 
   scan(cwd, 1, '');
+
+  if (isTruncated) {
+    treeLines.push('... [WORKSPACE MAP TRUNCATED: MAX 50 FILES REACHED]');
+  }
 
   const treeStructure = treeLines.length > 0 ? treeLines.join('\n') : '(empty)';
   const depListStr = dependencies.length > 0 ? dependencies.join(', ') : 'none';
@@ -347,8 +357,22 @@ export function readAndTruncateFile(filePath, maxLines = 500) {
 }
 
 /**
+ * Auto-Git Save Point (Pengganti Rasa Takut)
+ * Creates a pre-execution git commit snapshot synchronously before forwarding prompt.
+ * Fails silently if directory is not a git repo or if working tree is clean.
+ */
+export function createGitSavePoint(cwd = process.cwd()) {
+  try {
+    execSync('git add . && git commit -m "graviton_savepoint: pre-execution backup"', {
+      cwd: cwd || process.cwd(),
+      stdio: 'ignore'
+    });
+  } catch {}
+}
+
+/**
  * Shallow Dependency Resolver
- * Resolves relative local dependency paths (depth = 1)
+ * Resolves relative local dependency paths (depth = 1) across JS/TS, Python, Go, Rust
  */
 export function resolveLocalDependency(baseDir, relativeImport) {
   try {
@@ -357,21 +381,25 @@ export function resolveLocalDependency(baseDir, relativeImport) {
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       return candidate;
     }
-    // 2. Common extensions
-    const exts = ['.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx', '.json'];
+    // 2. Common extensions (JS/TS, Python, Go, Rust, etc.)
+    const exts = ['.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx', '.json', '.py', '.go', '.rs'];
     for (const ext of exts) {
       const withExt = candidate + ext;
       if (fs.existsSync(withExt) && fs.statSync(withExt).isFile()) {
         return withExt;
       }
     }
-    // 3. Directory index
+    // 3. Directory index or Python package
     if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
       for (const ext of exts) {
         const indexFile = path.join(candidate, 'index' + ext);
         if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
           return indexFile;
         }
+      }
+      const pyInit = path.join(candidate, '__init__.py');
+      if (fs.existsSync(pyInit) && fs.statSync(pyInit).isFile()) {
+        return pyInit;
       }
     }
   } catch {}
@@ -482,13 +510,13 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
             `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedContent}\n\`\`\``
           );
 
-          // 2. Shallow Dependency Scraping (Anti-Kebutaan Lintas File, depth = 1)
+          // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1)
           const rawFileContent = fs.readFileSync(resolved, 'utf8');
-          const depRegex = /import\s+.*?from\s+['"](\.[^'"]+)['"]|require\(['"](\.[^'"]+)['"]\)/g;
+          const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/)[^'"\s]+)/g;
           const detectedDeps = [];
           let match;
           while ((match = depRegex.exec(rawFileContent)) !== null) {
-            const depImport = match[1] || match[2];
+            const depImport = match[1] ? match[1].replace(/['";]+$/, '').trim() : null;
             if (depImport && !detectedDeps.includes(depImport)) {
               detectedDeps.push(depImport);
             }
