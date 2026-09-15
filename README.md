@@ -50,8 +50,8 @@
 Install globally via npm to register dual binaries (`graviton` and `grav`):
 
 ```bash
-# Install globally from npm or local source
-npm install -g graviton
+# Install globally directly from GitHub
+npm install -g github:alatariz/graviton
 
 # Verify installation
 graviton --version
