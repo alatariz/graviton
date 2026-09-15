@@ -248,55 +248,48 @@ export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const skillDirectiveStr = unlockedSkills.length > 0
-    ? `\nSuntikkan directive Antigravity Skills berikut:\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
+    ? `\nDirective Skills tambahan (eksekusi secara native):\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
     : '';
 
-  const systemInstruction = `Kamu adalah Graviton Meta 2026 — Unified AI Acceleration & Token Optimization Engine.
-Tugasmu: Melakukan kompresi dan re-sintesis prompt developer menjadi instruksi teknis bedah presisi tinggi dengan konsumsi token seminimal mungkin.
+  const systemInstruction = `[RUTHLESS CAVEMAN]: Kamu adalah Text Parser yang kejam. Tugasmu adalah MENGHAPUS TOTAL semua basa-basi manusia (contoh: 'Halo', 'tolong', 'bro', 'pusing', 'terima kasih'). JANGAN pernah memasukkan kata-kata emosional ke dalam output spesifikasi. Ekstrak HANYA instruksi teknis murni, nama file, dan pesan error/traceback.
 
 Aturan Lokasi: Selalu gunakan path dari [CWD] sebagai direktori utama untuk membuat, mengedit, atau membaca file. DILARANG menggunakan direktori scratch/sandbox bawaan kecuali diminta.
 
-ATURAN 4 PILAR WAJIB (EXECUTE SIMULTANEOUSLY):
-1. [PONYTAIL] — Buka tag <scratchpad> di awal output untuk memvalidasi 7 anak tangga efisiensi:
-   1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.
-   2. Reuse: Manfaatkan struktur kode/fungsi yang sudah ada.
-   3. Stdlib: Utamakan built-in/standar runtime daripada kode kustom berbelit.
-   4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.
-   5. Dependency: Hindari penambahan library/package eksternal baru.
-   6. One-liner: Sederhanakan ekspresi jika memungkinkan tanpa mengurangi readability.
-   7. Minimum that works: Tentukan intervensi teknis paling minimal yang langsung menyelesaikan tugas.
+[PONYTAIL ENFORCER]: Jika user meminta untuk menginstal library eksternal (seperti moment.js, lodash, tailwind) untuk tugas yang BISA diselesaikan dengan fungsi bawaan (Native/Stdlib), kamu WAJIB MENGUBAH perintah user tersebut. Ganti kalimatnya menjadi: 'DILARANG menggunakan library eksternal. Selesaikan secara native.' Paksa Antigravity untuk menjadi pemalas yang efisien.${skillDirectiveStr}
 
-2. [CAVEMAN] — Di luar <scratchpad>, terapkan prinsip "Why use many token when few do trick":
-   - Hapus semua salam pembuka, penutup, basa-basi, dan permohonan maaf.
-   - Gunakan fragmen teknis super padat, tajam, dan langsung to-the-point.
-   - Kunci 100% kode, file path, line numbers, dan traceback error asli secara absolut tanpa diubah atau dirangkum jika esensial.${skillDirectiveStr}
+[FORMAT OUTPUT]:
+Output reprompt HANYA boleh berisi:
+[CWD: ${currentCwd}]
+<scratchpad> (Berisi pemaksaan 7 aturan Ponytail)
+Task: (Sangat singkat, padat, tanpa bahasa gaul/curhat)
+Error Log: (Jika ada)
 
-3. Format Output:
+Format output persis:
+[CWD: ${currentCwd}]
+
 <scratchpad>
 [Ponytail: 7 Staircases of Efficiency]
-1. YAGNI: ...
-2. Reuse: ...
-3. Stdlib: ...
-4. Native: ...
-5. Dependency: ...
-6. One-liner: ...
-7. Minimum that works: ...
+1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.
+2. Reuse: Manfaatkan kode/struktur yang ada di direktori kerja.
+3. Stdlib: Utamakan fungsi bawaan runtime/standar daripada library eksternal.
+4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.
+5. Dependency: DILARANG menggunakan library eksternal jika bisa native. Selesaikan secara native.
+6. One-liner: Sederhanakan implementasi sesingkat dan seefisien mungkin.
+7. Minimum that works: Tentukan intervensi teknis paling minimal yang menyelesaikan tugas.
 </scratchpad>
 
-**Tujuan Utama:** [Fragmen teknis instruksi]
-**Kode Terkait:** [Kode asli jika ada]
-**Error Trace:** [Cuplikan traceback terisolasi jika ada]
-**Spesifikasi Perbaikan:** [Poin-poin bedah minimal]
+Task:
+[Instruksi teknis murni, sangat singkat, padat, tanpa bahasa gaul/curhat/basa-basi. Sebutkan nama file dan kode esensial jika ada.]
 
-4. [HEADROOM] — Di akhir instruksi, selalu pastikan:
-Be terse, don't restate context, and minimize output tokens.`;
+Error Log:
+[Pesan error/traceback jika ada dalam input. Jika TIDAK ada error pada input user, bagian Error Log ini WAJIB DIHAPUS dan TIDAK BOLEH DITULIS.]`;
 
   const userContent = `[CWD: ${currentCwd}]\n\n${cleanedText}`;
 
   const payload = {
     system_instruction: { parts: [{ text: systemInstruction }] },
     contents: [{ parts: [{ text: userContent }] }],
-    generationConfig: { temperature: 0.15, maxOutputTokens: 2048 }
+    generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
   };
 
   const res = await fetch(url, {
@@ -320,11 +313,13 @@ Be terse, don't restate context, and minimize output tokens.`;
 
 /**
  * Local Deterministic Synthesizer (Zero-cost offline Unified Meta 2026 Engine)
- * Emulates [PONYTAIL] 7-staircase validation, [CAVEMAN] zero-fluff extraction, and [HEADROOM] compactness.
+ * Emulates [RUTHLESS CAVEMAN], [PONYTAIL ENFORCER], and strict [FORMAT OUTPUT].
  */
 export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
+  const currentCwd = process.cwd();
   const codeBlocks = [];
 
+  // 1. Extract code blocks
   let text = rawText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
     codeBlocks.push({ lang, code: code.trim() });
     return '';
@@ -334,18 +329,11 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     return '';
   });
 
-  // [CAVEMAN] Strip conversational noise
-  text = text.replace(/^(?:halo|selamat\s+(?:pagi|siang|sore|malam)|hey|hi|good\s+(?:morning|afternoon|evening))\s*(?:antigravity|ai|gemini|kawan|bro|there)?[\s,!.-]*/gim, '');
-  text = text.replace(/(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?[\s,!.-]*)/gim, '');
-  text = text.replace(/(?:thanks(?:\s+a\s+lot|\s+in\s+advance)?[\s,!.-]*)/gim, '');
-  text = text.replace(/[,]?\s*(?:ya\s*|dong\s*|deh\s*)[.!?,]*$/gim, '');
-  text = text.replace(/(?:saya\s+ingin\s+(?:kamu\s+|anda\s+)?(?:tolong\s+)?(?:bantu\s+saya\s+untuk\s+)?)/gim, '');
-  text = text.replace(/(?:kodenya\s+(?:seperti\s+ini|adalah)[\s:]*)/gim, '');
-
+  // 2. Extract Error Traceback if present
   let errorSnippet = null;
-  const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+)/);
+  const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range|URI)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+|error\[E\d+\]:[^\n]+(?:\n\s+-->\s+[^\n]+)+|AssertionError[^\n]+)/i);
   if (errorMatch) {
-    const rawError = errorMatch[0];
+    const rawError = errorMatch[0].trim();
     const errLines = rawError.split('\n');
     const cleanErrLines = [errLines[0].trim()];
     for (let i = 1; i < errLines.length; i++) {
@@ -356,59 +344,99 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
       if (cleanErrLines.length >= 3) break;
     }
     errorSnippet = cleanErrLines.join('\n');
-    text = text.replace(rawError, '');
+    text = text.replace(errorMatch[0], '');
   }
 
-  const rawSentences = text.split(/\n+|\.\s+/).map(s => s.trim()).filter(s => s.length > 5);
-  const taskPoints = [];
-  for (let s of rawSentences) {
-    s = s.replace(/^[-,*•]\s*/, '').replace(/\?+$/, '');
-    s = s.replace(/^memperbaiki\b/i, 'Perbaiki');
-    s = s.replace(/^membuat(?:kan)?\b/i, 'Buat');
-    s = s.replace(/^menambahkan\b/i, 'Tambahkan');
-    s = s.replace(/^mengubah\b/i, 'Ubah');
-    s = s.charAt(0).toUpperCase() + s.slice(1);
-    if (!taskPoints.some(existing => existing.toLowerCase().includes(s.toLowerCase().slice(0, 20)))) {
-      taskPoints.push(s);
+  // 3. [PONYTAIL ENFORCER] Check for external library requests (moment, lodash, tailwind, etc.)
+  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import)\s+(?:library\s+|package\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk)\b/i;
+  const hasExternalLib = externalLibRegex.test(rawText);
+
+  // 4. [RUTHLESS CAVEMAN] Ruthlessly strip all fluff, emotions, greetings, and boilerplate
+  const fluffPatterns = [
+    /\b(?:halo|hai|hey|hi|hello|selamat\s+(?:pagi|siang|sore|malam)|good\s+(?:morning|afternoon|evening))\b/gi,
+    /\b(?:antigravity|ai|gemini|assistant|bot)\b/gi,
+    /\b(?:bro|kawan|gan|bang|mas|mbak|pak|bu|guys|there|teman)\b/gi,
+    /\b(?:tolong(?:in)?|bantu(?:an)?|bantu\s+saya|mohon|please|help)\b/gi,
+    /\b(?:pusing|bingung|mumet|capek|stress|curhat|kesel|error\s+terus|kenapa\s+ya)\b/gi,
+    /\b(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?|makasih|thanks(?:\s+a\s+lot|\s+in\s+advance)?)\b/gi,
+    /\b(?:dong|deh|sih|nih|tuh|kan|lah|ya|kok|banget|bener|amat|sekali)\b/gi,
+    /\b(?:saya\s+ingin|saya\s+mau|aku\s+mau|aku\s+ingin|mau|ingin)\b/gi,
+    /\b(?:kodenya\s+(?:seperti\s+ini|adalah)|seperti\s+ini|begini(?:\s+kodenya)?)\b/gi
+  ];
+
+  for (const pat of fluffPatterns) {
+    text = text.replace(pat, '');
+  }
+
+  // If external lib was requested, remove the library call phrase
+  if (hasExternalLib) {
+    text = text.replace(externalLibRegex, '');
+  }
+
+  // Clean leading/trailing punctuation and whitespace
+  text = text.replace(/^[,\s.!?;:]+|[,\s.!?;:]+$/g, '').replace(/\s+/g, ' ').trim();
+
+  // Extract file names if any (filtering out any external library names)
+  const fileNames = (rawText.match(/\b[\w./\\-]+\.(?:js|ts|jsx|tsx|py|rs|go|html|css|json|md|yaml|yml)\b/gi) || [])
+    .filter(f => !/^(?:moment|lodash|underscore|dayjs|date-fns|axios|tailwind|jquery|chalk)(?:\.js)?$/i.test(f));
+  const uniqueFiles = Array.from(new Set(fileNames));
+
+  // Build clean task statement
+  let taskInstruction = '';
+  if (hasExternalLib) {
+    taskInstruction = 'DILARANG menggunakan library eksternal. Selesaikan secara native.';
+    if (text) {
+      taskInstruction += ' ' + text.charAt(0).toUpperCase() + text.slice(1);
     }
+  } else if (text) {
+    let cleanedClean = text.replace(/^memperbaiki\b/i, 'Perbaiki')
+                          .replace(/^membuat(?:kan)?\b/i, 'Buat')
+                          .replace(/^menambahkan\b/i, 'Tambahkan')
+                          .replace(/^mengubah\b/i, 'Ubah');
+    taskInstruction = cleanedClean.charAt(0).toUpperCase() + cleanedClean.slice(1);
+  } else if (uniqueFiles.length > 0) {
+    taskInstruction = `Perbaiki dan selesaikan kode pada ${uniqueFiles.join(', ')}.`;
+  } else {
+    taskInstruction = 'Perbaiki kode dan selesaikan secara native.';
   }
 
-  const targetTask = taskPoints[0] || text.trim() || 'Perbaikan kode dan optimasi';
+  taskInstruction = taskInstruction.replace(/[,\s;:.]*$/, '.').trim();
 
-  // [PONYTAIL] 7 Staircases of Efficiency
-  const scratchpad = `<scratchpad>
-[Ponytail: 7 Staircases of Efficiency]
-1. YAGNI: Isolate core technical requirement: ${targetTask}.
-2. Reuse: Leverage existing codebase patterns in ${workspaceContext?.type || 'active workspace'}.
-3. Stdlib: Prefer standard runtime APIs and language built-ins.
-4. Native: Utilize idiomatic native constructs without over-engineering.
-5. Dependency: Zero extraneous external packages.
-6. One-liner: Keep modifications atomic and concise.
-7. Minimum that works: Surgical patch with zero regressions and zero layout shift.
-</scratchpad>`;
-
-  const body = [scratchpad];
-  if (taskPoints.length === 1) {
-    body.push(`**Tujuan Utama:**\n${taskPoints[0]}.`);
-  } else if (taskPoints.length > 1) {
-    body.push(`**Tujuan Utama & Spesifikasi:**\n` + taskPoints.map(t => `- ${t}.`).join('\n'));
-  } else if (text.trim()) {
-    body.push(`**Tujuan Utama:**\n${text.trim()}`);
+  if (uniqueFiles.length > 0 && !taskInstruction.includes(uniqueFiles[0])) {
+    taskInstruction += ` Target file: ${uniqueFiles.join(', ')}.`;
   }
 
   if (codeBlocks.length > 0) {
     const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-    body.push(`**Kode Terkait:**\n${formattedCode}`);
+    taskInstruction += '\n\nKode Terkait:\n' + formattedCode;
   }
+
+  // 5. Construct final output strictly according to [FORMAT OUTPUT]
+  const lines = [
+    `[CWD: ${currentCwd}]`,
+    '',
+    `<scratchpad>`,
+    `[Ponytail: 7 Staircases of Efficiency]`,
+    `1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.`,
+    `2. Reuse: Manfaatkan kode/struktur yang ada di direktori kerja.`,
+    `3. Stdlib: Utamakan fungsi bawaan runtime/standar daripada library eksternal.`,
+    `4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.`,
+    `5. Dependency: ${hasExternalLib ? 'DILARANG menggunakan library eksternal. Selesaikan secara native.' : 'DILARANG menambah dependensi baru jika bisa native.'}`,
+    `6. One-liner: Sederhanakan implementasi sesingkat dan seefisien mungkin.`,
+    `7. Minimum that works: Tentukan intervensi teknis paling minimal yang menyelesaikan tugas.`,
+    `</scratchpad>`,
+    '',
+    `Task:`,
+    taskInstruction
+  ];
 
   if (errorSnippet) {
-    body.push('**Error Trace:**\n```\n' + errorSnippet + '\n```');
+    lines.push('');
+    lines.push('Error Log:');
+    lines.push('```\n' + errorSnippet + '\n```');
   }
 
-  // [HEADROOM] Compactness directive
-  body.push(`Be terse, don't restate context, and minimize output tokens.`);
-
-  return body.join('\n\n').trim();
+  return lines.join('\n').trim();
 }
 
 /**
@@ -446,22 +474,10 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
     optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
   }
 
-  // Inject CWD, Workspace context & Skill unlocks headers
+  // Ensure [CWD: ...] is at the very top and output strictly complies with [FORMAT OUTPUT]
   const currentCwd = process.cwd();
-  const headers = [`[CWD: ${currentCwd}]`];
-  if (workspaceContext && workspaceContext.mainFiles && workspaceContext.mainFiles.length > 0) {
-    headers.push(`[Workspace: ${workspaceContext.type} @ ${workspaceContext.cwd}]`);
-  }
-  if (allSkills.length > 0) {
-    const skillList = allSkills.map(s => s.skill).join(', ');
-    headers.push(`[Antigravity Skill Activated: ${skillList}]`);
-  }
-
-  // Remove any redundant [CWD: ...] from beginning of optimizedText to prevent duplicates
-  optimizedText = optimizedText.replace(/^\[CWD:[^\]]+\]\s*/i, '').trim();
-
-  if (headers.length > 0) {
-    optimizedText = headers.join('\n') + '\n\n' + optimizedText;
+  if (!optimizedText.startsWith('[CWD:')) {
+    optimizedText = `[CWD: ${currentCwd}]\n\n` + optimizedText.trim();
   }
 
   const optimizedTokens = estimateTokens(optimizedText);
