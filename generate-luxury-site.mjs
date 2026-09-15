@@ -1,4 +1,4 @@
-// generate-luxury-site.mjs - Builds the ultimate RTK-grade luxury landing page for GRAVITON
+// generate-luxury-site.mjs - Builds the luxury landing page for GRAVITON Core
 import fs from 'fs';
 import path from 'path';
 
@@ -1959,7 +1959,7 @@ Efficiency meter:   <span style="background: var(--emerald); color: #022c22; fon
 
     <div class="footer-bottom">
       <div>© 2026 GRAVITON. Open Source under Apache 2.0.</div>
-      <div>Designed with calm precision. Inspired by RTK standards.</div>
+      <div>Designed with calm precision. Engineered for Graviton Core.</div>
     </div>
   </footer>
 
@@ -2075,7 +2075,7 @@ warning: field is never read: \`depth\`
    Compiling anyhow v1.0.79
 ... 1,028 more lines ...
 Finished dev [unoptimized] in 32.48s\`,
-        clean: \`$ rtk cargo build
+        clean: \`$ graviton run cargo build
 ✔ build finished in 32.4s
 · 214 crates compiled
 · 2 warnings: filter.rs:214, tree.rs:87\`

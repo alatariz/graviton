@@ -1,4 +1,4 @@
-// bin/graviton-relay.js - Graviton Meta 2026: One-Shot Autonomous Relay via Stdin
+// bin/graviton-relay.js - Graviton Core: Autonomous Stdin Relay for Antigravity
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -71,7 +71,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args.push('--continue');
   }
 
-  console.log(`\x1b[35m[GRAVITON ➔ ANTIGRAVITY ONE-SHOT]\x1b[0m Auto-Allow Active (--dangerously-skip-permissions)`);
+  console.log(`\x1b[35m[GRAVITON ➔ ANTIGRAVITY]\x1b[0m Forwarding to Antigravity with Auto-Allow (--dangerously-skip-permissions)...`);
 
   const child = spawn(agyExecutable, args, {
     stdio: ['pipe', process.stdout, process.stderr],

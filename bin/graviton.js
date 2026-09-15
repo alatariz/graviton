@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Meta 2026 Dual-Clutch Engine with Autonomous Auto-Allow Relay
+// bin/graviton.js - Official GRAVITON CLI: Graviton Core Autonomous Execution Layer
 
 import { spawn } from 'child_process';
 import fs from 'fs';
@@ -100,7 +100,7 @@ async function main() {
   // 1. HELP / USAGE
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     console.log(`
-\x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity (Meta 2026)
+\x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
 \x1b[1mUSAGE\x1b[0m
   graviton [options] "<prompt>"
@@ -108,32 +108,32 @@ async function main() {
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  \x1b[33m--dry-run\x1b[0m               Simulate token reduction & display savings without launching Antigravity
-  \x1b[33m--deep\x1b[0m                  Activate Gear 2 (Gemini 3.1 Pro Architect) for complex system decomposition
+  \x1b[33m--dry-run\x1b[0m               Preview prompt synthesis and token metrics without launching Antigravity
+  \x1b[33m--deep\x1b[0m                  Activate deep precision synthesis for complex technical architecture
   \x1b[33m-c, --continue\x1b[0m          Resume previous Antigravity session with synthesized prompt & auto-allow
 
 \x1b[1mCOMMANDS\x1b[0m
-  \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Dual-Clutch Engine & run Antigravity with Auto-Allow
+  \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
   \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
   \x1b[32mgain\x1b[0m, \x1b[32mstats\x1b[0m             Display aggregate tokens & lines pruned across sessions
   \x1b[32mclean\x1b[0m "<raw_text>"       Only synthesize prompt & copy to clipboard (do not launch Antigravity)
-  \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with zero-latency RTK output pruning
+  \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with streamlined terminal output filtering
   \x1b[32mgit\x1b[0m <git_args...>        Shorthand for "graviton run git <git_args>"
   \x1b[32mtest\x1b[0m <test_args...>      Shorthand for "graviton run test <test_args>"
   \x1b[32mserve\x1b[0m                    Launch local Web Studio on port 3000
   \x1b[32mversion\x1b[0m, \x1b[32m-v\x1b[0m             Display Graviton CLI version
 
 \x1b[1mEXAMPLES\x1b[0m
-  # Default 1-Shot with Gear 1 (Flash 3.8 Sanitizer):
-  graviton "perbaiki login auth.js kodenya..."
+  # Synthesize prompt and execute with Antigravity:
+  graviton "Refactor auth.js to handle session expiration"
 
-  # Deep Architectural Breakdown with Gear 2 (Pro 3.1 Architect):
-  graviton --deep "buatkan payment gateway webhook handler"
+  # Deep precision architecture synthesis:
+  graviton --deep "Build webhook handler for Stripe payments"
 
-  # Dry-run token savings forecast:
-  graviton --dry-run "buat query BigQuery transaksi harian..."
+  # Dry-run token optimization preview:
+  graviton --dry-run "Write BigQuery query for daily active users"
 
-  # Pipe terminal outputs (RTK style):
+  # Pipe terminal outputs to Graviton:
   git status | graviton
 `);
     process.exit(0);
@@ -146,7 +146,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Meta 2026 Overclocking Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton Core Architecture)`);
     process.exit(0);
   }
 
@@ -162,7 +162,7 @@ async function main() {
     const initialSkills = {
       'modern-web.md': `# Modern Web Guidance\nKeywords: web, modal, css, html, dialog, responsive, animation\nDirective: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
       'bigquery.md': `# BigQuery SQL Optimization\nKeywords: bigquery, sql, etl, partition, cluster, dataset, table\nDirective: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
-      'antigravity-overclock.md': `# Antigravity Overclocking Directive\nKeywords: overclock, performance, leak, background, relay, signal\nDirective: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
+      'antigravity-core.md': `# Antigravity Core Directive\nKeywords: performance, core, leak, background, relay, signal\nDirective: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
     };
 
     let createdCount = 0;
@@ -222,7 +222,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 7. RUN / GIT / TEST CLI LOG PRUNER (Zero-latency RTK output pruning)
+  // 7. RUN / GIT / TEST CLI LOG PRUNER (Streamlined terminal output filtering)
   if (command === 'run' || command === 'git' || command === 'test') {
     let cmdToRun = command === 'git' ? 'git' : command === 'test' ? 'npm' : filteredArgs[1];
     let cmdArgs = command === 'git' ? filteredArgs.slice(1) : command === 'test' ? ['test', ...filteredArgs.slice(1)] : filteredArgs.slice(2);
@@ -271,7 +271,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mUnified Meta 2026 Engine\x1b[0m...`);
+  console.log(`\x1b[35m[1/3 GRAVITON]\x1b[0m Synthesizing prompt via \x1b[1mGraviton Core\x1b[0m...`);
 
   const apiKey = process.env.GEMINI_API_KEY || null;
   const result = await synthesizePrompt(input, apiKey, { deep: isDeep });
@@ -285,7 +285,7 @@ async function main() {
 
   // DRY-RUN / GAIN FORECASTER
   if (isDryRun) {
-    console.log(`\n\x1b[33m[DRY-RUN GAIN FORECASTER]\x1b[0m Execution bypassed (--dry-run active)`);
+    console.log(`\n\x1b[33m[DRY-RUN PREVIEW]\x1b[0m Execution bypassed (--dry-run active)`);
     console.log(`\x1b[1mRaw: ${result.stats.originalTokens} tokens -> Graviton: ${result.stats.optimizedTokens} tokens. Saved: ${result.stats.percentSaved}%.\x1b[0m`);
     console.log(`\x1b[90mEngine: ${result.stats.engine}\x1b[0m`);
     console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
@@ -300,13 +300,16 @@ async function main() {
   console.log(result.optimizedText);
   console.log(`\x1b[90m--------------------------------------------------\x1b[0m`);
 
-  console.log(`\x1b[36m[3/3 RELAYING TO ANTIGRAVITY]\x1b[0m Launching Antigravity in \x1b[1mOne-Shot Auto-Allow Mode\x1b[0m...`);
+  console.log(`\x1b[36m[3/3 RELAYING TO ANTIGRAVITY]\x1b[0m Forwarding to Antigravity in \x1b[1mAuto-Allow Mode\x1b[0m...`);
 
   const child = runAntigravityWithAutoAllow(result.optimizedText, {
     continueSession: isContinue
   });
 
   child.on('close', code => {
+    if (code === 0) {
+      console.log('\x1b[32m✔ Execution complete.\x1b[0m');
+    }
     process.exit(code || 0);
   });
 }

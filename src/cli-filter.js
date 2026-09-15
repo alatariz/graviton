@@ -1,4 +1,4 @@
-﻿// src/cli-filter.js - Deterministic Output Pruner for Graviton CLI (rivaling RTK)
+// src/cli-filter.js - Deterministic Terminal Output Filter for Graviton CLI
 
 export function stripAnsi(str) {
   if (!str) return '';

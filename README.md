@@ -1,6 +1,6 @@
-﻿# Graviton (Full-Spectrum AI Token & Output Noise Killer)
+# Graviton Core (Precision Context & Execution Optimization Layer)
 
-> **Why settle for RTK alone?** RTK only trims terminal logs. **GRAVITON** handles both dimensions: zero-latency terminal noise pruning + AI semantic prompt synthesis for Antigravity.
+> **GRAVITON CORE** maximizes the Signal-to-Noise ratio for AI agent interactions: zero-latency terminal noise pruning + high-precision AI prompt synthesis for Antigravity.
 
 ## Quickstart
 
@@ -15,10 +15,10 @@ npm link
 ## CLI Usage
 
 ```bash
-# 1. Synthesize messy prompt & copy to clipboard instantly (Zero-Click)
-graviton prompt "tolong perbaiki error login auth.js kodenya..."
+# 1. Synthesize prompt & copy to clipboard instantly
+graviton clean "Refactor login auth.js error handling..."
 
-# 2. Run terminal commands with RTK-style noise reduction (~0ms latency)
+# 2. Run terminal commands with streamlined output filtering
 graviton run git status
 graviton run cargo test
 graviton run npm test

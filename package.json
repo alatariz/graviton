@@ -1,7 +1,7 @@
-﻿{
+{
   "name": "graviton-ai",
   "version": "1.0.0",
-  "description": "Full-Spectrum AI Token & Output Noise Killer (Rival to RTK)",
+  "description": "Graviton Core - High-Precision Context & Execution Optimization Layer for Antigravity",
   "main": "src/server.js",
   "type": "module",
   "bin": {

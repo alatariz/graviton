@@ -1,4 +1,4 @@
-// src/pipeline.js - Graviton Meta 2026: Unified 4-Pillar Compression Engine
+// src/pipeline.js - Graviton Core: Precision Context & Execution Optimization Engine
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -25,11 +25,11 @@ export function estimateTokens(text) {
 }
 
 /**
- * Headroom Heuristic: Compresses oversized JSON arrays (> 3 elements)
- * Replaces middle section with string `[... HEADROOM COMPRESSION: X items truncated ...]`,
+ * Graviton Core JSON Compressor: Compresses oversized JSON arrays (> 3 elements)
+ * Replaces middle section with string `[... GRAVITON CORE: X items truncated ...]`,
  * preserving only the first and last elements.
  */
-export function compressHeadroomJson(text) {
+export function compressJsonArray(text) {
   if (!text || typeof text !== 'string') return text;
 
   function compressArray(arr, depth = 0) {
@@ -40,7 +40,7 @@ export function compressHeadroomJson(text) {
       const last = compressValue(arr[arr.length - 1], depth + 1);
       return [
         first,
-        `[... HEADROOM COMPRESSION: ${truncatedCount} items truncated ...]`,
+        `[... GRAVITON CORE: ${truncatedCount} items truncated ...]`,
         last
       ];
     }
@@ -128,13 +128,14 @@ export function compressHeadroomJson(text) {
   return result;
 }
 
+
 /**
- * RTK & Headroom Noise Pruner
+ * Graviton Core Noise Filter
  * Pure heuristic & regex string filter executed BEFORE text reaches the AI Synthesizer.
  * Enforces:
- * - [HEADROOM LOGIC]: JSON array compression (> 3 elements) to first and last items.
- * - [RTK LOGIC]: Detection & destruction of terminal noise (npm WARN, npm notice, info, Downloaded, Compiling, Building).
- * - [RTK LOGIC]: Exclusive preservation of critical error lines (TypeError, ReferenceError, Exception, panic, FATAL, at stack trace).
+ * - JSON array compression (> 3 elements) to first and last items.
+ * - Detection & destruction of terminal noise (npm WARN, npm notice, info, Downloaded, Compiling, Building).
+ * - Exclusive preservation of critical error lines (TypeError, ReferenceError, Exception, panic, FATAL, at stack trace).
  */
 export function pruneNoise(rawText) {
   let out = redactSecrets(rawText);
@@ -149,15 +150,15 @@ export function pruneNoise(rawText) {
     return `[data:${mime};base64 ~${sizeKb}KB omitted]`;
   });
 
-  // 3. [HEADROOM LOGIC] Compress oversized JSON arrays (> 3 elements)
-  out = compressHeadroomJson(out);
+  // 3. Compress oversized JSON arrays (> 3 elements)
+  out = compressJsonArray(out);
 
-  // 4. [RTK LOGIC] Terminal Log Filter
-  // Exclusively preserve: TypeError, ReferenceError, Exception, panic, FATAL, or at  (stack trace)
-  const RTK_EXCLUSIVE_ERROR_REGEX = /(?:TypeError|ReferenceError|Exception|panic|FATAL|^\s*at\s+|\bat\s+(?:[A-Za-z0-9_$.<>]+\s+)?\([^)]+:\d+:\d+\))/i;
+  // 4. Terminal Log Filter
+  // Exclusively preserve: TypeError, ReferenceError, Exception, panic, FATAL, or at (stack trace)
+  const TERMINAL_EXCLUSIVE_ERROR_REGEX = /(?:TypeError|ReferenceError|Exception|panic|FATAL|^\s*at\s+|\bat\s+(?:[A-Za-z0-9_$.<>]+\s+)?\([^)]+:\d+:\d+\))/i;
 
   // Detect and destroy: npm WARN, npm notice, info, Downloaded, Compiling, Building, plus spinners/progress bars
-  const RTK_NOISE_REGEX = (
+  const TERMINAL_NOISE_REGEX = (
     /(?:npm\s+WARN|npm\s+notice|(?:^\s*|[\[:]|\b(?:npm|yarn|pnpm)\s+)info\b|Downloaded|Compiling|Building)/i
   );
   const PROGRESS_NOISE_REGEX = (
@@ -178,14 +179,14 @@ export function pruneNoise(rawText) {
     }
 
     // 1. Exclusively preserve critical error & traceback lines
-    if (RTK_EXCLUSIVE_ERROR_REGEX.test(trimmed)) {
+    if (TERMINAL_EXCLUSIVE_ERROR_REGEX.test(trimmed)) {
       filteredLines.push(line);
       continue;
     }
 
     // 2. Detect and destroy noise lines
-    if (RTK_NOISE_REGEX.test(trimmed) || PROGRESS_NOISE_REGEX.test(trimmed)) {
-      // Completely destroyed / dropped
+    if (TERMINAL_NOISE_REGEX.test(trimmed) || PROGRESS_NOISE_REGEX.test(trimmed)) {
+      // Completely dropped
       continue;
     }
 
@@ -250,15 +251,9 @@ export function loadLocalSkillVault(promptText = '') {
     if (!fs.existsSync(skillsDir)) {
       fs.mkdirSync(skillsDir, { recursive: true });
       const initialSkills = {
-        'modern-web.md': `# Modern Web Guidance
-Keywords: web, modal, css, html, dialog, responsive, animation
-Directive: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
-        'bigquery.md': `# BigQuery SQL Optimization
-Keywords: bigquery, sql, etl, partition, cluster, dataset, table
-Directive: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
-        'antigravity-overclock.md': `# Antigravity Overclocking Directive
-Keywords: overclock, performance, leak, background, relay, signal
-Directive: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
+        'modern-web.md': `# Modern Web Guidance\nKeywords: web, modal, css, html, dialog, responsive, animation\nDirective: Enforce native <dialog>, CSS container queries, :has selectors, view transitions, and zero-layout-shift practices.`,
+        'bigquery.md': `# BigQuery SQL Optimization\nKeywords: bigquery, sql, etl, partition, cluster, dataset, table\nDirective: Enforce partitioning, clustering, avoided SELECT *, and idempotent MERGE mutations.`,
+        'antigravity-core.md': `# Antigravity Core Directive\nKeywords: performance, core, leak, background, relay, signal\nDirective: Enforce zero memory leaks, signal forwarding, and autonomous task execution with Auto-Allow.`
       };
       for (const [filename, content] of Object.entries(initialSkills)) {
         fs.writeFileSync(path.join(skillsDir, filename), content, 'utf8');
@@ -297,11 +292,8 @@ Directive: Enforce zero memory leaks, signal forwarding, and autonomous task exe
 }
 
 /**
- * Unified Meta 2026 Engine: Single solid system prompt uniting all 4 pillars
- * - [CAVEMAN]: "Why use many token when few do trick." Buang basa-basi, pertahankan kode/path/error secara absolut.
- * - [PONYTAIL]: Wajib buka <scratchpad> untuk memvalidasi 7 anak tangga efisiensi:
- *   (YAGNI, Reuse, Stdlib, Native, Dependency, One-liner, Minimum that works).
- * - [HEADROOM]: Tambahkan direktif "Be terse, don't restate context, and minimize output tokens." di akhir instruksi.
+ * Graviton Core Precision Synthesizer (Gemini API Engine)
+ * Maximizes Signal-to-Noise ratio, removes fluff, smartly expands technical specs, and enforces native-first.
  */
 export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
   const currentCwd = process.cwd();
@@ -309,41 +301,29 @@ export async function repromptWithAI(cleanedText, apiKey, unlockedSkills = []) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const skillDirectiveStr = unlockedSkills.length > 0
-    ? `\nDirective Skills tambahan (eksekusi secara native):\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
+    ? `\nAdditional Skill Directives (execute natively):\n` + unlockedSkills.map(s => `- [${s.skill}] ${s.directive}`).join('\n')
     : '';
 
-  const systemInstruction = `[RUTHLESS CAVEMAN]: Kamu adalah Text Parser yang kejam. Tugasmu adalah MENGHAPUS TOTAL semua basa-basi manusia (contoh: 'Halo', 'tolong', 'bro', 'pusing', 'terima kasih'). JANGAN pernah memasukkan kata-kata emosional ke dalam output spesifikasi. Ekstrak HANYA instruksi teknis murni, nama file, dan pesan error/traceback.
+  const systemInstruction = `Role: You are the Graviton Core Synthesizer. Your job is to maximize the Signal-to-Noise ratio of the user's prompt.
 
-Aturan Lokasi: Selalu gunakan path dari [CWD] sebagai direktori utama untuk membuat, mengedit, atau membaca file. DILARANG menggunakan direktori scratch/sandbox bawaan kecuali diminta.
+Rule 1 (Remove Fluff): Completely remove all conversational fluff, emotions, and greetings.
 
-[PONYTAIL ENFORCER]: Jika user meminta untuk menginstal library eksternal (seperti moment.js, lodash, tailwind) untuk tugas yang BISA diselesaikan dengan fungsi bawaan (Native/Stdlib), kamu WAJIB MENGUBAH perintah user tersebut. Ganti kalimatnya menjadi: 'DILARANG menggunakan library eksternal. Selesaikan secara native.' Paksa Antigravity untuk menjadi pemalas yang efisien.${skillDirectiveStr}
+Rule 2 (Smart Expansion): If the user's technical request is ambiguous, EXPAND and clarify the technical specifications. Add necessary constraints (e.g., error handling, edge cases) to ensure the execution is precise. The final output can be longer than the input if it prevents execution errors.
 
-[FORMAT OUTPUT]:
-Output reprompt HANYA boleh berisi:
+Rule 3 (Native-First): Strictly prohibit the use of external libraries (like moment.js, lodash) if the task can be efficiently solved with standard language APIs (Native/Stdlib).
+
+Location Rule: Always use the path specified in [CWD] as the root execution directory for reading, editing, or creating files. Do NOT use temporary or sandbox scratchpaths unless explicitly requested.${skillDirectiveStr}
+
+Output Format:
+Your output must strictly and exclusively follow this format (in English):
+
 [CWD: ${currentCwd}]
-<scratchpad> (Berisi pemaksaan 7 aturan Ponytail)
-Task: (Sangat singkat, padat, tanpa bahasa gaul/curhat)
-Error Log: (Jika ada)
 
-Format output persis:
-[CWD: ${currentCwd}]
+<graviton_plan>: 1-2 sentences explaining the minimal, native-first technical approach.
 
-<scratchpad>
-[Ponytail: 7 Staircases of Efficiency]
-1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.
-2. Reuse: Manfaatkan kode/struktur yang ada di direktori kerja.
-3. Stdlib: Utamakan fungsi bawaan runtime/standar daripada library eksternal.
-4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.
-5. Dependency: DILARANG menggunakan library eksternal jika bisa native. Selesaikan secara native.
-6. One-liner: Sederhanakan implementasi sesingkat dan seefisien mungkin.
-7. Minimum that works: Tentukan intervensi teknis paling minimal yang menyelesaikan tugas.
-</scratchpad>
+[TARGET SPECIFICATIONS]: The highly precise, clarified task instructions.
 
-Task:
-[Instruksi teknis murni, sangat singkat, padat, tanpa bahasa gaul/curhat/basa-basi. Sebutkan nama file dan kode esensial jika ada.]
-
-Error Log:
-[Pesan error/traceback jika ada dalam input. Jika TIDAK ada error pada input user, bagian Error Log ini WAJIB DIHAPUS dan TIDAK BOLEH DITULIS.]`;
+[ERROR LOG]: (Only if present, heavily truncated to strictly show tracebacks).`;
 
   const userContent = `[CWD: ${currentCwd}]\n\n${cleanedText}`;
 
@@ -361,20 +341,20 @@ Error Log:
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Gemini Unified Engine request failed (${res.status})`);
+    throw new Error(err.error?.message || `Graviton Core Synthesizer request failed (${res.status})`);
   }
 
   const data = await res.json();
   const reprompted = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reprompted) throw new Error('No content returned from Gemini Unified Engine');
+  if (!reprompted) throw new Error('No content returned from Graviton Core Synthesizer');
 
   const trimmed = reprompted.trim();
   return trimmed.startsWith('[CWD:') ? trimmed : `[CWD: ${currentCwd}]\n\n${trimmed}`;
 }
 
 /**
- * Local Deterministic Synthesizer (Zero-cost offline Unified Meta 2026 Engine)
- * Emulates [RUTHLESS CAVEMAN], [PONYTAIL ENFORCER], and strict [FORMAT OUTPUT].
+ * Local Deterministic Synthesizer (Graviton Core Offline Precision Synthesizer)
+ * Emulates Rule 1 (Remove Fluff), Rule 2 (Smart Expansion), Rule 3 (Native-First), and exact format.
  */
 export function repromptLocally(rawText, workspaceContext = null, unlockedSkills = []) {
   const currentCwd = process.cwd();
@@ -390,7 +370,7 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     return '';
   });
 
-  // 2. Extract Error Traceback if present
+  // 2. Extract Error Traceback if present (heavily truncated to strictly show tracebacks)
   let errorSnippet = null;
   const errorMatch = text.match(/(?:(?:Type|Syntax|Reference|Range|URI)?Error:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bException:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bpanic:[^\n]+(?:\n\s+at\s+[^\n]+)+|\bFATAL:[^\n]+|error\[E\d+\]:[^\n]+(?:\n\s+-->\s+[^\n]+)+|AssertionError[^\n]+)/i);
   if (errorMatch) {
@@ -408,92 +388,99 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
     text = text.replace(errorMatch[0], '');
   }
 
-  // 3. [PONYTAIL ENFORCER] Check for external library requests (moment, lodash, tailwind, etc.)
-  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import)\s+(?:library\s+|package\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk)\b/i;
+  // 3. Rule 3 (Native-First): Check for external library requests
+  const externalLibRegex = /\b(?:install|pasang|tambah(?:kan)?|pakai|gunakan|pake|import|use|add)\s+(?:library\s+|package\s+|module\s+|modul\s+)?(moment(?:\.js)?|lodash|underscore|dayjs|date-fns|axios|tailwind(?:css)?|jquery|chalk)\b/i;
   const hasExternalLib = externalLibRegex.test(rawText);
 
-  // 4. [RUTHLESS CAVEMAN] Ruthlessly strip all fluff, emotions, greetings, and boilerplate
+  // 4. Rule 1 (Remove Fluff): Completely remove conversational fluff, emotions, and greetings
   const fluffPatterns = [
     /\b(?:halo|hai|hey|hi|hello|selamat\s+(?:pagi|siang|sore|malam)|good\s+(?:morning|afternoon|evening))\b/gi,
     /\b(?:antigravity|ai|gemini|assistant|bot)\b/gi,
-    /\b(?:bro|kawan|gan|bang|mas|mbak|pak|bu|guys|there|teman)\b/gi,
-    /\b(?:tolong(?:in)?|bantu(?:an)?|bantu\s+saya|mohon|please|help)\b/gi,
-    /\b(?:pusing|bingung|mumet|capek|stress|curhat|kesel|error\s+terus|kenapa\s+ya)\b/gi,
-    /\b(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?|makasih|thanks(?:\s+a\s+lot|\s+in\s+advance)?)\b/gi,
+    /\b(?:bro|kawan|gan|bang|mas|mbak|pak|bu|guys|there|teman|dude|mate)\b/gi,
+    /\b(?:tolong(?:in)?|bantu(?:an)?|bantu\s+saya|mohon|please|help|could\s+you|can\s+you)\b/gi,
+    /\b(?:pusing|bingung|mumet|capek|stress|curhat|kesel|error\s+terus|kenapa\s+ya|frustrated|stuck)\b/gi,
+    /\b(?:terima\s+kasih(?:\s+banyak)?(?:\s+ya)?(?:\s+sebelumnya)?|makasih|thanks(?:\s+a\s+lot|\s+in\s+advance)?|thank\s+you)\b/gi,
     /\b(?:dong|deh|sih|nih|tuh|kan|lah|ya|kok|banget|bener|amat|sekali)\b/gi,
-    /\b(?:saya\s+ingin|saya\s+mau|aku\s+mau|aku\s+ingin|mau|ingin)\b/gi,
-    /\b(?:kodenya\s+(?:seperti\s+ini|adalah)|seperti\s+ini|begini(?:\s+kodenya)?)\b/gi
+    /\b(?:saya\s+ingin|saya\s+mau|aku\s+mau|aku\s+ingin|mau|ingin|i\s+want\s+to|i\s+need\s+to|would\s+like\s+to)\b/gi,
+    /\b(?:kodenya\s+(?:seperti\s+ini|adalah)|seperti\s+ini|begini(?:\s+kodenya)?|here\s+is\s+the\s+code)\b/gi
   ];
 
   for (const pat of fluffPatterns) {
     text = text.replace(pat, '');
   }
 
-  // If external lib was requested, remove the library call phrase
   if (hasExternalLib) {
     text = text.replace(externalLibRegex, '');
   }
 
-  // Clean leading/trailing punctuation and whitespace
   text = text.replace(/^[,\s.!?;:]+|[,\s.!?;:]+$/g, '').replace(/\s+/g, ' ').trim();
 
-  // Extract file names if any (filtering out any external library names)
+  // Extract file names (filtering out external library keywords)
   const fileNames = (rawText.match(/\b[\w./\\-]+\.(?:js|ts|jsx|tsx|py|rs|go|html|css|json|md|yaml|yml)\b/gi) || [])
     .filter(f => !/^(?:moment|lodash|underscore|dayjs|date-fns|axios|tailwind|jquery|chalk)(?:\.js)?$/i.test(f));
   const uniqueFiles = Array.from(new Set(fileNames));
 
-  // Build clean task statement
-  let taskInstruction = '';
+  // 5. Rule 2 (Smart Expansion): Clarify and expand technical specifications with precision constraints
+  let targetSpecs = '';
   if (hasExternalLib) {
-    taskInstruction = 'DILARANG menggunakan library eksternal. Selesaikan secara native.';
+    targetSpecs = 'Strictly prohibit the use of external libraries. Solve the requirement natively using standard runtime APIs.';
     if (text) {
-      taskInstruction += ' ' + text.charAt(0).toUpperCase() + text.slice(1);
+      targetSpecs += ' ' + text.charAt(0).toUpperCase() + text.slice(1) + '.';
     }
+    targetSpecs += ' Enforce native language features, robust input validation, and zero external dependency footprint.';
   } else if (text) {
-    let cleanedClean = text.replace(/^memperbaiki\b/i, 'Perbaiki')
-                          .replace(/^membuat(?:kan)?\b/i, 'Buat')
-                          .replace(/^menambahkan\b/i, 'Tambahkan')
-                          .replace(/^mengubah\b/i, 'Ubah');
-    taskInstruction = cleanedClean.charAt(0).toUpperCase() + cleanedClean.slice(1);
+    let cleanText = text.replace(/^memperbaiki\b/i, 'Fix')
+                        .replace(/^membuat(?:kan)?\b/i, 'Implement')
+                        .replace(/^menambahkan\b/i, 'Add')
+                        .replace(/^mengubah\b/i, 'Refactor')
+                        .replace(/^perbaiki\b/i, 'Fix')
+                        .replace(/^buat\b/i, 'Implement');
+    targetSpecs = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+    if (!targetSpecs.endsWith('.')) targetSpecs += '.';
+    
+    // Smart expansion: append necessary precision constraints if ambiguous
+    if (errorSnippet || /fix|perbaiki|error|bug/i.test(targetSpecs)) {
+      targetSpecs += ' Ensure defensive null-checks, proper error handling, and robust edge-case validation.';
+    } else {
+      targetSpecs += ' Follow standard language idioms, modular structure, and prevent runtime regressions.';
+    }
   } else if (uniqueFiles.length > 0) {
-    taskInstruction = `Perbaiki dan selesaikan kode pada ${uniqueFiles.join(', ')}.`;
+    targetSpecs = `Refactor and resolve code in ${uniqueFiles.join(', ')}. Ensure strict type safety, input validation, and defensive error handling.`;
   } else {
-    taskInstruction = 'Perbaiki kode dan selesaikan secara native.';
+    targetSpecs = 'Resolve technical task natively with strict error handling and input validation.';
   }
 
-  taskInstruction = taskInstruction.replace(/[,\s;:.]*$/, '.').trim();
-
-  if (uniqueFiles.length > 0 && !taskInstruction.includes(uniqueFiles[0])) {
-    taskInstruction += ` Target file: ${uniqueFiles.join(', ')}.`;
+  if (uniqueFiles.length > 0 && !targetSpecs.includes(uniqueFiles[0])) {
+    targetSpecs += ` Target file(s): ${uniqueFiles.join(', ')}.`;
   }
 
   if (codeBlocks.length > 0) {
     const formattedCode = codeBlocks.map(cb => '```' + (cb.lang || '') + '\n' + cb.code + '\n```').join('\n\n');
-    taskInstruction += '\n\nKode Terkait:\n' + formattedCode;
+    targetSpecs += '\n\nRelated Code:\n' + formattedCode;
   }
 
-  // 5. Construct final output strictly according to [FORMAT OUTPUT]
+  // 6. Plan Statement (1-2 sentences explaining minimal native-first technical approach)
+  let planText = '';
+  if (hasExternalLib) {
+    planText = 'Implement the solution exclusively with standard runtime APIs, avoiding third-party packages. Execute minimal, targeted changes with strict error handling.';
+  } else if (errorSnippet) {
+    planText = 'Isolate and resolve the root cause of the error traceback using native language facilities. Apply defensive guard clauses to ensure edge-case stability.';
+  } else {
+    planText = 'Execute the requested specifications using native standard APIs with minimal structural changes. Validate inputs and handle edge cases cleanly.';
+  }
+
+  // 7. Assemble standardized Graviton Core format
   const lines = [
     `[CWD: ${currentCwd}]`,
     '',
-    `<scratchpad>`,
-    `[Ponytail: 7 Staircases of Efficiency]`,
-    `1. YAGNI: Hapus spekulasi/fitur tak perlu, fokus hanya pada inti masalah.`,
-    `2. Reuse: Manfaatkan kode/struktur yang ada di direktori kerja.`,
-    `3. Stdlib: Utamakan fungsi bawaan runtime/standar daripada library eksternal.`,
-    `4. Native: Gunakan fitur bahasa/platform native yang paling ringkas.`,
-    `5. Dependency: ${hasExternalLib ? 'DILARANG menggunakan library eksternal. Selesaikan secara native.' : 'DILARANG menambah dependensi baru jika bisa native.'}`,
-    `6. One-liner: Sederhanakan implementasi sesingkat dan seefisien mungkin.`,
-    `7. Minimum that works: Tentukan intervensi teknis paling minimal yang menyelesaikan tugas.`,
-    `</scratchpad>`,
+    `<graviton_plan>: ${planText}`,
     '',
-    `Task:`,
-    taskInstruction
+    `[TARGET SPECIFICATIONS]: ${targetSpecs}`
   ];
 
   if (errorSnippet) {
     lines.push('');
-    lines.push('Error Log:');
+    lines.push('[ERROR LOG]:');
     lines.push('```\n' + errorSnippet + '\n```');
   }
 
@@ -521,21 +508,21 @@ export async function synthesizePrompt(rawText, apiKey, options = {}) {
   const stage1Text = pruneNoise(rawText);
 
   let optimizedText = '';
-  let engineUsed = 'Unified Meta 2026 Engine (Local)';
+  let engineUsed = 'Graviton Core Synthesizer (Local)';
 
   if (apiKey) {
     try {
       optimizedText = await repromptWithAI(stage1Text, apiKey, allSkills);
-      engineUsed = 'Unified Meta 2026 Engine (Gemini)';
+      engineUsed = 'Graviton Core Synthesizer (Gemini)';
     } catch (e) {
       optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
-      engineUsed = 'Unified Meta 2026 Engine (Local Fallback)';
+      engineUsed = 'Graviton Core Synthesizer (Local Fallback)';
     }
   } else {
     optimizedText = repromptLocally(stage1Text, workspaceContext, allSkills);
   }
 
-  // Ensure [CWD: ...] is at the very top and output strictly complies with [FORMAT OUTPUT]
+  // Ensure [CWD: ...] is at the very top
   const currentCwd = process.cwd();
   if (!optimizedText.startsWith('[CWD:')) {
     optimizedText = `[CWD: ${currentCwd}]\n\n` + optimizedText.trim();
