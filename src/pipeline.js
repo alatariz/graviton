@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { execSync } from 'child_process';
 import { redactSecrets } from './workspace-helper.js';
 
 export function estimateTokens(text) {
@@ -144,8 +143,8 @@ export function pruneNoise(rawText) {
   // [WHITELIST]: Universal Error Matcher across JS/TS, Python, Go, Rust, etc.
   const WHITELIST_REGEX = /TypeError|Exception|Error:|at\s+|ReferenceError|Traceback|panic:|fatal error:/i;
 
-  // [BLACKLIST]: Ecosystem-agnostic terminal noise (npm, pip, cargo, go, info/warning, build/download steps)
-  const BLACKLIST_REGEX = /^(?:npm|pip|cargo|go)\s+(?:WARN|notice|info)|^(?:info\s+|warning:|npm notice)|\[.*?\]\s*(?:info|debug)|downloading|compiling|building/i;
+  // [BLACKLIST]: Surgical terminal noise (npm, pip, cargo, go, yarn, pnpm at start of line, or bracketed info/debug, > prompt)
+  const BLACKLIST_REGEX = /^(?:npm|pip|cargo|go|yarn|pnpm)\s+(?:WARN|notice|info|ERR! code)|^(?:\[INFO\]|\[DEBUG\]|>)/i;
 
   const filteredLines = [];
 
@@ -153,13 +152,19 @@ export function pruneNoise(rawText) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    // 1. [WHITELIST] rule
+    // 1. [WHITELIST RULE 1]: User JSON / Object log protection ({ or }) - NEVER prune
+    if (line.includes('{') || line.includes('}')) {
+      filteredLines.push(line);
+      continue;
+    }
+
+    // 2. [WHITELIST RULE 2]: Universal Error & Traceback Matcher
     if (WHITELIST_REGEX.test(line)) {
       filteredLines.push(line);
       continue;
     }
 
-    // 2. [BLACKLIST] rule
+    // 3. [BLACKLIST]: Surgical terminal noise at start of line
     if (BLACKLIST_REGEX.test(trimmed)) {
       continue;
     }
@@ -276,17 +281,35 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
       return;
     }
 
-    entries.sort((a, b) => {
-      if (a.isDirectory() && !b.isDirectory()) return -1;
-      if (!a.isDirectory() && b.isDirectory()) return 1;
-      return a.name.localeCompare(b.name);
-    });
+    const PRIORITY_DIRS = /^(src|app|lib|components|utils)$/i;
+    const STATIC_DIRS = /^(assets|public|images|fonts|docs)$/i;
 
     const filtered = entries.filter(e => {
       if (e.name.startsWith('.') && e.name !== '.env.example') return false;
       const relItemPath = path.relative(cwd, path.join(dir, e.name)).replace(/\\/g, '/');
       if (isIgnored(e.name, relItemPath)) return false;
       return true;
+    });
+
+    // Smart Priority Sorting:
+    // 0: Priority folders (src, app, lib, components, utils)
+    // 1: Normal directories
+    // 2: Files
+    // 3: Static directories (assets, public, images, fonts, docs)
+    function getItemPriority(item) {
+      if (item.isDirectory()) {
+        if (PRIORITY_DIRS.test(item.name)) return 0;
+        if (STATIC_DIRS.test(item.name)) return 3;
+        return 1;
+      }
+      return 2;
+    }
+
+    filtered.sort((a, b) => {
+      const pA = getItemPriority(a);
+      const pB = getItemPriority(b);
+      if (pA !== pB) return pA - pB;
+      return a.name.localeCompare(b.name);
     });
 
     for (let index = 0; index < filtered.length; index++) {
@@ -357,49 +380,92 @@ export function readAndTruncateFile(filePath, maxLines = 500) {
 }
 
 /**
- * Auto-Git Save Point (Pengganti Rasa Takut)
- * Creates a pre-execution git commit snapshot synchronously before forwarding prompt.
- * Fails silently if directory is not a git repo or if working tree is clean.
+ * Shadow Backup (Pengganti Git Savepoint)
+ * Copies detected hydrated files to ~/.graviton/backups/
+ * Formatted as [nama_file]_[timestamp].bak
+ * Prevents collateral staging on sensitive files like .env.
  */
-export function createGitSavePoint(cwd = process.cwd()) {
+export function createShadowBackup(filePaths, cwd = process.cwd()) {
+  if (!filePaths) return [];
+  const files = Array.isArray(filePaths) ? filePaths : [filePaths];
+  const backupDir = path.join(os.homedir(), '.graviton', 'backups');
+
   try {
-    execSync('git add . && git commit -m "graviton_savepoint: pre-execution backup"', {
-      cwd: cwd || process.cwd(),
-      stdio: 'ignore'
-    });
-  } catch {}
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+  } catch {
+    return [];
+  }
+
+  const backedUp = [];
+  const timestamp = Date.now();
+
+  for (const f of files) {
+    try {
+      const absPath = path.isAbsolute(f) ? f : path.resolve(cwd, f);
+      if (fs.existsSync(absPath) && fs.statSync(absPath).isFile()) {
+        const baseName = path.basename(absPath);
+        const backupFileName = `${baseName}_${timestamp}.bak`;
+        const backupPath = path.join(backupDir, backupFileName);
+        fs.copyFileSync(absPath, backupPath);
+        backedUp.push({ original: absPath, backup: backupPath });
+      }
+    } catch {}
+  }
+
+  return backedUp;
 }
 
 /**
  * Shallow Dependency Resolver
  * Resolves relative local dependency paths (depth = 1) across JS/TS, Python, Go, Rust
+ * Supports Path Aliases (@/ and ~/) by resolving against ./src/ and project root
  */
-export function resolveLocalDependency(baseDir, relativeImport) {
+export function resolveLocalDependency(baseDir, relativeImport, cwd = process.cwd()) {
   try {
-    const candidate = path.resolve(baseDir, relativeImport);
-    // 1. Direct file match
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      return candidate;
-    }
-    // 2. Common extensions (JS/TS, Python, Go, Rust, etc.)
-    const exts = ['.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx', '.json', '.py', '.go', '.rs'];
-    for (const ext of exts) {
-      const withExt = candidate + ext;
-      if (fs.existsSync(withExt) && fs.statSync(withExt).isFile()) {
-        return withExt;
+    const candidatePaths = [];
+
+    // 1. Path Alias Resolver (@/ and ~/)
+    if (relativeImport.startsWith('@/') || relativeImport.startsWith('~/')) {
+      const unaliased = relativeImport.replace(/^[@~]\//, '');
+      const rootDir = cwd || process.cwd();
+      candidatePaths.push(path.resolve(rootDir, 'src', unaliased));
+      candidatePaths.push(path.resolve(rootDir, unaliased));
+      if (baseDir) {
+        candidatePaths.push(path.resolve(baseDir, 'src', unaliased));
+        candidatePaths.push(path.resolve(baseDir, unaliased));
       }
+    } else {
+      candidatePaths.push(path.resolve(baseDir, relativeImport));
     }
-    // 3. Directory index or Python package
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+
+    const exts = ['.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx', '.json', '.py', '.go', '.rs'];
+
+    for (const candidate of candidatePaths) {
+      // Direct file match
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+      // Common extensions (JS/TS, Python, Go, Rust, etc.)
       for (const ext of exts) {
-        const indexFile = path.join(candidate, 'index' + ext);
-        if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
-          return indexFile;
+        const withExt = candidate + ext;
+        if (fs.existsSync(withExt) && fs.statSync(withExt).isFile()) {
+          return withExt;
         }
       }
-      const pyInit = path.join(candidate, '__init__.py');
-      if (fs.existsSync(pyInit) && fs.statSync(pyInit).isFile()) {
-        return pyInit;
+      // Directory index or Python package
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+        for (const ext of exts) {
+          const indexFile = path.join(candidate, 'index' + ext);
+          if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
+            return indexFile;
+          }
+        }
+        const pyInit = path.join(candidate, '__init__.py');
+        if (fs.existsSync(pyInit) && fs.statSync(pyInit).isFile()) {
+          return pyInit;
+        }
       }
     }
   } catch {}
@@ -512,7 +578,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
           // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1)
           const rawFileContent = fs.readFileSync(resolved, 'utf8');
-          const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/)[^'"\s]+)/g;
+          const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/|@\/|~\/)[^'"\s]+)/g;
           const detectedDeps = [];
           let match;
           while ((match = depRegex.exec(rawFileContent)) !== null) {
@@ -524,7 +590,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
           const fileDir = path.dirname(resolved);
           for (const depImport of detectedDeps) {
-            const resolvedDep = resolveLocalDependency(fileDir, depImport);
+            const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
             if (resolvedDep && !handledPaths.has(resolvedDep)) {
               handledPaths.add(resolvedDep);
               const depContent = readAndTruncateFile(resolvedDep, 500);
@@ -540,6 +606,11 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
         }
       } catch {}
     }
+  }
+
+  // Shadow Backup: Automatically back up detected hydrated files into ~/.graviton/backups/
+  if (handledPaths.size > 0) {
+    createShadowBackup(Array.from(handledPaths), currentCwd);
   }
 
   const allInjected = [];

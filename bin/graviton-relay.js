@@ -1,7 +1,6 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { createGitSavePoint } from '../src/pipeline.js';
 
 /**
  * Dynamically resolves the agy executable path across Windows, macOS, and Linux
@@ -70,8 +69,6 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   if (options.continueSession) {
     args.push('--continue');
   }
-
-  createGitSavePoint(options.cwd || process.cwd());
 
   const child = spawn(agyExecutable, args, {
     stdio: ['pipe', process.stdout, process.stderr],
