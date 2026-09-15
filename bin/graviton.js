@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton Core Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.2 Autonomous Execution Layer
 
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, pruneNoise } from '../src/pipeline.js';
+import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, pruneNoise, readOdometer } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 
@@ -142,12 +142,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.0.0';
+    let version = '1.2.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton Core Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.2 Architecture)`);
     process.exit(0);
   }
 
@@ -191,11 +191,13 @@ async function main() {
   // 4. GAIN & STATS
   if (command === 'gain' || command === 'stats' || command === '--gain' || command === '--stats') {
     const stats = loadStats();
+    const odo = readOdometer();
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON EFFICIENCY GAINS ===\x1b[0m`);
     console.log(`  \x1b[36mCommands Processed    :\x1b[0m ${stats.commandsRun.toLocaleString()}`);
     console.log(`  \x1b[36mPrompts Synthesized   :\x1b[0m ${stats.promptsOptimized.toLocaleString()}`);
     console.log(`  \x1b[32mEstimated Tokens Saved:\x1b[0m \x1b[1m${stats.tokensSaved.toLocaleString()}\x1b[0m tokens`);
     console.log(`  \x1b[32mLines Filtered Out    :\x1b[0m \x1b[1m${stats.linesFiltered.toLocaleString()}\x1b[0m lines`);
+    console.log(`  \x1b[35mOdometer Total Tracked:\x1b[0m \x1b[1m${odo.totalTokens.toLocaleString()}\x1b[0m tokens`);
     console.log(`\x1b[90mKeep your AI context clean, fast, and focused.\x1b[0m\n`);
     process.exit(0);
   }
@@ -319,7 +321,8 @@ async function main() {
 
   child.on('close', code => {
     if (code === 0) {
-      console.log('\x1b[32m✔ Execution complete.\x1b[0m');
+      const odo = readOdometer();
+      console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
     }
     process.exit(code || 0);
   });

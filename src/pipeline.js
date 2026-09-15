@@ -380,20 +380,117 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 }
 
 /**
- * Graviton Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
+ * File Truncation (Anti-Bom File)
+ * Reads file content and splits by lines (\n).
+ * If lines exceed 500, takes first 500 lines and appends:
+ * \n// [...FILE TRUNCATED: MAX 500 LINES EXCEEDED...]
+ */
+export function readAndTruncateFile(filePath, maxLines = 500) {
+  try {
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const lines = raw.replace(/\r\n/g, '\n').split('\n');
+    if (lines.length > maxLines) {
+      return lines.slice(0, maxLines).join('\n') + '\n// [...FILE TRUNCATED: MAX 500 LINES EXCEEDED...]';
+    }
+    return lines.join('\n');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Shallow Dependency Resolver
+ * Resolves relative local dependency paths (depth = 1)
+ */
+export function resolveLocalDependency(baseDir, relativeImport) {
+  try {
+    const candidate = path.resolve(baseDir, relativeImport);
+    // 1. Direct file match
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+    // 2. Common extensions
+    const exts = ['.js', '.mjs', '.cjs', '.ts', '.jsx', '.tsx', '.json'];
+    for (const ext of exts) {
+      const withExt = candidate + ext;
+      if (fs.existsSync(withExt) && fs.statSync(withExt).isFile()) {
+        return withExt;
+      }
+    }
+    // 3. Directory index
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+      for (const ext of exts) {
+        const indexFile = path.join(candidate, 'index' + ext);
+        if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
+          return indexFile;
+        }
+      }
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Local Trip Odometer (Pelacak Token Offline)
+ * Tracks session tokens and cumulative total in ~/.graviton/odometer.json
+ */
+export function getOdometerPath() {
+  return path.join(os.homedir(), '.graviton', 'odometer.json');
+}
+
+export function readOdometer() {
+  try {
+    const odoPath = getOdometerPath();
+    if (fs.existsSync(odoPath)) {
+      const data = JSON.parse(fs.readFileSync(odoPath, 'utf8'));
+      return {
+        totalTokens: Number(data.totalTokens) || 0,
+        lastSessionTokens: Number(data.lastSessionTokens) || 0,
+        sessionsCount: Number(data.sessionsCount) || 0,
+        updatedAt: data.updatedAt || null
+      };
+    }
+  } catch {}
+  return { totalTokens: 0, lastSessionTokens: 0, sessionsCount: 0, updatedAt: null };
+}
+
+export function recordOdometer(sessionTokens) {
+  try {
+    const gravitonDir = path.join(os.homedir(), '.graviton');
+    if (!fs.existsSync(gravitonDir)) {
+      fs.mkdirSync(gravitonDir, { recursive: true });
+    }
+    const current = readOdometer();
+    const totalTokens = current.totalTokens + sessionTokens;
+    const data = {
+      totalTokens,
+      lastSessionTokens: sessionTokens,
+      sessionsCount: current.sessionsCount + 1,
+      updatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(getOdometerPath(), JSON.stringify(data, null, 2), 'utf8');
+    return { sessionTokens, totalTokens };
+  } catch {
+    return { sessionTokens, totalTokens: sessionTokens };
+  }
+}
+
+/**
+ * Graviton V1.2 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
  * Zero token cost, zero external API calls.
  */
-export function constructSuperPrompt(userInput, cwd = process.cwd()) {
+export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {}) {
   const currentCwd = cwd || process.cwd();
   const cleanedInput = pruneNoise(userInput || '');
   const workspaceInfo = buildWorkspaceMap(currentCwd);
 
   // Smart File Hydration: detect file names mentioned in userInput
   const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh))\b/gi;
-  const matches = (userInput.match(fileRegex) || []).map(m => m.trim());
+  const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
   const uniqueFiles = Array.from(new Set(matches));
 
   const injectedFiles = [];
+  const injectedDependencies = [];
   const handledPaths = new Set();
 
   for (const filename of uniqueFiles) {
@@ -428,26 +525,62 @@ export function constructSuperPrompt(userInput, cwd = process.cwd()) {
     if (resolved && !handledPaths.has(resolved)) {
       handledPaths.add(resolved);
       try {
-        const content = fs.readFileSync(resolved, 'utf8');
-        const lines = content.split('\n');
-        const cappedLines = lines.slice(0, 300).join('\n');
-        const ext = path.extname(resolved).slice(1) || '';
-        const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
+        const cappedContent = readAndTruncateFile(resolved, 500);
+        if (cappedContent !== null) {
+          const ext = path.extname(resolved).slice(1) || '';
+          const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
 
-        injectedFiles.push(
-          `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedLines}\n\`\`\``
-        );
+          injectedFiles.push(
+            `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedContent}\n\`\`\``
+          );
+
+          // 2. Shallow Dependency Scraping (Anti-Kebutaan Lintas File, depth = 1)
+          const rawFileContent = fs.readFileSync(resolved, 'utf8');
+          const depRegex = /import\s+.*?from\s+['"](\.[^'"]+)['"]|require\(['"](\.[^'"]+)['"]\)/g;
+          const detectedDeps = [];
+          let match;
+          while ((match = depRegex.exec(rawFileContent)) !== null) {
+            const depImport = match[1] || match[2];
+            if (depImport && !detectedDeps.includes(depImport)) {
+              detectedDeps.push(depImport);
+            }
+          }
+
+          const fileDir = path.dirname(resolved);
+          for (const depImport of detectedDeps) {
+            const resolvedDep = resolveLocalDependency(fileDir, depImport);
+            if (resolvedDep && !handledPaths.has(resolvedDep)) {
+              handledPaths.add(resolvedDep);
+              const depContent = readAndTruncateFile(resolvedDep, 500);
+              if (depContent !== null) {
+                const depExt = path.extname(resolvedDep).slice(1) || '';
+                const relDepPath = path.relative(currentCwd, resolvedDep).replace(/\\/g, '/');
+                injectedDependencies.push(
+                  `[AUTO-INJECTED DEPENDENCY: ${relDepPath}]\n\`\`\`${depExt}\n${depContent}\n\`\`\``
+                );
+              }
+            }
+          }
+        }
       } catch {}
     }
   }
 
-  const injectedFilesBlock = injectedFiles.length > 0
-    ? '\n\n' + injectedFiles.join('\n\n')
+  const allInjected = [];
+  if (injectedFiles.length > 0) {
+    allInjected.push(injectedFiles.join('\n\n'));
+  }
+  if (injectedDependencies.length > 0) {
+    allInjected.push(injectedDependencies.join('\n\n'));
+  }
+
+  const injectedFilesBlock = allInjected.length > 0
+    ? '\n\n' + allInjected.join('\n\n')
     : '';
 
   const systemDirective = `You are Antigravity, executed via Graviton. Act as a Ruthless Editor. Remove conversational fluff. Think in <graviton_plan> before coding. Strictly prioritize native/stdlib over external dependencies. Output absolute minimal code.`;
 
-  return `[SYSTEM DIRECTIVE]: "${systemDirective}"
+  const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
 
@@ -455,6 +588,12 @@ ${workspaceInfo}${injectedFilesBlock}
 
 [USER INSTRUCTION & ERROR LOG]:
 ${cleanedInput}`.trim();
+
+  // Local Trip Odometer: Record tokens for this assembly
+  const promptTokens = Math.ceil(finalPrompt.length / 4);
+  recordOdometer(promptTokens);
+
+  return finalPrompt;
 }
 
 /**
