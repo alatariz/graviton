@@ -5,3 +5,8 @@ node_modules/
 
 # Web Dashboard & Studio (Excluded from GitHub repository)
 web/
+
+# Local Graviton session state
+.graviton-session
+.graviton/
+

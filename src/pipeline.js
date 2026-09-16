@@ -269,7 +269,8 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
   const ignoreDirs = new Set([
     'node_modules', '.git', 'dist', 'build', '__pycache__',
     '.gemini', 'coverage', '.next', 'target', '.turbo',
-    '.cache', 'venv', '.venv', '.idea', '.vscode'
+    '.cache', 'venv', '.venv', '.idea', '.vscode',
+    '.graviton', '.graviton-session'
   ]);
   const gitignorePatterns = [];
   const gravitonFilter = createGravitonFilter(cwd);
@@ -322,6 +323,7 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 
   // Helper to test if name or relative path matches gitignore pattern
   function isIgnored(name, relPath) {
+    if (name.startsWith('.graviton') || relPath.startsWith('.graviton')) return true;
     if (ignoreDirs.has(name) || ignoreDirs.has(relPath)) return true;
     for (const pattern of gitignorePatterns) {
       if (name === pattern || relPath === pattern) return true;
@@ -874,7 +876,13 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     ? '\n\n' + allInjected.join('\n\n')
     : '';
 
-  const systemDirective = `You are Antigravity, executed via Graviton in autonomous one-shot mode. Act as an Autonomous Engineering Agent. Execute requested tasks directly using tools. If an instruction to create files or folders does not specify an exact name, pick a sensible, clean name and execute creation immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.`;
+  const systemDirective = `You are Antigravity, executed via Graviton in autonomous mode.
+CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
+1. The active workspace and project root is strictly located at [CWD]: "${currentCwd}".
+2. You MUST create all new files, project structures, code, dependencies, and folders strictly INSIDE this [CWD] directory (or relative to it).
+3. NEVER create files or projects in ~/.gemini, in scratch directories, or in any parent/root directory outside [CWD].
+4. When executing terminal commands or running scripts, always execute them in [CWD].
+5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.`;
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 

@@ -2,6 +2,7 @@ import { spawnSync, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
+import { getLatestConversationId, saveWorkspaceSession } from '../src/session-manager.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -253,6 +254,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   console.log(`\x1b[90m[GRAVITON] Relay target: ${agyExecutable}\x1b[0m`);
   console.log(`\x1b[36m[GRAVITON]\x1b[0m Relaying prompt to Antigravity CLI (Auto-Allow active)...`);
 
+  const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+
   // Construct arguments: use options.args if provided, otherwise assemble auto-allow flags + prompt
   let args;
   if (options.args) {
@@ -264,7 +267,13 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits')
     ];
 
-    if (options.continueSession) {
+    if (options.addDir !== false) {
+      args.push('--add-dir', executionCwd);
+    }
+
+    if (options.conversationId) {
+      args.push('--conversation', options.conversationId);
+    } else if (options.continueSession) {
       args.push('--continue');
     }
 
@@ -293,12 +302,21 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Execute the relay using spawnSync
+  // Execute the relay using spawnSync with workspace directory confinement
   const result = spawnSync(agyExecutable, args, {
+    cwd: executionCwd,
     stdio: stdioMode,
     shell: useShell,
     env
   });
+
+  // Auto-detect and record conversation ID for this workspace session
+  try {
+    const latestConvId = getLatestConversationId();
+    if (latestConvId) {
+      saveWorkspaceSession(executionCwd, latestConvId, promptText);
+    }
+  } catch {}
 
   // Handle spawn errors
   if (result.error) {

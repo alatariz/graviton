@@ -16,6 +16,7 @@ import { getTelemetry, formatTelemetryDashboard, recordTelemetry } from '../src/
 import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
+import { getWorkspaceSession, clearWorkspaceSession } from '../src/session-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,7 +60,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V1.8.4 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V1.8.5 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -67,6 +68,7 @@ async function main() {
   // Parse boolean flags
   let isDeep = false;
   let isContinue = false;
+  let isNew = false;
   const filteredArgs = [];
 
   for (const arg of rawArgs) {
@@ -74,6 +76,8 @@ async function main() {
       isDeep = true;
     } else if (arg === '-c' || arg === '--continue') {
       isContinue = true;
+    } else if (arg === '-n' || arg === '--new' || arg === '--fresh') {
+      isNew = true;
     } else if (arg !== '--dry-run') {
       filteredArgs.push(arg);
     }
@@ -119,7 +123,8 @@ async function main() {
 
 \x1b[1mOPTIONS\x1b[0m
   \x1b[33m--deep\x1b[0m                  Activate deep precision synthesis for complex technical architecture
-  \x1b[33m-c, --continue\x1b[0m          Resume previous Antigravity session with synthesized prompt & auto-allow
+  \x1b[33m-c, --continue\x1b[0m          Resume previous workspace session with synthesized prompt & auto-allow
+  \x1b[33m-n, --new\x1b[0m               Start a fresh session in the current workspace (clears previous session)
 
 \x1b[1mCOMMANDS\x1b[0m
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
@@ -299,6 +304,34 @@ async function main() {
   console.log(`\x1b[36m[GRAVITON]\x1b[0m Assembling SuperPrompt...`);
 
   const currentCwd = process.cwd();
+  let targetConversationId = null;
+  let continueSession = false;
+
+  if (isNew) {
+    clearWorkspaceSession(currentCwd);
+    console.log(`\x1b[33m[GRAVITON]\x1b[0m Starting fresh session for workspace: \x1b[1m${currentCwd}\x1b[0m`);
+  } else {
+    const existingSession = getWorkspaceSession(currentCwd);
+    if (isContinue) {
+      if (existingSession && existingSession.conversationId) {
+        targetConversationId = existingSession.conversationId;
+        continueSession = true;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Resuming workspace session (\x1b[33m${targetConversationId.slice(0, 8)}...\x1b[0m)`);
+      } else {
+        continueSession = true;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing most recent session...`);
+      }
+    } else if (existingSession && existingSession.conversationId) {
+      // Auto-continue within 24 hours for seamless multi-turn workflow in this workspace
+      const ageHours = (Date.now() - (existingSession.updatedAt || 0)) / (1000 * 60 * 60);
+      if (ageHours < 24) {
+        targetConversationId = existingSession.conversationId;
+        continueSession = true;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing active workspace session (\x1b[33m${targetConversationId.slice(0, 8)}...\x1b[0m) \x1b[90m(use --new for fresh session)\x1b[0m`);
+      }
+    }
+  }
+
   const superPrompt = constructSuperPrompt(input, currentCwd);
 
   const stats = loadStats();
@@ -308,7 +341,9 @@ async function main() {
   copyToClipboard(superPrompt);
 
   const result = runAntigravityWithAutoAllow(superPrompt, {
-    continueSession: isContinue,
+    conversationId: targetConversationId,
+    continueSession,
+    cwd: currentCwd,
     isDeep
   });
 

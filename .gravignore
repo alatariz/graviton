@@ -17,3 +17,8 @@ coverage/
 # Minified bundles
 *.min.js
 *.min.css
+
+# Internal Graviton session state
+.graviton*
+.graviton-session
+
