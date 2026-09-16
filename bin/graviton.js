@@ -17,6 +17,8 @@ import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperProm
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 import { getWorkspaceSession, clearWorkspaceSession } from '../src/session-manager.js';
+import { executeRollback } from '../src/rollback-manager.js';
+import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts } from '../src/port-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,7 +62,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V1.8.5 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V1.9.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -128,6 +130,10 @@ async function main() {
 
 \x1b[1mCOMMANDS\x1b[0m
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
+  \x1b[32mundo\x1b[0m, \x1b[32mrollback\x1b[0m         Revert files modified or created during the most recent AI session
+  \x1b[32mstart\x1b[0m <cmd...>           Launch long-running dev server cleanly as background daemon (non-hanging)
+  \x1b[32mstop\x1b[0m [port|all]         Terminate background daemon or free blocked development port
+  \x1b[32mports\x1b[0m                   Scan and display active listening development ports (3000, 5173, etc.)
   \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
   \x1b[32mstats\x1b[0m, \x1b[32mgain\x1b[0m             Display lifetime telemetry dashboard & token savings
   \x1b[32mmap\x1b[0m                     Display workspace directory tree and detected dependencies
@@ -221,6 +227,71 @@ async function main() {
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON WORKSPACE HYDRATION ===\x1b[0m`);
     console.log(wsMap);
     console.log(`\x1b[90mActive working directory mapped with depth 2.\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  // 5b. SAFETY ROLLBACK GUARD (V1.9.0)
+  if (command === 'undo' || command === 'rollback' || command === '--undo' || command === '--rollback') {
+    console.log('\x1b[36m[GRAVITON]\x1b[0m Initiating Safety Rollback Guard...');
+    const res = executeRollback(process.cwd());
+    if (res.success) {
+      console.log(`\n\x1b[1m\x1b[32m=== GRAVITON ROLLBACK SUCCESSFUL ===\x1b[0m`);
+      if (res.restored.length > 0) {
+        console.log(`\x1b[32m  ✔ Restored ${res.restored.length} modified file(s):\x1b[0m`);
+        res.restored.forEach(f => console.log(`     - \x1b[1m${f}\x1b[0m`));
+      }
+      if (res.removed.length > 0) {
+        console.log(`\x1b[33m  ✔ Removed ${res.removed.length} newly created file(s):\x1b[0m`);
+        res.removed.forEach(f => console.log(`     - \x1b[1m${f}\x1b[0m`));
+      }
+      console.log(`\n\x1b[90mWorkspace restored to pre-session state.\x1b[0m\n`);
+    } else {
+      console.log(`\x1b[33m[!] ${res.message || 'No changes to rollback.'}\x1b[0m`);
+    }
+    process.exit(0);
+  }
+
+  // 5c. BACKGROUND DAEMON LAUNCHER (V1.9.0)
+  if (command === 'start') {
+    const cmdToRun = filteredArgs.slice(1).join(' ');
+    if (!cmdToRun) {
+      console.error('\x1b[31mError: Please specify the command to run as a background daemon (e.g. graviton start "node server.js").\x1b[0m');
+      process.exit(1);
+    }
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting background daemon: \x1b[1m${cmdToRun}\x1b[0m...`);
+    const daemon = startBackgroundDaemon(cmdToRun, process.cwd());
+    console.log(`\x1b[32m✔ Background daemon running (PID: ${daemon.pid})\x1b[0m`);
+    console.log(`\x1b[90mUse 'graviton stop' to terminate, or 'graviton ports' to inspect listening ports.\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  // 5d. PORT GUARD & DAEMON STOPPER (V1.9.0)
+  if (command === 'stop') {
+    const target = filteredArgs[1] || 'all';
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m Stopping daemons / freeing port: \x1b[1m${target}\x1b[0m...`);
+    const results = stopDaemonOrPort(target, process.cwd());
+    if (results.length > 0) {
+      results.forEach(r => {
+        console.log(`\x1b[32m  ✔ ${r.message || `Stopped process ${r.target}`}\x1b[0m`);
+      });
+    } else {
+      console.log(`\x1b[90mNo active background daemons or blocked ports found.\x1b[0m`);
+    }
+    process.exit(0);
+  }
+
+  // 5e. PORT SCANNER (V1.9.0)
+  if (command === 'ports' || command === '--ports') {
+    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON PORT GUARD: ACTIVE DEV PORTS ===\x1b[0m`);
+    const active = listActivePorts();
+    if (active.length === 0) {
+      console.log(`  \x1b[32m✔\x1b[0m All common dev ports (3000, 3001, 4200, 5173, 8000, 8080) are free!`);
+    } else {
+      active.forEach(item => {
+        console.log(`  \x1b[33m●\x1b[0m Port \x1b[1m${item.port}\x1b[0m is occupied by PID \x1b[1m${item.pid}\x1b[0m \x1b[90m(use 'graviton stop ${item.port}' to free)\x1b[0m`);
+      });
+    }
+    console.log('');
     process.exit(0);
   }
 

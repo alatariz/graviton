@@ -1,8 +1,9 @@
 import { spawnSync, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
+import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pipeline.js';
 import { getLatestConversationId, saveWorkspaceSession } from '../src/session-manager.js';
+import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -255,6 +256,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   console.log(`\x1b[36m[GRAVITON]\x1b[0m Relaying prompt to Antigravity CLI (Auto-Allow active)...`);
 
   const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+  const initialSnapshot = captureWorkspaceSnapshot(executionCwd);
 
   // Construct arguments: use options.args if provided, otherwise assemble auto-allow flags + prompt
   let args;
@@ -310,12 +312,14 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     env
   });
 
-  // Auto-detect and record conversation ID for this workspace session
+  // Auto-detect and record conversation ID and session manifest for rollback guard
   try {
     const latestConvId = getLatestConversationId();
     if (latestConvId) {
       saveWorkspaceSession(executionCwd, latestConvId, promptText);
     }
+    const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
+    saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
   } catch {}
 
   // Handle spawn errors

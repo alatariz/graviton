@@ -497,6 +497,12 @@ export function readAndTruncateFile(filePath, maxLines = 500) {
   }
 }
 
+let _latestShadowBackups = [];
+
+export function getLatestShadowBackups() {
+  return _latestShadowBackups;
+}
+
 /**
  * Shadow Backup (Pengganti Git Savepoint)
  * Copies detected hydrated files to ~/.graviton/backups/
@@ -532,6 +538,7 @@ export function createShadowBackup(filePaths, cwd = process.cwd()) {
     } catch {}
   }
 
+  _latestShadowBackups = backedUp;
   return backedUp;
 }
 
@@ -881,7 +888,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 1. The active workspace and project root is strictly located at [CWD]: "${currentCwd}".
 2. You MUST create all new files, project structures, code, dependencies, and folders strictly INSIDE this [CWD] directory (or relative to it).
 3. NEVER create files or projects in ~/.gemini, in scratch directories, or in any parent/root directory outside [CWD].
-4. When executing terminal commands or running scripts, always execute them in [CWD].
+4. When executing terminal commands or running scripts, always execute them in [CWD]. If instructed to run or start a web server/dev process, launch it cleanly in background mode or report the local localhost URL clearly to user.
 5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.`;
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
