@@ -9,8 +9,8 @@
     "node": ">=18.0.0"
   },
   "bin": {
-    "graviton": "./src/pipeline.js",
-    "grav": "./src/pipeline.js"
+    "graviton": "./bin/graviton.js",
+    "grav": "./bin/graviton.js"
   },
   "scripts": {
     "start": "node src/pipeline.js",

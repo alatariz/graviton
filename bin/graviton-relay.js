@@ -159,20 +159,16 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let child;
     const stdioMode = options.stdio || 'inherit';
 
-    // 1 & 2. OS Check: Single String Shell on Windows, standard spawn on non-Windows
-    if (process.platform === 'win32') {
-      child = spawn(fullCmd, [], {
-        stdio: stdioMode,
-        shell: true,
-        env
-      });
-    } else {
-      child = spawn(baseCommand, originalArgs, {
-        stdio: stdioMode,
-        shell: false,
-        env
-      });
-    }
+    // 1 & 5. Set spawn options to { stdio: 'inherit', shell: true }
+    const isWindows = process.platform === 'win32';
+    const spawnCmd = isWindows ? fullCmd : baseCommand;
+    const spawnArgs = isWindows ? [] : originalArgs;
+
+    child = spawn(spawnCmd, spawnArgs, {
+      stdio: stdioMode,
+      shell: true,
+      env
+    });
 
     let settled = false;
 
@@ -230,7 +226,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       reject(err);
     });
 
-    // 4. Exit Code Logging: Inside the .on('close') event
+    // 2. Inside the Promise, resolve() MUST only be called inside the child.on('close') event
     child.on('close', (code) => {
       if (settled) return;
       settled = true;
@@ -244,9 +240,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
           process.exit(code || 1);
         }
       } else {
-        const odo = readOdometer();
-        console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
-        resolve(0);
+        resolve(code || 0);
       }
     });
   });

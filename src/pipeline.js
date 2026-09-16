@@ -966,7 +966,7 @@ if (process.argv[1]) {
         console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
         process.exit(1);
       });
-      import('../bin/graviton.js');
+      await import('../bin/graviton.js');
     }
   } catch {}
 }

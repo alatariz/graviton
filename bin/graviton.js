@@ -307,11 +307,13 @@ async function main() {
 
   copyToClipboard(superPrompt);
 
-  await runAntigravityWithAutoAllow(superPrompt, {
+  const exitCode = await runAntigravityWithAutoAllow(superPrompt, {
     continueSession: isContinue
   });
 
-  process.exit(0);
+  const odo = readOdometer();
+  console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
+  process.exit(exitCode || 0);
 }
 
 main().catch(err => {

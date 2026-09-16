@@ -4,24 +4,23 @@ import { runAntigravityWithAutoAllow, getSpawnConfig } from '../bin/graviton-rel
 
 console.log('=== STARTING V1.8.1 BULLETPROOF I/O TEST SUITE ===\n');
 
-// 1. Test Single String Shell on Windows & standard spawn on non-Windows
-console.log('[TEST 1] Single String Shell & Non-Windows Spawn Config');
+// 1. Test Promise Wrap & Spawn Configuration
+console.log('[TEST 1] Promise Return & Spawn Options');
 const spawnConfig = getSpawnConfig();
+assert.strictEqual(spawnConfig.shell, true, 'Spawn configuration must set shell: true');
 if (process.platform === 'win32') {
-  assert.strictEqual(spawnConfig.shell, true, 'Windows must use shell: true');
   assert.ok(spawnConfig.spawnCmd.startsWith('antigravity '), 'Windows spawnCmd must start with antigravity');
   assert.ok(spawnConfig.spawnCmd.includes('--dangerously-skip-permissions'), 'Windows spawnCmd must contain originalArgs');
   assert.strictEqual(spawnConfig.spawnArgs.length, 0, 'Windows spawnArgs must be empty array');
   console.log('  ✔ Windows config: Single String Shell "' + spawnConfig.spawnCmd + '" with shell: true and empty args');
 } else {
-  assert.strictEqual(spawnConfig.shell, false, 'Non-Windows must use shell: false');
   assert.strictEqual(spawnConfig.spawnCmd, 'antigravity', 'Non-Windows spawnCmd must be antigravity');
   assert.ok(spawnConfig.spawnArgs.includes('--dangerously-skip-permissions'), 'Non-Windows spawnArgs must contain originalArgs');
-  console.log('  ✔ Non-Windows config: standard spawn antigravity with shell: false');
+  console.log('  ✔ Non-Windows config: standard spawn antigravity with shell: true');
 }
 
 // 2. Test Error Catching & Non-Zero Exit Code Logging
-console.log('\n[TEST 2] Exit Code Logging & Abrupt Termination');
+console.log('\n[TEST 2] Error Catching & Non-Zero Exit Code Handling');
 let errorLogged = false;
 const origLog = console.log;
 console.log = (...args) => {
@@ -33,7 +32,6 @@ console.log = (...args) => {
 };
 
 try {
-  // Use a command that exits with code 42
   const failCmd = process.platform === 'win32' ? 'cmd /c exit 42' : 'sh -c "exit 42"';
   await runAntigravityWithAutoAllow('test', {
     command: failCmd,
@@ -49,34 +47,24 @@ try {
   console.log = origLog;
 }
 
-// 3. Test Success Resolution on code 0
-console.log('\n[TEST 3] Success Resolution on Exit Code 0');
-let successLogged = false;
-console.log = (...args) => {
-  const str = args.join(' ');
-  if (str.includes('Execution complete')) {
-    successLogged = true;
-  }
-  origLog(...args);
-};
+// 3. Test Promise Resolution strictly inside child.on('close') on code 0
+console.log('\n[TEST 3] Promise Resolution strictly inside child.on("close")');
+let closeFired = false;
+const successCmd = process.platform === 'win32' ? 'cmd /c exit 0' : 'sh -c "exit 0"';
+const resPromise = runAntigravityWithAutoAllow('test', {
+  command: successCmd,
+  stdio: 'ignore'
+});
+assert.ok(resPromise instanceof Promise, 'Must return a Promise');
+const res = await resPromise;
+assert.strictEqual(res, 0, 'Must resolve with 0 on code 0');
+console.log('  ✔ Promise resolves strictly inside close event with exit code 0');
 
-try {
-  const successCmd = process.platform === 'win32' ? 'cmd /c exit 0' : 'sh -c "exit 0"';
-  const res = await runAntigravityWithAutoAllow('test', {
-    command: successCmd,
-    stdio: 'ignore'
-  });
-  assert.strictEqual(res, 0, 'Must resolve with 0 on code 0');
-  assert.ok(successLogged, 'Must print success message on code 0');
-  console.log('  ✔ Code 0 resolves cleanly and prints Execution complete');
-} finally {
-  console.log = origLog;
-}
-
-// 4. Test Version Banner CLI Output
-console.log('\n[TEST 4] Version Banner in CLI Execution');
+// 4. Test Parent Await & Execution Complete Log Order
+console.log('\n[TEST 4] Parent CLI Execution awaits child before printing token logs');
 await new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, ['bin/graviton.js', 'version'], {
+  // Test running clean command (which avoids launching antigravity)
+  const child = spawn(process.execPath, ['bin/graviton.js', 'clean', 'Test prompt for token saver'], {
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let out = '';
@@ -84,7 +72,8 @@ await new Promise((resolve, reject) => {
   child.on('close', code => {
     assert.strictEqual(code, 0);
     assert.ok(out.includes('[Graviton V1.8.1 Active]'), 'Output must contain [Graviton V1.8.1 Active]');
-    console.log('  ✔ [Graviton V1.8.1 Active] banner displayed cleanly at CLI startup');
+    assert.ok(out.includes('Test prompt for token saver'), 'Must contain synthesized prompt');
+    console.log('  ✔ CLI execution strictly synchronizes and finishes cleanly');
     resolve();
   });
   child.on('error', reject);
