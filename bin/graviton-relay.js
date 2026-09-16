@@ -1,4 +1,4 @@
-import { spawnSync } from 'child_process';
+import { spawnSync, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
@@ -20,43 +20,83 @@ export function getCrossPlatformCommand(cmd = 'antigravity') {
 }
 
 /**
- * Dynamically resolves the antigravity executable path across Windows, macOS, and Linux
- * by searching through ~/.gemini/bin, process.env.PATH, and checking platform conventions.
- * On Windows: explicitly resolves to .cmd or .exe
- * On non-Windows: uses standard command name
+ * Detects if an executable is the Electron GUI desktop app instead of the CLI.
+ * Electron desktop apps detach immediately on Windows and do not process CLI stdin/prompts.
+ */
+export function isGuiExecutable(filePath) {
+  if (!filePath) return false;
+  const lower = filePath.toLowerCase();
+  if (lower.endsWith('antigravity.exe')) {
+    const dir = path.dirname(filePath);
+    if (
+      fs.existsSync(path.join(dir, 'resources.pak')) ||
+      fs.existsSync(path.join(dir, 'chrome_100_percent.pak')) ||
+      fs.existsSync(path.join(dir, 'snapshot_blob.bin')) ||
+      lower.includes('programs\\antigravity')
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Dynamically resolves the antigravity / agy executable path across Windows, macOS, and Linux
+ * by searching through ~/.gemini/bin, AppData/Local/agy/bin, system PATH, and system discovery (where/which).
+ * Strictly filters out GUI desktop apps (Antigravity.exe) to ensure only the CLI runner (agy) is selected.
+ * Returns the absolute path if found, or null if not found.
  */
 export function resolveAgyExecutable(commandName = 'agy') {
   const isWindows = process.platform === 'win32';
-  const defaultCommand = getCrossPlatformCommand(commandName);
 
   // 1. Explicit environment variable override
   if (process.env.AGY_PATH && fs.existsSync(process.env.AGY_PATH)) {
-    return process.env.AGY_PATH;
+    if (!isGuiExecutable(process.env.AGY_PATH)) {
+      return process.env.AGY_PATH;
+    }
   }
 
-  const searchNames = commandName === 'antigravity'
-    ? ['antigravity', 'agy']
-    : ['agy', 'antigravity'];
+  // CLI executable names (check 'agy' first as it is the canonical CLI binary)
+  const searchNames = ['agy', 'antigravity'];
 
-  // 2. Check ~/.gemini/bin/ directory
   const homeDir = process.env.USERPROFILE || process.env.HOME || '';
+  const localAppData = process.env.LOCALAPPDATA || (homeDir ? path.join(homeDir, 'AppData', 'Local') : '');
+
+  // 2. Check standard CLI installation directories
+  const candidateDirectories = [];
   if (homeDir) {
-    const geminiBin = path.join(homeDir, '.gemini', 'bin');
-    if (fs.existsSync(geminiBin)) {
-      for (const name of searchNames) {
-        if (isWindows) {
-          const winCandidates = [
-            path.join(geminiBin, `${name}.exe`),
-            path.join(geminiBin, `${name}.cmd`),
-            path.join(geminiBin, `${name}.bat`),
-            path.join(geminiBin, name)
-          ];
-          for (const candidate of winCandidates) {
-            if (fs.existsSync(candidate)) return candidate;
+    candidateDirectories.push(
+      path.join(homeDir, '.gemini', 'bin'),
+      path.join(homeDir, '.gemini', 'antigravity-cli', 'bin'),
+      path.join(homeDir, '.antigravity', 'bin')
+    );
+  }
+  if (isWindows && localAppData) {
+    candidateDirectories.push(
+      path.join(localAppData, 'agy', 'bin'),
+      path.join(localAppData, 'Programs', 'agy', 'bin')
+    );
+  }
+
+  for (const dir of candidateDirectories) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of searchNames) {
+      if (isWindows) {
+        const winCandidates = [
+          path.join(dir, `${name}.exe`),
+          path.join(dir, `${name}.cmd`),
+          path.join(dir, `${name}.bat`),
+          path.join(dir, name)
+        ];
+        for (const candidate of winCandidates) {
+          if (fs.existsSync(candidate) && fs.statSync(candidate).isFile() && !isGuiExecutable(candidate)) {
+            return candidate;
           }
-        } else {
-          const candidate = path.join(geminiBin, name);
-          if (fs.existsSync(candidate)) return candidate;
+        }
+      } else {
+        const candidate = path.join(dir, name);
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile() && !isGuiExecutable(candidate)) {
+          return candidate;
         }
       }
     }
@@ -75,14 +115,18 @@ export function resolveAgyExecutable(commandName = 'agy') {
       if (isWindows) {
         for (const ext of extensions) {
           const candidate = path.join(dir, `${name}${ext.toLowerCase()}`);
-          if (fs.existsSync(candidate)) return candidate;
+          if (fs.existsSync(candidate) && fs.statSync(candidate).isFile() && !isGuiExecutable(candidate)) {
+            return candidate;
+          }
           const upperCandidate = path.join(dir, `${name}${ext.toUpperCase()}`);
-          if (fs.existsSync(upperCandidate)) return upperCandidate;
+          if (fs.existsSync(upperCandidate) && fs.statSync(upperCandidate).isFile() && !isGuiExecutable(upperCandidate)) {
+            return upperCandidate;
+          }
         }
       } else {
         const candidate = path.join(dir, name);
         try {
-          if (fs.existsSync(candidate)) {
+          if (fs.existsSync(candidate) && fs.statSync(candidate).isFile() && !isGuiExecutable(candidate)) {
             fs.accessSync(candidate, fs.constants.X_OK);
             return candidate;
           }
@@ -91,8 +135,32 @@ export function resolveAgyExecutable(commandName = 'agy') {
     }
   }
 
-  // 4. Default fallback: explicit .cmd on Windows (e.g. agy.cmd or antigravity.cmd), standard command on others
-  return defaultCommand;
+  // 4. Try resolving via where.exe (Windows) or which (Unix)
+  if (isWindows) {
+    for (const name of searchNames) {
+      try {
+        const out = execSync(`where.exe ${name}`, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+        const lines = out.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          if (fs.existsSync(line) && fs.statSync(line).isFile() && !isGuiExecutable(line)) {
+            return line;
+          }
+        }
+      } catch {}
+    }
+  } else {
+    for (const name of searchNames) {
+      try {
+        const out = execSync(`which ${name}`, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+        if (out && fs.existsSync(out) && fs.statSync(out).isFile() && !isGuiExecutable(out)) {
+          return out;
+        }
+      } catch {}
+    }
+  }
+
+  // 5. If not found, return null (strictly reject non-existent or GUI binaries)
+  return null;
 }
 
 /**
@@ -133,8 +201,8 @@ export function getSpawnConfig(options = {}) {
 /**
  * Executes Antigravity synchronously with full terminal I/O streaming.
  *
- * Graviton V1.8.3 Rock-Solid Synchronous Relay:
- * 1. Resolves binary path searching both 'agy' and 'antigravity' in ~/.gemini/bin and PATH.
+ * Graviton V1.8.4 Rock-Solid Synchronous Relay:
+ * 1. Resolves binary path searching both 'agy' and 'antigravity' in ~/.gemini/bin, AppData, and PATH.
  * 2. Injects superPrompt via -p (or -i if interactive) with --dangerously-skip-permissions.
  * 3. Uses shell: false for native binaries (.exe on Windows, ELF on Linux, Mach-O on macOS)
  *    to eliminate shell escaping and argument truncation bugs, with fallback to shell: true for .cmd/.bat.
@@ -158,9 +226,32 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Dynamically resolve executable (checks agy and antigravity in ~/.gemini/bin and system PATH)
+  // Dynamically resolve executable (checks agy and antigravity in ~/.gemini/bin, AppData, and PATH)
   const commandName = options.command || 'agy';
   const agyExecutable = resolveAgyExecutable(commandName);
+
+  // Validate executable existence
+  if (!agyExecutable || !fs.existsSync(agyExecutable)) {
+    console.error(
+      `\n\x1b[1;31m[🚨 GRAVITON FATAL ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) belum terpasang di laptop ini!\n\n` +
+      `Graviton adalah akselerator CLI untuk Google Antigravity. Binary \x1b[33magy\x1b[0m atau \x1b[33magy.exe\x1b[0m tidak ditemukan di sistem ini.\n` +
+      `\x1b[90m(Catatan: Antigravity Desktop App tidak menjalankan perintah CLI secara otomatis).\x1b[0m\n\n` +
+      `\x1b[1mCara Memasang Google Antigravity CLI di Windows:\x1b[0m\n` +
+      `Buka PowerShell baru dan jalankan:\n` +
+      `  \x1b[36mirm https://antigravity.google/cli/install.ps1 | iex\x1b[0m\n\n` +
+      `Atau di Command Prompt (CMD):\n` +
+      `  \x1b[36mcurl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd\x1b[0m\n\n` +
+      `Jika Antigravity CLI sudah terpasang di lokasi khusus, atur path-nya:\n` +
+      `  \x1b[33msetx AGY_PATH "C:\\path\\to\\agy.exe"\x1b[0m\n`
+    );
+    if (options.rejectOnError) {
+      throw new Error('Google Antigravity CLI (agy) was not found on this machine.');
+    }
+    process.exit(1);
+  }
+
+  console.log(`\x1b[90m[GRAVITON] Relay target: ${agyExecutable}\x1b[0m`);
+  console.log(`\x1b[36m[GRAVITON]\x1b[0m Relaying prompt to Antigravity CLI (Auto-Allow active)...`);
 
   // Construct arguments: use options.args if provided, otherwise assemble auto-allow flags + prompt
   let args;
@@ -211,15 +302,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
   // Handle spawn errors
   if (result.error) {
-    if (result.error.code === 'ENOENT') {
-      console.error(
-        '\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) was not found on this system.\n' +
-        'Please ensure Antigravity is installed in ~/.gemini/bin or added to your PATH.\n' +
-        'For installation instructions, visit: https://github.com/google-deepmind/antigravity'
-      );
-    } else {
-      console.error('Spawn Error:', result.error);
-    }
+    console.error('Spawn Error:', result.error);
     if (options.rejectOnError) {
       throw result.error;
     }

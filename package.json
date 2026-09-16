@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "1.8.3",
-  "description": "Graviton V1.8.3 - Autonomous AI Acceleration Layer for Antigravity",
+  "version": "1.8.4",
+  "description": "Graviton V1.8.4 - Autonomous AI Acceleration Layer for Antigravity",
   "license": "Apache-2.0",
   "main": "./src/pipeline.js",
   "type": "module",

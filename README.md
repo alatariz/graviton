@@ -11,7 +11,7 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-1.8.3-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 1.8.3" /></a>
+    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-1.8.4-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 1.8.4" /></a>
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>

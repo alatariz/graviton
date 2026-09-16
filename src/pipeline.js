@@ -874,7 +874,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     ? '\n\n' + allInjected.join('\n\n')
     : '';
 
-  const systemDirective = `You are Antigravity, executed via Graviton. Act as a Ruthless Editor. Remove conversational fluff. Think in <graviton_plan> before coding. Strictly prioritize native/stdlib over external dependencies. Output absolute minimal code.`;
+  const systemDirective = `You are Antigravity, executed via Graviton in autonomous one-shot mode. Act as an Autonomous Engineering Agent. Execute requested tasks directly using tools. If an instruction to create files or folders does not specify an exact name, pick a sensible, clean name and execute creation immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.`;
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
