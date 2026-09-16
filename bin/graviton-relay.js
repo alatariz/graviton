@@ -122,13 +122,14 @@ export function getSpawnConfig(options = {}) {
 }
 
 /**
- * Executes Antigravity in pure One-Shot mode via Stdin.
- * Writes promptText to child.stdin and immediately closes it (stdin.end()),
- * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
+ * Executes Antigravity with full terminal I/O streaming.
  *
- * Windows Node.js Security Patch:
- * - On Windows (win32): spawn 'cmd.exe' with ['/c', baseCommand, ...originalArgs] and shell: false.
- * - On non-Windows: spawn baseCommand directly with originalArgs and shell: false.
+ * Graviton V1.8.0 Execution Vanguard:
+ * 1. Strictly sets { stdio: 'inherit' } so terminal streams are connected directly.
+ * 2. Wraps execution in a Promise that resolves only on the 'close' or 'exit' event.
+ * 3. Timeout Guardrails: 15-minute max execution timeout (forcefully kills child and throws clean error).
+ * 4. SIGINT Interceptor: Cleanly kills child process if user presses Ctrl+C, preventing zombie processes.
+ * 5. Windows Security Patch: Uses cmd.exe /c with shell: false on Windows, eliminating EINVAL and DEP0190.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
@@ -149,45 +150,90 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Pure Node.js spawn with shell: false across all platforms
-  const child = spawn(spawnCmd, spawnArgs, {
-    stdio: ['pipe', process.stdout, process.stderr],
-    shell: false,
-    env
-  });
+  const timeoutMs = options.timeoutMs || (15 * 60 * 1000); // 15-minute max execution timeout
 
-  // Programmatically write promptText into child.stdin and close stream
-  if (promptText) {
-    child.stdin.write(promptText);
-  }
-  child.stdin.end();
+  return new Promise((resolve, reject) => {
+    // 1 & 2. In child_process.spawn options, strictly set { stdio: 'inherit' }
+    const spawnStdio = options.stdio || 'inherit';
+    const child = spawn(spawnCmd, spawnArgs, {
+      stdio: spawnStdio,
+      shell: false,
+      env
+    });
 
-  // Forward termination signals to child process
-  const forwardSignal = (signal) => {
-    if (child && !child.killed) {
-      try {
-        child.kill(signal);
-      } catch {
-        // Child might have already exited
+    let settled = false;
+
+    // Helper to safely force-kill child process (preventing zombie processes)
+    const killChildProcess = (signal = 'SIGKILL') => {
+      if (child && !child.killed) {
+        try {
+          if (process.platform === 'win32' && child.pid) {
+            try {
+              spawn('taskkill', ['/F', '/T', '/PID', String(child.pid)], { stdio: 'ignore', shell: false });
+            } catch {}
+          }
+          child.kill(signal);
+        } catch {}
       }
+    };
+
+    const cleanup = () => {
+      clearTimeout(timeoutTimer);
+      process.removeListener('SIGINT', sigintHandler);
+      process.removeListener('SIGTERM', sigtermHandler);
+    };
+
+    // 3. Timeout Guardrails: 15-minute max execution timeout
+    const timeoutTimer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      killChildProcess('SIGKILL');
+      cleanup();
+      reject(new Error('Antigravity execution timed out after 15 minutes (max execution guardrail exceeded).'));
+    }, timeoutMs);
+
+    // 4. SIGINT Interceptor: cleanly kill child process on Ctrl+C to prevent zombie background processes
+    const sigintHandler = () => {
+      killChildProcess('SIGINT');
+      cleanup();
+      process.exit(130);
+    };
+
+    const sigtermHandler = () => {
+      killChildProcess('SIGTERM');
+      cleanup();
+      process.exit(143);
+    };
+
+    process.on('SIGINT', sigintHandler);
+    process.on('SIGTERM', sigtermHandler);
+
+    // Write prompt text into stdin if stdin stream exists (e.g. piped stdio)
+    if (child.stdin && promptText) {
+      try {
+        child.stdin.write(promptText);
+        child.stdin.end();
+      } catch {}
     }
-  };
 
-  const sigintHandler = () => forwardSignal('SIGINT');
-  const sigtermHandler = () => forwardSignal('SIGTERM');
+    // Handle spawn error (e.g. executable not found ENOENT)
+    child.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    });
 
-  process.on('SIGINT', sigintHandler);
-  process.on('SIGTERM', sigtermHandler);
+    // 2. Wrap execution in Promise that resolves only on 'close' or 'exit' event
+    const handleCompletion = (code, signal) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      const exitCode = code !== null ? code : (signal ? 1 : 0);
+      resolve(exitCode);
+    };
 
-  child.on('exit', (code, signal) => {
-    process.removeListener('SIGINT', sigintHandler);
-    process.removeListener('SIGTERM', sigtermHandler);
-    if (code !== null) {
-      process.exitCode = code;
-    } else if (signal) {
-      process.kill(process.pid, signal);
-    }
+    child.on('exit', handleCompletion);
+    child.on('close', handleCompletion);
   });
-
-  return child;
 }
