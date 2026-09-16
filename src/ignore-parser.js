@@ -2,22 +2,28 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Graviton V1.7.0 Custom .gravitonignore Parser
+ * Graviton V1.7.0 Custom .gravignore Parser
  * Pure Node.js implementation: zero external dependencies.
  * Bypasses sensitive files, secret keys, and noise directories during
  * file hydration, dependency scraping, and workspace mapping.
  */
 
 /**
- * Load and parse .gravitonignore rules from the specified directory.
+ * Load and parse .gravignore rules from the specified directory.
  * Strips whitespace, ignores empty lines and comments (#).
- * @param {string} cwd - Directory to look for .gravitonignore
+ * Automatically checks for .gravignore (with backward-compatible fallback to .gravitonignore).
+ * @param {string} cwd - Directory to look for .gravignore
  * @returns {string[]} Array of valid pattern strings
  */
-export function loadGravitonIgnore(cwd = process.cwd()) {
-  const ignoreFilePath = path.join(cwd, '.gravitonignore');
+export function loadGravIgnore(cwd = process.cwd()) {
+  let ignoreFilePath = path.join(cwd, '.gravignore');
   if (!fs.existsSync(ignoreFilePath)) {
-    return [];
+    const legacyPath = path.join(cwd, '.gravitonignore');
+    if (fs.existsSync(legacyPath)) {
+      ignoreFilePath = legacyPath;
+    } else {
+      return [];
+    }
   }
 
   try {
@@ -39,8 +45,11 @@ export function loadGravitonIgnore(cwd = process.cwd()) {
   }
 }
 
+// Backward-compatible alias
+export const loadGravitonIgnore = loadGravIgnore;
+
 /**
- * Compiles a single .gravitonignore pattern into a fast matcher function.
+ * Compiles a single .gravignore pattern into a fast matcher function.
  * @param {string} pattern
  * @returns {(relPath: string, baseName: string) => boolean}
  */
@@ -98,13 +107,13 @@ export function compilePattern(pattern) {
 }
 
 /**
- * Checks if a target file or directory path matches any .gravitonignore pattern.
+ * Checks if a target file or directory path matches any .gravignore pattern.
  * @param {string} targetPath - File or folder path (absolute or relative)
  * @param {string[]} patterns - Array of ignore patterns
  * @param {string} cwd - Base working directory
  * @returns {boolean} True if the path must be bypassed
  */
-export function isGravitonIgnored(targetPath, patterns = [], cwd = process.cwd()) {
+export function isGravIgnored(targetPath, patterns = [], cwd = process.cwd()) {
   if (!patterns || patterns.length === 0 || !targetPath) {
     return false;
   }
@@ -127,13 +136,16 @@ export function isGravitonIgnored(targetPath, patterns = [], cwd = process.cwd()
   return false;
 }
 
+// Backward-compatible alias
+export const isGravitonIgnored = isGravIgnored;
+
 /**
  * Creates a reusable, high-performance ignore filter object for a workspace.
  * @param {string} cwd
  * @returns {{ patterns: string[], isIgnored: (targetPath: string) => boolean }}
  */
-export function createGravitonFilter(cwd = process.cwd()) {
-  const patterns = loadGravitonIgnore(cwd);
+export function createGravFilter(cwd = process.cwd()) {
+  const patterns = loadGravIgnore(cwd);
   const matchers = patterns.map(compilePattern);
 
   return {
@@ -156,3 +168,6 @@ export function createGravitonFilter(cwd = process.cwd()) {
     }
   };
 }
+
+// Backward-compatible alias
+export const createGravitonFilter = createGravFilter;

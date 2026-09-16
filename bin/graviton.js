@@ -182,12 +182,12 @@ async function main() {
       saveStats({ commandsRun: 0, promptsOptimized: 0, tokensSaved: 0, linesFiltered: 0 });
     }
 
-    const localIgnore = path.join(process.cwd(), '.gravitonignore');
+    const localIgnore = path.join(process.cwd(), '.gravignore');
     let ignoreStatus = 'Found';
     if (!fs.existsSync(localIgnore)) {
-      const defaultIgnore = `# Graviton Ignore Rules (.gravitonignore)\n# Patterns matched here are strictly bypassed during file hydration and dependency scraping.\n\n# Sensitive credentials\n.env*\n*.pem\n*.key\nsecrets/\n\n# Build & dependency noise\nnode_modules/\ndist/\nbuild/\ncoverage/\n*.log\n\n# Minified bundles\n*.min.js\n*.min.css\n`;
+      const defaultIgnore = `# Graviton Ignore Rules (.gravignore)\n# Patterns matched here are strictly bypassed during file hydration and dependency scraping.\n\n# Sensitive credentials\n.env*\n*.pem\n*.key\nsecrets/\n\n# Build & dependency noise\nnode_modules/\ndist/\nbuild/\ncoverage/\n*.log\n\n# Minified bundles\n*.min.js\n*.min.css\n`;
       fs.writeFileSync(localIgnore, defaultIgnore, 'utf8');
-      ignoreStatus = 'Created (.gravitonignore)';
+      ignoreStatus = 'Created (.gravignore)';
     }
 
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON INITIALIZATION ===\x1b[0m`);

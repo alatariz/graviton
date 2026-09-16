@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { loadGravitonIgnore, isGravitonIgnored, createGravitonFilter } from './ignore-parser.js';
+import { loadGravIgnore, isGravIgnored, createGravFilter, loadGravitonIgnore, isGravitonIgnored, createGravitonFilter } from './ignore-parser.js';
 import { getTelemetry, recordTelemetry, formatTelemetryDashboard } from './telemetry.js';
 import fs from 'fs';
 import path from 'path';
@@ -971,4 +971,14 @@ if (process.argv[1]) {
   } catch {}
 }
 
-export { loadGravitonIgnore, isGravitonIgnored, createGravitonFilter, getTelemetry, recordTelemetry, formatTelemetryDashboard };
+export {
+  loadGravIgnore,
+  isGravIgnored,
+  createGravFilter,
+  loadGravitonIgnore,
+  isGravitonIgnored,
+  createGravitonFilter,
+  getTelemetry,
+  recordTelemetry,
+  formatTelemetryDashboard
+};

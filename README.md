@@ -177,8 +177,8 @@ Graviton's engine operates completely within local Node.js standard libraries (`
   ```
 - **Bounded JSON Whitelist**: Whitelists structural JSON payloads while blocking multi-megabyte serialized JSON dumps, preserving stack traces and valid config objects while incinerating log spam.
 
-### 4. Custom `.gravitonignore` Rule Engine
-- **Workspace Security & Context Sanitation**: Automatically parses `.gravitonignore` in your project root (`process.cwd()`).
+### 4. Custom `.gravignore` Rule Engine
+- **Workspace Security & Context Sanitation**: Automatically parses `.gravignore` in your project root (`process.cwd()`).
 - **Zero-Dependency Pattern Matching**: Strips comments (`#`), blank lines, and evaluates directory boundaries and glob wildcards (`*.key`, `secrets/`, `.env*`).
 - **Strict Hydration Bypass**: Any matching path is completely excluded from file hydration, shallow dependency scraping, and workspace mapping, preventing sensitive data or noisy files from entering LLM context.
 

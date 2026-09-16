@@ -3,9 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import {
+  loadGravIgnore,
   loadGravitonIgnore,
   compilePattern,
+  isGravIgnored,
   isGravitonIgnored,
+  createGravFilter,
   createGravitonFilter
 } from '../src/ignore-parser.js';
 import {
@@ -19,19 +22,19 @@ import {
   buildWorkspaceMap
 } from '../src/pipeline.js';
 
-console.log('\n=== STARTING V1.7.0 TEST SUITE ===\n');
+console.log('\n=== STARTING V1.7.0 TEST SUITE (.gravignore) ===\n');
 
 // -------------------------------------------------------------
-// 1. .gravitonignore Parser Unit Tests
+// 1. .gravignore Parser Unit Tests
 // -------------------------------------------------------------
-console.log('[TEST 1] .gravitonignore Parsing and Pattern Compilation');
+console.log('[TEST 1] .gravignore Parsing and Pattern Compilation');
 
 const tmpDir = path.join(os.tmpdir(), 'graviton-v170-test-' + Date.now());
 fs.mkdirSync(tmpDir, { recursive: true });
 
-// Create a realistic .gravitonignore
+// Create a realistic .gravignore
 const ignoreContent = `
-# Graviton Ignore Rules
+# Graviton Ignore Rules (.gravignore)
 # Security & Credentials
 .env*
 *.key
@@ -48,23 +51,30 @@ coverage/
 temp*
 `;
 
-fs.writeFileSync(path.join(tmpDir, '.gravitonignore'), ignoreContent, 'utf8');
+fs.writeFileSync(path.join(tmpDir, '.gravignore'), ignoreContent, 'utf8');
 
-const loadedPatterns = loadGravitonIgnore(tmpDir);
+const loadedPatterns = loadGravIgnore(tmpDir);
 assert.strictEqual(loadedPatterns.length, 9, 'Should load exactly 9 non-empty, non-comment patterns');
 assert.ok(loadedPatterns.includes('secrets/'), 'Should contain secrets/');
 assert.ok(loadedPatterns.includes('*.key'), 'Should contain *.key');
-console.log('  ✔ loadGravitonIgnore correctly ignores comments and blank lines');
 
-// Test isGravitonIgnored matching
-assert.strictEqual(isGravitonIgnored('secrets/credentials.json', loadedPatterns, tmpDir), true, 'secrets/* should be ignored');
-assert.strictEqual(isGravitonIgnored('sub/secrets/key.pem', loadedPatterns, tmpDir), true, 'Nested secrets/ should be ignored');
-assert.strictEqual(isGravitonIgnored('server.key', loadedPatterns, tmpDir), true, '*.key should be ignored');
-assert.strictEqual(isGravitonIgnored('client.pem', loadedPatterns, tmpDir), true, '*.pem should be ignored');
-assert.strictEqual(isGravitonIgnored('bundle.min.js', loadedPatterns, tmpDir), true, '*.min.js should be ignored');
-assert.strictEqual(isGravitonIgnored('temp_cache.tmp', loadedPatterns, tmpDir), true, 'temp* should be ignored');
-assert.strictEqual(isGravitonIgnored('src/auth.js', loadedPatterns, tmpDir), false, 'src/auth.js should NOT be ignored');
-assert.strictEqual(isGravitonIgnored('package.json', loadedPatterns, tmpDir), false, 'package.json should NOT be ignored');
+// Test alias
+const aliasPatterns = loadGravitonIgnore(tmpDir);
+assert.strictEqual(aliasPatterns.length, 9, 'loadGravitonIgnore alias should work identical to loadGravIgnore');
+console.log('  ✔ loadGravIgnore & alias correctly ignore comments and blank lines');
+
+// Test isGravIgnored matching
+assert.strictEqual(isGravIgnored('secrets/credentials.json', loadedPatterns, tmpDir), true, 'secrets/* should be ignored');
+assert.strictEqual(isGravIgnored('sub/secrets/key.pem', loadedPatterns, tmpDir), true, 'Nested secrets/ should be ignored');
+assert.strictEqual(isGravIgnored('server.key', loadedPatterns, tmpDir), true, '*.key should be ignored');
+assert.strictEqual(isGravIgnored('client.pem', loadedPatterns, tmpDir), true, '*.pem should be ignored');
+assert.strictEqual(isGravIgnored('bundle.min.js', loadedPatterns, tmpDir), true, '*.min.js should be ignored');
+assert.strictEqual(isGravIgnored('temp_cache.tmp', loadedPatterns, tmpDir), true, 'temp* should be ignored');
+assert.strictEqual(isGravIgnored('src/auth.js', loadedPatterns, tmpDir), false, 'src/auth.js should NOT be ignored');
+assert.strictEqual(isGravIgnored('package.json', loadedPatterns, tmpDir), false, 'package.json should NOT be ignored');
+
+// Test alias isGravitonIgnored
+assert.strictEqual(isGravitonIgnored('server.key', loadedPatterns, tmpDir), true, 'isGravitonIgnored alias should return true');
 
 console.log('  ✔ Pattern matcher handles wildcards, directory prefixes, and file names accurately');
 
@@ -100,19 +110,19 @@ assert.ok(!superPrompt.includes('SUPER_SECRET_PRIVATE_KEY_DATA'), 'secrets/priva
 assert.ok(!superPrompt.includes('API_KEY_12345'), 'secret_token.key content must be completely bypassed');
 assert.ok(!superPrompt.includes('[AUTO-INJECTED FILE: secrets/private.key]'), 'Ignored file header must not be injected');
 
-console.log('  ✔ File hydration and dependency scraping strictly bypass .gravitonignore files');
+console.log('  ✔ File hydration and dependency scraping strictly bypass .gravignore files');
 
 // -------------------------------------------------------------
 // 3. Workspace Map Ignore Filtering Tests
 // -------------------------------------------------------------
-console.log('\n[TEST 3] Workspace Map respects .gravitonignore');
+console.log('\n[TEST 3] Workspace Map respects .gravignore');
 
 const wsMap = buildWorkspaceMap(tmpDir);
 assert.ok(!wsMap.includes('secrets/'), 'secrets/ directory must be excluded from workspace map');
 assert.ok(!wsMap.includes('secret_token.key'), 'secret_token.key must be excluded from workspace map');
 assert.ok(wsMap.includes('safe.js'), 'safe.js must remain visible in workspace map');
 
-console.log('  ✔ Workspace map prunes all .gravitonignore patterns');
+console.log('  ✔ Workspace map prunes all .gravignore patterns');
 
 // -------------------------------------------------------------
 // 4. Local Telemetry & Dashboard Tests
