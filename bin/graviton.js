@@ -59,7 +59,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V1.8.1 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V1.8.3 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -148,12 +148,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.8.1';
+    let version = '1.8.3';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.8.1 Bulletproof I/O)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.8.3 Rock-Solid Relay)`);
     process.exit(0);
   }
 
@@ -308,7 +308,8 @@ async function main() {
   copyToClipboard(superPrompt);
 
   const result = runAntigravityWithAutoAllow(superPrompt, {
-    continueSession: isContinue
+    continueSession: isContinue,
+    isDeep
   });
 
   if (result && result.error) {
@@ -316,9 +317,13 @@ async function main() {
     process.exit(1);
   }
 
+  if (result && result.status !== 0 && result.status !== null) {
+    process.exit(result.status);
+  }
+
   const odo = readOdometer();
   console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
-  process.exit((result && result.status !== null) ? result.status : 0);
+  process.exit(0);
 }
 
 main().catch(err => {
