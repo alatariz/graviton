@@ -357,7 +357,11 @@ async function main() {
   }
 
   const odo = readOdometer();
-  console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
+  const activeSession = getWorkspaceSession(currentCwd);
+  const sessionTag = activeSession && activeSession.conversationId
+    ? `Session: ${activeSession.conversationId.slice(0, 8)}... | `
+    : '';
+  console.log(`\x1b[32m✔ Execution complete. (${sessionTag}Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
   process.exit(0);
 }
 
