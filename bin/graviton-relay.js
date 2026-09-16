@@ -76,7 +76,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
   const child = spawn(agyExecutable, args, {
     stdio: ['pipe', process.stdout, process.stderr],
-    shell: false
+    shell: true
   });
 
   // Programmatically write promptText into child.stdin and close stream

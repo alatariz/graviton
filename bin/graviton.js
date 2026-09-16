@@ -1,5 +1,11 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.5.1 Interceptor Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.6.1 Interceptor Autonomous Execution Layer
+
+process.on('uncaughtException', (err) => {
+  const message = err && err.message ? err.message : String(err);
+  console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
+  process.exit(1);
+});
 
 import { spawn } from 'child_process';
 import fs from 'fs';
@@ -143,7 +149,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.6.0 Open-Source Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.6.1 Open-Source Architecture)`);
     process.exit(0);
   }
 
@@ -309,6 +315,7 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('\x1b[31mGraviton Error:\x1b[0m', err);
+  const message = err && err.message ? err.message : String(err);
+  console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
   process.exit(1);
 });

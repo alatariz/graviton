@@ -927,6 +927,11 @@ if (process.argv[1]) {
   try {
     const isDirectCli = path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
     if (isDirectCli) {
+      process.on('uncaughtException', (err) => {
+        const message = err && err.message ? err.message : String(err);
+        console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
+        process.exit(1);
+      });
       import('../bin/graviton.js');
     }
   } catch {}
