@@ -8,7 +8,7 @@ import { purgeOldBackups } from '../src/pipeline.js';
  * On Windows (win32), command must explicitly be appended with '.cmd' (e.g., 'agy.cmd' or 'antigravity.cmd').
  * For other platforms, uses the standard command (e.g., 'agy').
  */
-export function getCrossPlatformCommand(cmd = 'agy') {
+export function getCrossPlatformCommand(cmd = 'antigravity') {
   if (process.platform === 'win32') {
     const ext = path.extname(cmd).toLowerCase();
     if (ext === '.cmd' || ext === '.exe' || ext === '.bat') {
@@ -20,12 +20,12 @@ export function getCrossPlatformCommand(cmd = 'agy') {
 }
 
 /**
- * Dynamically resolves the agy executable path across Windows, macOS, and Linux
+ * Dynamically resolves the antigravity executable path across Windows, macOS, and Linux
  * by searching through ~/.gemini/bin, process.env.PATH, and checking platform conventions.
  * On Windows: explicitly resolves to .cmd or .exe
  * On non-Windows: uses standard command name
  */
-export function resolveAgyExecutable(commandName = 'agy') {
+export function resolveAgyExecutable(commandName = 'antigravity') {
   const isWindows = process.platform === 'win32';
   const defaultCommand = getCrossPlatformCommand(commandName);
 
@@ -98,7 +98,7 @@ export function resolveAgyExecutable(commandName = 'agy') {
  * - On non-Windows: spawn command is baseCommand, args are originalArgs, shell: false.
  */
 export function getSpawnConfig(options = {}) {
-  const baseCommand = options.command || 'agy';
+  const baseCommand = options.command || 'antigravity';
   const originalArgs = [
     '--dangerously-skip-permissions',
     '--effort', options.effort || 'high',
