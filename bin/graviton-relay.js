@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { purgeOldBackups } from '../src/pipeline.js';
+import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -93,9 +93,9 @@ export function resolveAgyExecutable(commandName = 'antigravity') {
 /**
  * Computes spawn configuration dynamically checking the OS.
  * Windows Node.js Security Patch:
- * - On Windows (win32): spawn command is 'cmd.exe', args are ['/c', baseCommand, ...originalArgs], shell: false.
- *   This avoids EINVAL when spawning .cmd files and eliminates DEP0190 deprecation warning.
- * - On non-Windows: spawn command is baseCommand, args are originalArgs, shell: false.
+ * - On Windows (win32): uses the Single String Shell approach (spawn(fullCmd, [], { shell: true }))
+ *   to eliminate argument truncation, bypass EINVAL on .cmd files, and avoid DEP0190 warnings.
+ * - On non-Windows: standard spawn(baseCommand, originalArgs, { shell: false }).
  */
 export function getSpawnConfig(options = {}) {
   const baseCommand = options.command || 'antigravity';
@@ -110,34 +110,37 @@ export function getSpawnConfig(options = {}) {
   }
 
   const isWindows = process.platform === 'win32';
-  const spawnCmd = isWindows ? 'cmd.exe' : baseCommand;
-  const spawnArgs = isWindows ? ['/c', baseCommand, ...originalArgs] : originalArgs;
+  const fullCmd = baseCommand + (originalArgs.length > 0 ? ' ' + originalArgs.join(' ') : '');
+  const spawnCmd = isWindows ? fullCmd : baseCommand;
+  const spawnArgs = isWindows ? [] : originalArgs;
+  const shell = isWindows ? true : false;
 
   return {
     baseCommand,
     originalArgs,
+    fullCmd,
     spawnCmd,
-    spawnArgs
+    spawnArgs,
+    shell
   };
 }
 
 /**
  * Executes Antigravity with full terminal I/O streaming.
  *
- * Graviton V1.8.0 Execution Vanguard:
- * 1. Strictly sets { stdio: 'inherit' } so terminal streams are connected directly.
- * 2. Wraps execution in a Promise that resolves only on the 'close' or 'exit' event.
- * 3. Timeout Guardrails: 15-minute max execution timeout (forcefully kills child and throws clean error).
- * 4. SIGINT Interceptor: Cleanly kills child process if user presses Ctrl+C, preventing zombie processes.
- * 5. Windows Security Patch: Uses cmd.exe /c with shell: false on Windows, eliminating EINVAL and DEP0190.
+ * Graviton V1.8.1 Bulletproof I/O:
+ * 1. Windows: Single String Shell ('antigravity ' + originalArgs.join(' ')) with { stdio: 'inherit', shell: true }.
+ * 2. Non-Windows: standard spawn with ('antigravity', originalArgs, { stdio: 'inherit', shell: false }).
+ * 3. Error Catching: .on('error', (err) => console.error('[GRAVITON CRASH]', err)).
+ * 4. Exit Code Logging: .on('close'), if code !== 0 logs bold red [GRAVITON ERROR]; if code === 0 resolves and prints success.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
 
-  const { spawnCmd, spawnArgs } = getSpawnConfig(options);
+  const { baseCommand, originalArgs, fullCmd } = getSpawnConfig(options);
 
-  // Ensure ~/.gemini/bin is in PATH for seamless cmd.exe resolution
+  // Ensure ~/.gemini/bin is in PATH for seamless executable resolution
   const homeDir = process.env.USERPROFILE || process.env.HOME || '';
   const geminiBin = homeDir ? path.join(homeDir, '.gemini', 'bin') : '';
   let env = process.env;
@@ -153,13 +156,23 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   const timeoutMs = options.timeoutMs || (15 * 60 * 1000); // 15-minute max execution timeout
 
   return new Promise((resolve, reject) => {
-    // 1 & 2. In child_process.spawn options, strictly set { stdio: 'inherit' }
-    const spawnStdio = options.stdio || 'inherit';
-    const child = spawn(spawnCmd, spawnArgs, {
-      stdio: spawnStdio,
-      shell: false,
-      env
-    });
+    let child;
+    const stdioMode = options.stdio || 'inherit';
+
+    // 1 & 2. OS Check: Single String Shell on Windows, standard spawn on non-Windows
+    if (process.platform === 'win32') {
+      child = spawn(fullCmd, [], {
+        stdio: stdioMode,
+        shell: true,
+        env
+      });
+    } else {
+      child = spawn(baseCommand, originalArgs, {
+        stdio: stdioMode,
+        shell: false,
+        env
+      });
+    }
 
     let settled = false;
 
@@ -183,7 +196,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       process.removeListener('SIGTERM', sigtermHandler);
     };
 
-    // 3. Timeout Guardrails: 15-minute max execution timeout
+    // Timeout Guardrails: 15-minute max execution timeout
     const timeoutTimer = setTimeout(() => {
       if (settled) return;
       settled = true;
@@ -192,7 +205,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       reject(new Error('Antigravity execution timed out after 15 minutes (max execution guardrail exceeded).'));
     }, timeoutMs);
 
-    // 4. SIGINT Interceptor: cleanly kill child process on Ctrl+C to prevent zombie background processes
+    // SIGINT Interceptor: cleanly kill child process on Ctrl+C to prevent zombie background processes
     const sigintHandler = () => {
       killChildProcess('SIGINT');
       cleanup();
@@ -208,32 +221,33 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     process.on('SIGINT', sigintHandler);
     process.on('SIGTERM', sigtermHandler);
 
-    // Write prompt text into stdin if stdin stream exists (e.g. piped stdio)
-    if (child.stdin && promptText) {
-      try {
-        child.stdin.write(promptText);
-        child.stdin.end();
-      } catch {}
-    }
-
-    // Handle spawn error (e.g. executable not found ENOENT)
+    // 3. Error Catching: Add a .on('error', (err) => console.error('[GRAVITON CRASH]', err)) listener
     child.on('error', (err) => {
+      console.error('[GRAVITON CRASH]', err);
       if (settled) return;
       settled = true;
       cleanup();
       reject(err);
     });
 
-    // 2. Wrap execution in Promise that resolves only on 'close' or 'exit' event
-    const handleCompletion = (code, signal) => {
+    // 4. Exit Code Logging: Inside the .on('close') event
+    child.on('close', (code) => {
       if (settled) return;
       settled = true;
       cleanup();
-      const exitCode = code !== null ? code : (signal ? 1 : 0);
-      resolve(exitCode);
-    };
 
-    child.on('exit', handleCompletion);
-    child.on('close', handleCompletion);
+      if (code !== 0) {
+        console.log(`\x1b[1;31m[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}\x1b[0m`);
+        if (options.rejectOnError) {
+          reject(new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
+        } else {
+          process.exit(code || 1);
+        }
+      } else {
+        const odo = readOdometer();
+        console.log(`\x1b[32m✔ Execution complete. (Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
+        resolve(0);
+      }
+    });
   });
 }
