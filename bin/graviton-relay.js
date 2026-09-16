@@ -4,6 +4,8 @@ import path from 'path';
 import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pipeline.js';
 import { getLatestConversationId, saveWorkspaceSession } from '../src/session-manager.js';
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
+import { inspectSessionFiles } from '../src/sanity-guard.js';
+import { trackSessionTurn, checkCompactionStatus } from '../src/session-compactor.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -320,6 +322,19 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
     const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
     saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
+
+    // V2.0 Track turn metrics
+    const odo = readOdometer();
+    trackSessionTurn(executionCwd, odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
+
+    // V2.0 Post-execution Syntax Sanity Guard
+    inspectSessionFiles(executionCwd);
+
+    // V2.0 Session Compactor Advisory
+    const comp = checkCompactionStatus(executionCwd);
+    if (comp && comp.advise) {
+      console.log(comp.message);
+    }
   } catch {}
 
   // Handle spawn errors

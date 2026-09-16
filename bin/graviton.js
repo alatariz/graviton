@@ -19,6 +19,8 @@ import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 import { getWorkspaceSession, clearWorkspaceSession } from '../src/session-manager.js';
 import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts } from '../src/port-guard.js';
+import { startChatRepl } from '../src/chat-repl.js';
+import { compactWorkspaceSession } from '../src/session-compactor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,7 +64,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V1.9.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V2.0.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -130,6 +132,8 @@ async function main() {
 
 \x1b[1mCOMMANDS\x1b[0m
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
+  \x1b[32mchat\x1b[0m, \x1b[32mrepl\x1b[0m               Launch interactive REPL chat session (no quoting hassle in Windows)
+  \x1b[32mcompact\x1b[0m                  Compact long continuous session to refresh context window & save tokens
   \x1b[32mundo\x1b[0m, \x1b[32mrollback\x1b[0m         Revert files modified or created during the most recent AI session
   \x1b[32mstart\x1b[0m <cmd...>           Launch long-running dev server cleanly as background daemon (non-hanging)
   \x1b[32mstop\x1b[0m [port|all]         Terminate background daemon or free blocked development port
@@ -145,26 +149,26 @@ async function main() {
   \x1b[32mversion\x1b[0m, \x1b[32m-v\x1b[0m             Display Graviton CLI version
 
 \x1b[1mEXAMPLES\x1b[0m
-  # Synthesize prompt and execute with Antigravity:
+  # Interactive REPL mode:
+  graviton chat
+
+  # Synthesize prompt with Smart Target Scope and execute:
   graviton "Refactor auth.js to handle session expiration"
 
-  # Deep precision architecture synthesis:
-  graviton --deep "Build webhook handler for Stripe payments"
-
-  # Pipe terminal outputs to Graviton:
-  git status | graviton
+  # Compact long session context:
+  graviton compact
 `);
     process.exit(0);
   }
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '1.8.4';
+    let version = '2.0.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.8.4 Autonomous Relay)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.0.0 Intelligent Context Engine)`);
     process.exit(0);
   }
 
@@ -295,6 +299,24 @@ async function main() {
     process.exit(0);
   }
 
+  // 5f. INTERACTIVE REPL CHAT (V2.0.0)
+  if (command === 'chat' || command === 'repl' || command === 'interactive') {
+    await startChatRepl({ cwd: process.cwd(), isDeep });
+    return;
+  }
+
+  // 5g. SMART SESSION COMPACTOR (V2.0.0)
+  if (command === 'compact' || command === '--compact') {
+    console.log('\x1b[36m[GRAVITON]\x1b[0m Compacting active workspace session...');
+    const res = compactWorkspaceSession(process.cwd());
+    if (res.success) {
+      console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+    } else {
+      console.log(`\x1b[33m[!] ${res.message}\x1b[0m`);
+    }
+    process.exit(0);
+  }
+
   // 6. SERVE WEB STUDIO (Optional Local Web Dashboard)
   if (command === 'serve' || command === '--serve') {
     const webServerPath = path.join(__dirname, '..', 'web', 'server.js');
@@ -403,7 +425,7 @@ async function main() {
     }
   }
 
-  const superPrompt = constructSuperPrompt(input, currentCwd);
+  const superPrompt = constructSuperPrompt(input, currentCwd, { isContinuous: continueSession });
 
   const stats = loadStats();
   stats.promptsOptimized++;

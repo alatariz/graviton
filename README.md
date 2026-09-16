@@ -11,7 +11,7 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-1.9.0-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 1.9.0" /></a>
+    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-2.0.0-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 2.0.0" /></a>
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
@@ -106,11 +106,13 @@ graviton stats
 
 | Capability | Standard Antigravity CLI (`agy`) | With Graviton (`graviton` / `grav`) | Efficiency Gain |
 | :--- | :--- | :--- | :--- |
+| **Directory Exploration** | Loops through `list_dir` / `grep` scans (30s+ wait, thousands of tokens) | **Smart Target Pinning**: Direct file resolution in 5ms, 0 tokens | **10x faster execution (3s vs 30s)** |
+| **Continuous Chat** | Sends full redundant workspace trees and accumulates bloated context | **Delta Prompting & Compactor**: Prunes trees on follow-up turns | **-80% token waste per turn** |
+| **AI Code Integrity** | Broken syntax or typos remain unnoticed until runtime crashes | **Syntax Sanity Guard**: Instant `node --check` post-run validation | **100% immediate syntax alert** |
 | **Terminal Output** | Raw output dumped directly into context (1,000+ lines) | Deduplicated, ANSI-stripped, traceback-isolated | **-99.5% token noise** |
 | **Minified Files** | Ingests `.min.js` / `.min.css` (30k+ tokens incinerated) | The Minified Shield intercepts & replaces with token-safe descriptor | **100% token bomb protection** |
-| **Context Window** | Diluted with conversational filler, compilations, and warnings | Maximized Signal-to-Noise Ratio with AST file hydration | **10x deeper reasoning headroom** |
-| **Execution Speed** | Manual prompt typing with quotes and confirmation dialogs | Quote-free syntax + continuous background Auto-Allow (`--dangerously-skip-permissions`) | **Autonomous flow** |
-| **Local Safety** | Git working tree pollution from auto-stash | Detached background OS shadow copies (`~/.graviton/backups/`) with auto-GC | **Zero Git pollution** |
+| **Execution Speed** | Manual prompt typing with quotes and confirmation dialogs | Interactive REPL (`graviton chat`) + background Auto-Allow | **Zero quoting friction** |
+| **Local Safety** | Git working tree pollution from auto-stash | Safety Rollback Guard (`graviton undo`) + shadow backups | **One-click instant undo** |
 | **Runtime Cost** | Consumes external tokens for intermediate middleware | 100% pure offline Node.js V8 standard library (0 API keys) | **$0.00 external cost** |
 
 ---
@@ -229,13 +231,21 @@ Graviton dynamically detects task intents in your prompts and automatically inje
 
 | Command | Shorthand | Purpose |
 | :--- | :--- | :--- |
-| `graviton <prompt>` | `grav <prompt>` | Primary entrypoint: quote-free prompt aggregation and execution |
-| `graviton --deep <prompt>` | `grav -d <prompt>` | Triggers deep architectural reasoning mode with high-rigor planning |
-| `graviton run <cmd>` | `grav run <cmd>` | Executes shell command, strips terminal noise, and feeds tracebacks to Antigravity |
-| `graviton pipe <file>` | `grav pipe <file>` | Sanitizes input file and attaches it to prompt context |
+| `graviton "<prompt>"` | `grav "<prompt>"` | Primary entrypoint: Smart Target Scoping & execution with Auto-Allow |
+| `graviton chat` | `grav chat` | Interactive REPL chat session (quote-free, conversational workflow) |
+| `graviton compact` | `grav compact` | Compacts long continuous session to refresh context window & save tokens |
+| `graviton undo` | `grav undo` | Instant Safety Rollback: restores modified files & removes AI-created files |
+| `graviton start <cmd>` | `grav start <cmd>` | Detached background dev server launcher (non-hanging terminal) |
+| `graviton stop [port\|all]`| `grav stop [port\|all]`| Terminates background server or frees occupied dev port |
+| `graviton ports` | `grav ports` | Scans common dev ports (3000, 5173, 8000, 8080) for active processes |
+| `graviton --deep "<prompt>"`| `grav -d "<prompt>"` | High-rigor planning mode for complex technical architecture |
+| `graviton -c "<prompt>"` | `grav -c "<prompt>"` | Resumes previous session with Delta Prompting (prunes redundant tree) |
+| `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Starts fresh session in current workspace (clears previous session) |
 | `graviton stats` | `grav stats` | Displays lifetime telemetry dashboard, files shielded, and tokens saved |
-| `graviton init` | `grav init` | Generates recommended `.gravitonrc` configuration in the current directory |
-| `graviton doctor` | `grav doctor` | Verifies Node.js runtime, `agy` binary location, and environment health |
+| `graviton map` | `grav map` | Renders prioritized workspace directory map with code-density weighting |
+| `graviton run <cmd>` | `grav run <cmd>` | Executes shell command with streamlined noise filtering |
+| `graviton init` | `grav init` | Initializes `~/.graviton` configuration and local Skill Vault |
+| `graviton version` | `grav -v` | Displays Graviton CLI version and engine metadata |
 
 ---
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { loadGravIgnore, isGravIgnored, createGravFilter, loadGravitonIgnore, isGravitonIgnored, createGravitonFilter } from './ignore-parser.js';
 import { getTelemetry, recordTelemetry, formatTelemetryDashboard } from './telemetry.js';
+import { resolveTargetScope } from './context-scoper.js';
+import { getCompactMemoryDirective } from './session-compactor.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -883,19 +885,33 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     ? '\n\n' + allInjected.join('\n\n')
     : '';
 
+  const targetScope = resolveTargetScope(userInput, currentCwd);
+  const compactMemory = getCompactMemoryDirective(currentCwd);
+  const isContinuous = Boolean(options && options.isContinuous);
+
   const systemDirective = `You are Antigravity, executed via Graviton in autonomous mode.
 CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 1. The active workspace and project root is strictly located at [CWD]: "${currentCwd}".
 2. You MUST create all new files, project structures, code, dependencies, and folders strictly INSIDE this [CWD] directory (or relative to it).
 3. NEVER create files or projects in ~/.gemini, in scratch directories, or in any parent/root directory outside [CWD].
 4. When executing terminal commands or running scripts, always execute them in [CWD]. If instructed to run or start a web server/dev process, launch it cleanly in background mode or report the local localhost URL clearly to user.
-5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.`;
+5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.
+6. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.`;
+
+  // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
+  const workspaceBlock = isContinuous
+    ? `[GRAVITON V2.0 SESSION CONTINUITY ACTIVE]\nWorkspace tree already indexed in previous turn. Delta Target Scope applied below.`
+    : workspaceInfo;
+
+  const targetDirectiveBlock = targetScope && targetScope.directive ? `\n\n${targetScope.directive}` : '';
+  const compactMemoryBlock = compactMemory ? `\n\n${compactMemory}` : '';
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
+${compactMemoryBlock}${targetDirectiveBlock}
 
-${workspaceInfo}${injectedFilesBlock}
+${workspaceBlock}${injectedFilesBlock}
 
 [USER INSTRUCTION & ERROR LOG]:
 ${cleanedInput}`.trim();
