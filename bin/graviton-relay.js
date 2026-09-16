@@ -4,65 +4,106 @@ import path from 'path';
 import { purgeOldBackups } from '../src/pipeline.js';
 
 /**
- * Dynamically resolves the agy executable path across Windows, macOS, and Linux
- * by searching through process.env.PATH and checking standard fallback directories.
+ * Resolves the command executable name based on the OS.
+ * On Windows (win32), command must explicitly be appended with '.cmd' (e.g., 'agy.cmd' or 'antigravity.cmd').
+ * For other platforms, uses the standard command (e.g., 'agy').
  */
-export function resolveAgyExecutable() {
+export function getCrossPlatformCommand(cmd = 'agy') {
+  if (process.platform === 'win32') {
+    const ext = path.extname(cmd).toLowerCase();
+    if (ext === '.cmd' || ext === '.exe' || ext === '.bat') {
+      return cmd;
+    }
+    return `${cmd}.cmd`;
+  }
+  return cmd;
+}
+
+/**
+ * Dynamically resolves the agy executable path across Windows, macOS, and Linux
+ * by searching through ~/.gemini/bin, process.env.PATH, and checking platform conventions.
+ * On Windows: explicitly resolves to .cmd or .exe
+ * On non-Windows: uses standard command name
+ */
+export function resolveAgyExecutable(commandName = 'agy') {
   const isWindows = process.platform === 'win32';
-  const binName = 'agy';
-  const pathexts = isWindows
-    ? (process.env.PATHEXT ? process.env.PATHEXT.split(';') : ['.EXE', '.CMD', '.BAT'])
-    : [''];
+  const defaultCommand = getCrossPlatformCommand(commandName);
 
-  const envPath = process.env.PATH || process.env.Path || '';
-  const dirs = envPath.split(path.delimiter);
+  // 1. Explicit environment variable override
+  if (process.env.AGY_PATH && fs.existsSync(process.env.AGY_PATH)) {
+    return process.env.AGY_PATH;
+  }
 
-  for (const dir of dirs) {
-    if (!dir) continue;
-    for (const ext of pathexts) {
-      const candidate = path.join(dir, isWindows ? `${binName}${ext.toLowerCase()}` : binName);
-      try {
-        if (fs.existsSync(candidate)) {
-          if (!isWindows) {
-            fs.accessSync(candidate, fs.constants.X_OK);
-          }
-          return candidate;
-        }
-        if (isWindows && ext) {
-          const upperCandidate = path.join(dir, `${binName}${ext.toUpperCase()}`);
-          if (fs.existsSync(upperCandidate)) {
-            return upperCandidate;
-          }
-        }
-      } catch {
-        // Skip directory if not readable
+  // 2. Check ~/.gemini/bin/ directory
+  const homeDir = process.env.USERPROFILE || process.env.HOME || '';
+  if (homeDir) {
+    if (isWindows) {
+      const winCandidates = [
+        path.join(homeDir, '.gemini', 'bin', `${commandName}.exe`),
+        path.join(homeDir, '.gemini', 'bin', `${commandName}.cmd`),
+        path.join(homeDir, '.gemini', 'bin', `${commandName}.bat`),
+        path.join(homeDir, '.gemini', 'bin', 'antigravity.cmd'),
+        path.join(homeDir, '.gemini', 'bin', 'antigravity.exe')
+      ];
+      for (const candidate of winCandidates) {
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    } else {
+      const unixCandidates = [
+        path.join(homeDir, '.gemini', 'bin', commandName),
+        path.join(homeDir, '.gemini', 'bin', 'antigravity')
+      ];
+      for (const candidate of unixCandidates) {
+        if (fs.existsSync(candidate)) return candidate;
       }
     }
   }
 
-  // Fallback: check ~/.gemini/bin/agy[.exe]
-  const homeDir = process.env.USERPROFILE || process.env.HOME || '';
-  if (homeDir) {
-    const candidate = path.join(homeDir, '.gemini', 'bin', isWindows ? 'agy.exe' : 'agy');
-    if (fs.existsSync(candidate)) {
-      return candidate;
+  // 3. Search in system PATH
+  const envPath = process.env.PATH || process.env.Path || '';
+  const dirs = envPath.split(path.delimiter);
+  const extensions = isWindows
+    ? (process.env.PATHEXT ? process.env.PATHEXT.split(';') : ['.CMD', '.EXE', '.BAT'])
+    : [''];
+
+  for (const dir of dirs) {
+    if (!dir) continue;
+    if (isWindows) {
+      for (const ext of extensions) {
+        const candidate = path.join(dir, `${commandName}${ext.toLowerCase()}`);
+        if (fs.existsSync(candidate)) return candidate;
+        const upperCandidate = path.join(dir, `${commandName}${ext.toUpperCase()}`);
+        if (fs.existsSync(upperCandidate)) return upperCandidate;
+      }
+    } else {
+      const candidate = path.join(dir, commandName);
+      try {
+        if (fs.existsSync(candidate)) {
+          fs.accessSync(candidate, fs.constants.X_OK);
+          return candidate;
+        }
+      } catch {}
     }
   }
 
-  // Default fallback to command name for standard shell resolution
-  return isWindows ? 'agy.cmd' : 'agy';
+  // 4. Default fallback: explicit .cmd on Windows (e.g. agy.cmd or antigravity.cmd), standard command on others
+  return defaultCommand;
 }
 
 /**
  * Executes Antigravity in pure One-Shot mode via Stdin.
  * Writes promptText to child.stdin and immediately closes it (stdin.end()),
  * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
+ *
+ * Uses ironclad cross-platform child_process.spawn without 'shell: true' (avoiding DEP0190),
+ * dynamically resolving .cmd on Windows and passing arguments as a standard array.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
 
-  const agyExecutable = resolveAgyExecutable();
+  const commandName = options.command || 'agy';
+  const agyExecutable = resolveAgyExecutable(commandName);
 
   const args = [
     '--dangerously-skip-permissions',
@@ -74,9 +115,9 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args.push('--continue');
   }
 
+  // Ironclad cross-platform spawn: no shell: true (avoids DEP0190 deprecation warning)
   const child = spawn(agyExecutable, args, {
-    stdio: ['pipe', process.stdout, process.stderr],
-    shell: true
+    stdio: ['pipe', process.stdout, process.stderr]
   });
 
   // Programmatically write promptText into child.stdin and close stream
