@@ -18,7 +18,7 @@ import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 import { getWorkspaceSession, clearWorkspaceSession } from '../src/session-manager.js';
 import { executeRollback } from '../src/rollback-manager.js';
-import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts } from '../src/port-guard.js';
+import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
 import { compactWorkspaceSession } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
@@ -44,22 +44,34 @@ function saveStats(stats) {
 }
 
 function copyToClipboard(text) {
-  const isWin = process.platform === 'win32';
-  if (isWin) {
-    const proc = spawn('clip', { stdio: ['pipe', 'ignore', 'ignore'] });
-    proc.stdin.write(text);
-    proc.stdin.end();
-  } else if (process.platform === 'darwin') {
-    const proc = spawn('pbcopy', { stdio: ['pipe', 'ignore', 'ignore'] });
-    proc.stdin.write(text);
-    proc.stdin.end();
-  } else {
-    try {
+  try {
+    const isWin = process.platform === 'win32';
+    if (isWin) {
+      const proc = spawn('clip', { stdio: ['pipe', 'ignore', 'ignore'] });
+      proc.on('error', () => {});
+      if (proc.stdin) {
+        proc.stdin.on('error', () => {});
+        proc.stdin.write(text);
+        proc.stdin.end();
+      }
+    } else if (process.platform === 'darwin') {
+      const proc = spawn('pbcopy', { stdio: ['pipe', 'ignore', 'ignore'] });
+      proc.on('error', () => {});
+      if (proc.stdin) {
+        proc.stdin.on('error', () => {});
+        proc.stdin.write(text);
+        proc.stdin.end();
+      }
+    } else {
       const proc = spawn('xclip', ['-selection', 'clipboard'], { stdio: ['pipe', 'ignore', 'ignore'] });
-      proc.stdin.write(text);
-      proc.stdin.end();
-    } catch (e) {}
-  }
+      proc.on('error', () => {});
+      if (proc.stdin) {
+        proc.stdin.on('error', () => {});
+        proc.stdin.write(text);
+        proc.stdin.end();
+      }
+    }
+  } catch (e) {}
 }
 
 const rawArgs = process.argv.slice(2);
@@ -73,6 +85,7 @@ async function main() {
 
   // Parse boolean flags
   let isDeep = false;
+  let isFast = false;
   let isContinue = false;
   let isNew = false;
   const filteredArgs = [];
@@ -80,6 +93,8 @@ async function main() {
   for (const arg of rawArgs) {
     if (arg === '--deep') {
       isDeep = true;
+    } else if (arg === '--fast' || arg === '-f') {
+      isFast = true;
     } else if (arg === '-c' || arg === '--continue') {
       isContinue = true;
     } else if (arg === '-n' || arg === '--new' || arg === '--fresh') {
@@ -128,6 +143,7 @@ async function main() {
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
+  \x1b[33m--fast, -f\x1b[0m              Direct ultra-fast execution without planning (effort: low) for quick edits
   \x1b[33m--deep\x1b[0m                  Activate deep precision synthesis for complex technical architecture
   \x1b[33m-c, --continue\x1b[0m          Resume previous workspace session with synthesized prompt & auto-allow
   \x1b[33m-n, --new\x1b[0m               Start a fresh session in the current workspace (clears previous session)
@@ -323,7 +339,7 @@ async function main() {
 
   // 5h. SYSTEM HEALTH DOCTOR (V2.0.0)
   if (command === 'doctor' || command === '--doctor') {
-    const docResult = runDoctor(process.cwd());
+    const docResult = runDoctor(process.cwd(), { fix: rawArgs.includes('--fix') });
     console.log(formatDoctorReport(docResult));
     process.exit(docResult.allHealthy ? 0 : 1);
   }
@@ -451,11 +467,27 @@ async function main() {
 
   copyToClipboard(superPrompt);
 
+  // Port Conflict Auto-Healer (V2.0.0)
+  const isDevServerPrompt = /\b(jalankan|start|nyalakan|run|serve|host)\b/i.test(input) && /\b(dev|server|web|vite|next|app|localhost|port)\b/i.test(input);
+  if (isDevServerPrompt) {
+    const commonPorts = [3000, 5173, 8080];
+    for (const port of commonPorts) {
+      const occupied = findProcessOnPort(port);
+      if (occupied) {
+        console.log(`\x1b[33m[GRAVITON PORT HEALER]\x1b[0m Port ${port} occupied by PID ${occupied.pid}. Auto-freeing...`);
+        killProcessOnPort(port);
+      }
+    }
+  }
+
   const result = runAntigravityWithAutoAllow(superPrompt, {
     conversationId: targetConversationId,
     continueSession,
     cwd: currentCwd,
-    isDeep
+    isDeep,
+    isFast,
+    effort: isFast ? 'low' : (isDeep ? 'high' : 'high'),
+    mode: isFast ? 'accept-edits' : (isDeep ? 'plan' : 'accept-edits')
   });
 
   if (result && result.error) {

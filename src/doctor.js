@@ -10,7 +10,7 @@ import { resolveAgyExecutable } from '../bin/graviton-relay.js';
  * @param {string} cwd
  * @returns {object} Diagnostic results
  */
-export function runDoctor(cwd = process.cwd()) {
+export function runDoctor(cwd = process.cwd(), options = {}) {
   const diagnostics = [];
   let allHealthy = true;
 
@@ -35,8 +35,28 @@ export function runDoctor(cwd = process.cwd()) {
     });
   }
 
+  // Auto-Fix if requested
+  let agyPath = resolveAgyExecutable('agy');
+  if (options && options.fix && (!agyPath || !fs.existsSync(agyPath))) {
+    console.log('\x1b[36m[GRAVITON DOCTOR FIX]\x1b[0m Memulai instalasi otomatis Google Antigravity CLI...');
+    try {
+      if (process.platform === 'win32') {
+        spawnSync('powershell.exe', [
+          '-NoProfile',
+          '-Command',
+          'irm https://antigravity.google/cli/install.ps1 | iex'
+        ], { stdio: 'inherit' });
+      } else {
+        spawnSync('bash', [
+          '-c',
+          'curl -fsSL https://antigravity.google/cli/install.sh | bash'
+        ], { stdio: 'inherit' });
+      }
+      agyPath = resolveAgyExecutable('agy');
+    } catch {}
+  }
+
   // 2. Antigravity CLI (agy) Resolution
-  const agyPath = resolveAgyExecutable('agy');
   if (agyPath && fs.existsSync(agyPath)) {
     let agyVer = '';
     try {
