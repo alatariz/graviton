@@ -7,16 +7,16 @@ console.log('=== TESTING WINDOWS NODE.JS SECURITY PATCH ===\n');
 const configDefault = getSpawnConfig();
 assert.strictEqual(configDefault.spawnCmd, 'cmd.exe', 'On Windows, spawnCmd must strictly be cmd.exe');
 assert.strictEqual(configDefault.spawnArgs[0], '/c', 'First arg must be /c');
-assert.strictEqual(configDefault.spawnArgs[1], 'antigravity', 'Second arg must be default antigravity');
+assert.strictEqual(configDefault.spawnArgs[1], 'agy', 'Second arg must be default agy');
 assert.ok(configDefault.spawnArgs.includes('--dangerously-skip-permissions'), 'Must include originalArgs');
-console.log('  ✔ Windows default config: cmd.exe with args [\'/c\', \'antigravity\', ...originalArgs]');
+console.log('  ✔ Windows default config: cmd.exe with args [\'/c\', \'agy\', ...originalArgs]');
 
-// 2. Test with custom alias 'agy'
-const configAgy = getSpawnConfig({ command: 'agy' });
-assert.strictEqual(configAgy.spawnCmd, 'cmd.exe');
-assert.strictEqual(configAgy.spawnArgs[0], '/c');
-assert.strictEqual(configAgy.spawnArgs[1], 'agy');
-console.log('  ✔ Windows alias config: cmd.exe with args [\'/c\', \'agy\', ...originalArgs]');
+// 2. Test with custom alias 'antigravity'
+const configAntigravity = getSpawnConfig({ command: 'antigravity' });
+assert.strictEqual(configAntigravity.spawnCmd, 'cmd.exe');
+assert.strictEqual(configAntigravity.spawnArgs[0], '/c');
+assert.strictEqual(configAntigravity.spawnArgs[1], 'antigravity');
+console.log('  ✔ Windows alias config: cmd.exe with args [\'/c\', \'antigravity\', ...originalArgs]');
 
 // 3. Test with continueSession & custom options
 const configContinue = getSpawnConfig({ continueSession: true, effort: 'low', mode: 'architect' });
@@ -31,14 +31,14 @@ console.log('  ✔ Options and --continue correctly relayed in args array');
 const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
 try {
   Object.defineProperty(process, 'platform', { value: 'linux' });
-  const linuxConfig = getSpawnConfig({ command: 'agy' });
-  assert.strictEqual(linuxConfig.spawnCmd, 'agy', 'On Linux with custom command, spawnCmd must match');
+  const linuxConfig = getSpawnConfig({ command: 'antigravity' });
+  assert.strictEqual(linuxConfig.spawnCmd, 'antigravity', 'On Linux with custom command, spawnCmd must match');
   assert.strictEqual(linuxConfig.spawnArgs[0], '--dangerously-skip-permissions', 'On Linux, no /c prepended');
   assert.strictEqual(linuxConfig.spawnArgs.length, 5, 'On Linux, length matches originalArgs');
 
   const linuxDefault = getSpawnConfig();
-  assert.strictEqual(linuxDefault.spawnCmd, 'antigravity', 'On Linux default, spawnCmd is antigravity');
-  console.log('  ✔ Non-Windows platforms (Linux/macOS) use base command (antigravity) with originalArgs');
+  assert.strictEqual(linuxDefault.spawnCmd, 'agy', 'On Linux default, spawnCmd is agy');
+  console.log('  ✔ Non-Windows platforms (Linux/macOS) use base command (agy) with originalArgs');
 } finally {
   Object.defineProperty(process, 'platform', originalPlatform);
 }

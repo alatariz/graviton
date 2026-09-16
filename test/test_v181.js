@@ -9,14 +9,14 @@ console.log('[TEST 1] Promise Return & Spawn Options');
 const spawnConfig = getSpawnConfig();
 assert.strictEqual(spawnConfig.shell, true, 'Spawn configuration must set shell: true');
 if (process.platform === 'win32') {
-  assert.ok(spawnConfig.spawnCmd.startsWith('antigravity '), 'Windows spawnCmd must start with antigravity');
+  assert.ok(spawnConfig.spawnCmd.startsWith('agy '), 'Windows spawnCmd must start with agy');
   assert.ok(spawnConfig.spawnCmd.includes('--dangerously-skip-permissions'), 'Windows spawnCmd must contain originalArgs');
   assert.strictEqual(spawnConfig.spawnArgs.length, 0, 'Windows spawnArgs must be empty array');
   console.log('  ✔ Windows config: Single String Shell "' + spawnConfig.spawnCmd + '" with shell: true and empty args');
 } else {
-  assert.strictEqual(spawnConfig.spawnCmd, 'antigravity', 'Non-Windows spawnCmd must be antigravity');
+  assert.strictEqual(spawnConfig.spawnCmd, 'agy', 'Non-Windows spawnCmd must be agy');
   assert.ok(spawnConfig.spawnArgs.includes('--dangerously-skip-permissions'), 'Non-Windows spawnArgs must contain originalArgs');
-  console.log('  ✔ Non-Windows config: standard spawn antigravity with shell: true');
+  console.log('  ✔ Non-Windows config: standard spawn agy with shell: true');
 }
 
 // 2. Test Error Catching & Non-Zero Exit Code Logging

@@ -10,11 +10,11 @@ const spawnConfig = getSpawnConfig();
 if (process.platform === 'win32') {
   assert.strictEqual(spawnConfig.spawnCmd, 'cmd.exe', 'Windows must use cmd.exe');
   assert.strictEqual(spawnConfig.spawnArgs[0], '/c');
-  assert.strictEqual(spawnConfig.spawnArgs[1], 'antigravity', 'Default command must be antigravity');
+  assert.strictEqual(spawnConfig.spawnArgs[1], 'agy', 'Default command must be agy');
 } else {
-  assert.strictEqual(spawnConfig.spawnCmd, 'antigravity', 'Non-Windows must use antigravity');
+  assert.strictEqual(spawnConfig.spawnCmd, 'agy', 'Non-Windows must use agy');
 }
-console.log('  ✔ Spawn configuration correctly targets antigravity');
+console.log('  ✔ Spawn configuration correctly targets agy');
 
 // 2. Test Promise Return & Stdio inherit
 console.log('\n[TEST 2] runAntigravityWithAutoAllow returns a Promise');

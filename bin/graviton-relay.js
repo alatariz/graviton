@@ -8,7 +8,7 @@ import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
  * On Windows (win32), command must explicitly be appended with '.cmd' (e.g., 'agy.cmd' or 'antigravity.cmd').
  * For other platforms, uses the standard command (e.g., 'agy').
  */
-export function getCrossPlatformCommand(cmd = 'antigravity') {
+export function getCrossPlatformCommand(cmd = 'agy') {
   if (process.platform === 'win32') {
     const ext = path.extname(cmd).toLowerCase();
     if (ext === '.cmd' || ext === '.exe' || ext === '.bat') {
@@ -171,7 +171,7 @@ export function resolveAgyExecutable(commandName = 'agy') {
  * - On non-Windows: standard spawn(baseCommand, originalArgs, { shell: false }).
  */
 export function getSpawnConfig(options = {}) {
-  const baseCommand = options.command || 'antigravity';
+  const baseCommand = options.command || 'agy';
   const originalArgs = [
     '--dangerously-skip-permissions',
     '--effort', options.effort || 'high',
