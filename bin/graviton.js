@@ -21,6 +21,8 @@ import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
 import { compactWorkspaceSession } from '../src/session-compactor.js';
+import { runDoctor, formatDoctorReport } from '../src/doctor.js';
+import { getSessionDiff } from '../src/diff-viewer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -133,6 +135,8 @@ async function main() {
 \x1b[1mCOMMANDS\x1b[0m
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
   \x1b[32mchat\x1b[0m, \x1b[32mrepl\x1b[0m               Launch interactive REPL chat session (no quoting hassle in Windows)
+  \x1b[32mdiff\x1b[0m                    Review colorized line-by-line diff of recent modifications made by AI
+  \x1b[32mdoctor\x1b[0m                  Diagnose system health, Node.js runtime, & Antigravity (agy) installation
   \x1b[32mcompact\x1b[0m                  Compact long continuous session to refresh context window & save tokens
   \x1b[32mundo\x1b[0m, \x1b[32mrollback\x1b[0m         Revert files modified or created during the most recent AI session
   \x1b[32mstart\x1b[0m <cmd...>           Launch long-running dev server cleanly as background daemon (non-hanging)
@@ -314,6 +318,20 @@ async function main() {
     } else {
       console.log(`\x1b[33m[!] ${res.message}\x1b[0m`);
     }
+    process.exit(0);
+  }
+
+  // 5h. SYSTEM HEALTH DOCTOR (V2.0.0)
+  if (command === 'doctor' || command === '--doctor') {
+    const docResult = runDoctor(process.cwd());
+    console.log(formatDoctorReport(docResult));
+    process.exit(docResult.allHealthy ? 0 : 1);
+  }
+
+  // 5i. SESSION DIFF REVIEW (V2.0.0)
+  if (command === 'diff' || command === '--diff') {
+    const diffReport = getSessionDiff(process.cwd());
+    console.log(diffReport);
     process.exit(0);
   }
 

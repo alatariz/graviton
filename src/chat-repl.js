@@ -8,10 +8,13 @@ import { executeRollback } from './rollback-manager.js';
 import { listActivePorts, stopDaemonOrPort } from './port-guard.js';
 import { compactWorkspaceSession, checkCompactionStatus } from './session-compactor.js';
 import { inspectSessionFiles } from './sanity-guard.js';
+import { getSessionDiff } from './diff-viewer.js';
+import { runDoctor, formatDoctorReport } from './doctor.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
  * Allows conversational prompts without shell quotation escaping in Windows PowerShell/CMD.
+ * Supports debounced multiline paste buffering so multi-line code/prompts are not fractured.
  * @param {object} options
  */
 export async function startChatRepl(options = {}) {
@@ -21,9 +24,9 @@ export async function startChatRepl(options = {}) {
 \x1b[1m\x1b[36m===============================================================
   GRAVITON V2.0.0 INTERACTIVE REPL CHAT
 ===============================================================\x1b[0m
-\x1b[90mWorkspace : [1m${cwd}\x1b[0m
+\x1b[90mWorkspace : \x1b[1m${cwd}\x1b[0m
 \x1b[90mKetik prompt secara bebas tanpa perlu tanda petik luar ("...").
-Perintah internal: \x1b[33m/undo\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/ports\x1b[90m, \x1b[33m/stop\x1b[90m, \x1b[33m/status\x1b[90m, \x1b[33m/exit\x1b[0m
+Perintah: \x1b[33m/undo\x1b[90m, \x1b[33m/diff\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/ports\x1b[90m, \x1b[33m/stop\x1b[90m, \x1b[33m/doctor\x1b[90m, \x1b[33m/status\x1b[90m, \x1b[33m/exit\x1b[0m
 `);
 
   const rl = readline.createInterface({
@@ -34,8 +37,11 @@ Perintah internal: \x1b[33m/undo\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/por
 
   rl.prompt();
 
-  rl.on('line', async (line) => {
-    const input = line.trim();
+  let pasteBuffer = [];
+  let pasteTimer = null;
+
+  async function handleExecution(rawInput) {
+    const input = rawInput.trim();
 
     if (!input) {
       rl.prompt();
@@ -53,13 +59,29 @@ Perintah internal: \x1b[33m/undo\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/por
       console.log(`
 \x1b[1mDAFTAR PERINTAH REPL:\x1b[0m
   \x1b[33m/undo\x1b[0m         Membatalkan perubahan sesi AI terakhir (Rollback)
+  \x1b[33m/diff\x1b[0m         Tinjau perbedaan baris kode yang baru saja diedit oleh AI
   \x1b[33m/compact\x1b[0m      Meringkas sesi panjang & me-refresh context window
+  \x1b[33m/doctor\x1b[0m       Jalankan diagnosa kesehatan sistem & Google Antigravity
   \x1b[33m/ports\x1b[0m        Cek daftar port dev yang sedang aktif
   \x1b[33m/stop [port]\x1b[0m  Hentikan background server atau bebaskan port
   \x1b[33m/status\x1b[0m       Cek informasi sesi dan token aktif
   \x1b[33m/new\x1b[0m          Reset sesi aktif di workspace ini
   \x1b[33m/exit\x1b[0m         Keluar dari Graviton REPL
 `);
+      rl.prompt();
+      return;
+    }
+
+    if (input === '/diff') {
+      const diffOutput = getSessionDiff(cwd);
+      console.log(diffOutput);
+      rl.prompt();
+      return;
+    }
+
+    if (input === '/doctor') {
+      const docResult = runDoctor(cwd);
+      console.log(formatDoctorReport(docResult));
       rl.prompt();
       return;
     }
@@ -162,6 +184,17 @@ Perintah internal: \x1b[33m/undo\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/por
 
     console.log('');
     rl.prompt();
+  }
+
+  // Handle multiline paste buffering
+  rl.on('line', (line) => {
+    pasteBuffer.push(line);
+    if (pasteTimer) clearTimeout(pasteTimer);
+    pasteTimer = setTimeout(() => {
+      const combined = pasteBuffer.join('\n');
+      pasteBuffer = [];
+      handleExecution(combined);
+    }, 60);
   });
 
   rl.on('close', () => {

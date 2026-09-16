@@ -133,17 +133,23 @@ export function startBackgroundDaemon(commandString, cwd = process.cwd()) {
   const normalizedCwd = path.resolve(cwd);
   let childPid = null;
 
-  // On Windows, use PowerShell Start-Process with -WindowStyle Hidden to prevent Windows Terminal from popping up
+  // On Windows, use PowerShell Start-Process with -WindowStyle Hidden via Base64 -EncodedCommand
+  // to guarantee 100% immune argument escaping (no quote, backtick, or $ variable mangling)
   if (process.platform === 'win32') {
     try {
-      const psCommand = `Start-Process -FilePath "cmd.exe" -ArgumentList "/c ${commandString.replace(/"/g, '`"')}" -WorkingDirectory "${normalizedCwd}" -WindowStyle Hidden -PassThru | Select-Object -ExpandProperty Id`;
+      const b64Cmd = Buffer.from(commandString, 'utf8').toString('base64');
+      const b64Cwd = Buffer.from(normalizedCwd, 'utf8').toString('base64');
+      const psScript = `$cmd = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${b64Cmd}")); $dir = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${b64Cwd}")); Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", $cmd) -WorkingDirectory $dir -WindowStyle Hidden -PassThru | Select-Object -ExpandProperty Id`;
+      const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
+
       const res = spawnSync('powershell.exe', [
         '-NoProfile',
         '-NonInteractive',
         '-WindowStyle', 'Hidden',
-        '-Command',
-        psCommand
+        '-EncodedCommand',
+        encoded
       ], { encoding: 'utf8', windowsHide: true });
+
       const parsedPid = parseInt((res.stdout || '').trim(), 10);
       if (!isNaN(parsedPid) && parsedPid > 0) {
         childPid = parsedPid;

@@ -87,6 +87,31 @@ export function checkFileSyntax(filePath) {
     }
   }
 
+  // 3. Python Files (.py)
+  if (ext === '.py') {
+    try {
+      const pyRes = spawnSync('python', ['-m', 'py_compile', normalizedPath], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      if (pyRes.status !== 0) {
+        const errorText = (pyRes.stderr || pyRes.stdout || '').trim();
+        let line = null;
+        const match = errorText.match(/line (\d+)/i);
+        if (match) line = parseInt(match[1], 10);
+        const lines = errorText.split(/\r?\n/).filter(Boolean);
+        const firstLine = lines.find(l => l.includes('SyntaxError')) || lines[lines.length - 1] || 'Python SyntaxError';
+        return {
+          file: filePath,
+          valid: false,
+          error: firstLine,
+          line,
+          rawError: errorText
+        };
+      }
+    } catch {}
+  }
+
   return { file: filePath, valid: true };
 }
 
