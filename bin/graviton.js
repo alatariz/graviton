@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.7.0 Interceptor Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V2.0.0 Interceptor Autonomous Execution Layer
 
 process.on('uncaughtException', (err) => {
   const message = err && err.message ? err.message : String(err);
@@ -16,7 +16,18 @@ import { getTelemetry, formatTelemetryDashboard, recordTelemetry } from '../src/
 import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
-import { getWorkspaceSession, clearWorkspaceSession } from '../src/session-manager.js';
+import {
+  getWorkspaceSession,
+  clearWorkspaceSession,
+  getWorkspaceConversations,
+  getActiveConversation,
+  setActiveConversation,
+  saveWorkspaceConversation,
+  deleteWorkspaceConversation,
+  formatConversationList,
+  generateConversationTitle,
+  runInteractiveConversationPicker
+} from '../src/session-manager.js';
 import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
@@ -83,22 +94,34 @@ async function main() {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
 
-  // Parse boolean flags
+  // Parse boolean flags and conversation arguments
   let isDeep = false;
   let isFast = false;
-  let isContinue = false;
   let isNew = false;
+  let isConversationMode = false;
+  let conversationAction = null;
+  let conversationTarget = null;
   const filteredArgs = [];
 
-  for (const arg of rawArgs) {
+  for (let i = 0; i < rawArgs.length; i++) {
+    const arg = rawArgs[i];
     if (arg === '--deep') {
       isDeep = true;
     } else if (arg === '--fast' || arg === '-f') {
       isFast = true;
-    } else if (arg === '-c' || arg === '--continue') {
-      isContinue = true;
-    } else if (arg === '-n' || arg === '--new' || arg === '--fresh') {
+    } else if (arg === '-n' || arg === '--n' || arg === '--new' || arg === '--fresh') {
       isNew = true;
+    } else if (arg === '-c' || arg === '--c' || arg === '--conversation' || arg === 'conversation') {
+      isConversationMode = true;
+      const next = rawArgs[i + 1];
+      if (next && (next === 'del' || next === 'delete' || next === 'd' || next === 'rm')) {
+        conversationAction = 'delete';
+        conversationTarget = rawArgs[i + 2] || null;
+        i += 2;
+      } else if (next && /^\d+$/.test(next)) {
+        conversationTarget = next;
+        i++;
+      }
     } else if (arg !== '--dry-run') {
       filteredArgs.push(arg);
     }
@@ -107,7 +130,7 @@ async function main() {
   const command = filteredArgs[0];
 
   // Check if piped from stdin (e.g. `git status | graviton` or `cat prompt.txt | graviton`)
-  if (!process.stdin.isTTY && !command) {
+  if (!process.stdin.isTTY && !command && !isConversationMode) {
     const rawPiped = fs.readFileSync(0, 'utf-8');
     if (rawPiped.trim()) {
       if (rawPiped.includes('On branch') || rawPiped.includes('test') || rawPiped.includes('PASS') || rawPiped.includes('FAIL') || rawPiped.includes('error:')) {
@@ -126,58 +149,92 @@ async function main() {
   // =========================================================================
   // NATIVE COMMAND ROUTER / INTERCEPTOR
   // =========================================================================
-  // Intercept and route internal Graviton utility commands immediately.
-  // Native commands MUST execute internal logic and call process.exit(0).
-  // Under NO circumstances should native commands be sent to constructSuperPrompt
-  // or relayed to the Antigravity child process!
-  // =========================================================================
 
   // 1. HELP / USAGE
-  if (!command || command === 'help' || command === '--help' || command === '-h') {
+  if ((!command && !isConversationMode) || command === 'help' || command === '--help' || command === '-h') {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
 \x1b[1mUSAGE\x1b[0m
   graviton [options] "<prompt>"
   graviton <command> [args...]
+  graviton -c [number] [prompt]
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  \x1b[33m--fast, -f\x1b[0m              Direct ultra-fast execution without planning (effort: low) for quick edits
-  \x1b[33m--deep\x1b[0m                  Activate deep precision synthesis for complex technical architecture
-  \x1b[33m-c, --continue\x1b[0m          Resume previous workspace session with synthesized prompt & auto-allow
-  \x1b[33m-n, --new\x1b[0m               Start a fresh session in the current workspace (clears previous session)
+  \x1b[33m--fast, -f[0m                  Direct ultra-fast execution without planning (effort: low)
+  \x1b[33m--deep[0m                      Activate deep precision synthesis for complex architecture
+  \x1b[33m-c, --c, --conversation[0m     Buka riwayat percakapan (Antigravity IDE History), pilih, atau hapus
+  \x1b[33m-n, --n, --new[0m              Mulai percakapan/obrolan baru secara eksplisit di workspace ini
 
 \x1b[1mCOMMANDS\x1b[0m
-  \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
-  \x1b[32mchat\x1b[0m, \x1b[32mrepl\x1b[0m               Launch interactive REPL chat session (no quoting hassle in Windows)
-  \x1b[32mdiff\x1b[0m                    Review colorized line-by-line diff of recent modifications made by AI
-  \x1b[32mdoctor\x1b[0m                  Diagnose system health, Node.js runtime, & Antigravity (agy) installation
-  \x1b[32mcompact\x1b[0m                  Compact long continuous session to refresh context window & save tokens
-  \x1b[32mundo\x1b[0m, \x1b[32mrollback\x1b[0m         Revert files modified or created during the most recent AI session
-  \x1b[32mstart\x1b[0m <cmd...>           Launch long-running dev server cleanly as background daemon (non-hanging)
-  \x1b[32mstop\x1b[0m [port|all]         Terminate background daemon or free blocked development port
-  \x1b[32mports\x1b[0m                   Scan and display active listening development ports (3000, 5173, etc.)
-  \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
-  \x1b[32mstats\x1b[0m, \x1b[32mgain\x1b[0m             Display lifetime telemetry dashboard & token savings
-  \x1b[32mmap\x1b[0m                     Display workspace directory tree and detected dependencies
-  \x1b[32mclean\x1b[0m "<raw_text>"       Only synthesize prompt & copy to clipboard (do not launch Antigravity)
-  \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with streamlined terminal output filtering
-  \x1b[32mgit\x1b[0m <git_args...>        Shorthand for "graviton run git <git_args>"
-  \x1b[32mtest\x1b[0m <test_args...>      Shorthand for "graviton run test <test_args>"
-  \x1b[32mserve\x1b[0m                    Launch local Web Studio on port 3000
-  \x1b[32mversion\x1b[0m, \x1b[32m-v\x1b[0m             Display Graviton CLI version
+  \x1b[32m"<raw_text>"[0m                [DEFAULT] Synthesize prompt via Graviton Core & execute (chat baru otomatis)
+  \x1b[32mchat[0m, \x1b[32mrepl[0m                   Launch interactive REPL chat session (Antigravity IDE History support)
+  \x1b[32mdiff[0m                        Review colorized line-by-line diff of recent modifications made by AI
+  \x1b[32mdoctor[0m                      Diagnose system health, Node.js runtime, & Antigravity (agy) installation
+  \x1b[32mcompact[0m                     Compact long continuous session to refresh context window & save tokens
+  \x1b[32mundo[0m, \x1b[32mrollback[0m             Revert files modified or created during the most recent AI session
+  \x1b[32mstart[0m <cmd...>               Launch long-running dev server cleanly as background daemon (non-hanging)
+  \x1b[32mstop[0m [port|all]             Terminate background daemon or free blocked development port
+  \x1b[32mports[0m                       Scan and display active listening development ports (3000, 5173, etc.)
+  \x1b[32minit[0m [--global]             Initialize ~/.graviton directory and local Skill Vault
+  \x1b[32mstats[0m, \x1b[32mgain[0m                 Display lifetime telemetry dashboard & token savings
+  \x1b[32mmap[0m                         Display workspace directory tree and detected dependencies
+  \x1b[32mclean[0m "<raw_text>"           Only synthesize prompt & copy to clipboard (do not launch Antigravity)
+  \x1b[32mrun[0m <cmd...>                 Execute CLI command with streamlined terminal output filtering
+  \x1b[32mversion[0m, \x1b[32m-v[0m                 Display Graviton CLI version
 
-\x1b[1mEXAMPLES\x1b[0m
-  # Interactive REPL mode:
-  graviton chat
+\x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
+  # Buka daftar percakapan interaktif (pilih / hapus / buat baru):
+  graviton --c
 
-  # Synthesize prompt with Smart Target Scope and execute:
-  graviton "Refactor auth.js to handle session expiration"
+  # Lanjutkan percakapan nomor 1 di interactive chat:
+  graviton --c 1
 
-  # Compact long session context:
-  graviton compact
+  # Jalankan instruksi langsung pada percakapan nomor 1:
+  graviton --c 1 "tambahkan validasi email di auth.js"
+
+  # Hapus percakapan nomor 2 dari riwayat:
+  graviton --c del 2
+
+  # Mulai percakapan baru secara paksa:
+  graviton -n "buatkan REST API endpoint baru"
 `);
+    process.exit(0);
+  }
+
+  // 1b. CONVERSATION MODE HANDLER (when no prompt is given)
+  if (isConversationMode && filteredArgs.length === 0) {
+    if (conversationAction === 'delete') {
+      if (!conversationTarget) {
+        console.error('\x1b[31mError: Tentukan nomor percakapan yang ingin dihapus (contoh: graviton --c del 2).\x1b[0m');
+        process.exit(1);
+      }
+      const res = deleteWorkspaceConversation(process.cwd(), conversationTarget);
+      if (res.success) {
+        console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+      } else {
+        console.log(`\x1b[31m✖ ${res.message}\x1b[0m`);
+      }
+      process.exit(0);
+    }
+
+    if (conversationTarget) {
+      const selected = setActiveConversation(process.cwd(), conversationTarget);
+      if (selected) {
+        console.log(`\x1b[32m✔ Percakapan [${conversationTarget}] aktif: "${selected.title}" (${selected.id.slice(0, 8)}...)\x1b[0m`);
+        console.log(`\x1b[90mMelanjutkan obrolan dalam mode interaktif REPL...\x1b[0m`);
+        await startChatRepl({ cwd: process.cwd(), isDeep });
+      } else {
+        console.log(`\x1b[31m✖ Nomor percakapan '${conversationTarget}' tidak ditemukan.\x1b[0m`);
+      }
+      process.exit(0);
+    }
+
+    // Launch interactive conversation picker
+    await runInteractiveConversationPicker(process.cwd(), async (selected) => {
+      await startChatRepl({ cwd: process.cwd(), isDeep });
+    });
     process.exit(0);
   }
 
@@ -238,7 +295,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 4. TELEMETRY & STATS DASHBOARD (V1.7.0)
+  // 4. TELEMETRY & STATS DASHBOARD
   if (command === 'gain' || command === 'stats' || command === 'status' || command === '--gain' || command === '--stats' || command === '--status') {
     const dashboard = formatTelemetryDashboard();
     console.log(dashboard);
@@ -254,7 +311,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 5b. SAFETY ROLLBACK GUARD (V1.9.0)
+  // 5b. SAFETY ROLLBACK GUARD
   if (command === 'undo' || command === 'rollback' || command === '--undo' || command === '--rollback') {
     console.log('\x1b[36m[GRAVITON]\x1b[0m Initiating Safety Rollback Guard...');
     const res = executeRollback(process.cwd());
@@ -275,7 +332,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 5c. BACKGROUND DAEMON LAUNCHER (V1.9.0)
+  // 5c. BACKGROUND DAEMON LAUNCHER
   if (command === 'start') {
     const cmdToRun = filteredArgs.slice(1).join(' ');
     if (!cmdToRun) {
@@ -289,7 +346,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 5d. PORT GUARD & DAEMON STOPPER (V1.9.0)
+  // 5d. PORT GUARD & DAEMON STOPPER
   if (command === 'stop') {
     const target = filteredArgs[1] || 'all';
     console.log(`\x1b[36m[GRAVITON]\x1b[0m Stopping daemons / freeing port: \x1b[1m${target}\x1b[0m...`);
@@ -304,7 +361,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 5e. PORT SCANNER (V1.9.0)
+  // 5e. PORT SCANNER
   if (command === 'ports' || command === '--ports') {
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON PORT GUARD: ACTIVE DEV PORTS ===\x1b[0m`);
     const active = listActivePorts();
@@ -319,13 +376,13 @@ async function main() {
     process.exit(0);
   }
 
-  // 5f. INTERACTIVE REPL CHAT (V2.0.0)
+  // 5f. INTERACTIVE REPL CHAT
   if (command === 'chat' || command === 'repl' || command === 'interactive') {
     await startChatRepl({ cwd: process.cwd(), isDeep });
     return;
   }
 
-  // 5g. SMART SESSION COMPACTOR (V2.0.0)
+  // 5g. SMART SESSION COMPACTOR
   if (command === 'compact' || command === '--compact') {
     console.log('\x1b[36m[GRAVITON]\x1b[0m Compacting active workspace session...');
     const res = compactWorkspaceSession(process.cwd());
@@ -337,21 +394,21 @@ async function main() {
     process.exit(0);
   }
 
-  // 5h. SYSTEM HEALTH DOCTOR (V2.0.0)
+  // 5h. SYSTEM HEALTH DOCTOR
   if (command === 'doctor' || command === '--doctor') {
     const docResult = runDoctor(process.cwd(), { fix: rawArgs.includes('--fix') });
     console.log(formatDoctorReport(docResult));
     process.exit(docResult.allHealthy ? 0 : 1);
   }
 
-  // 5i. SESSION DIFF REVIEW (V2.0.0)
+  // 5i. SESSION DIFF REVIEW
   if (command === 'diff' || command === '--diff') {
     const diffReport = getSessionDiff(process.cwd());
     console.log(diffReport);
     process.exit(0);
   }
 
-  // 6. SERVE WEB STUDIO (Optional Local Web Dashboard)
+  // 6. SERVE WEB STUDIO
   if (command === 'serve' || command === '--serve') {
     const webServerPath = path.join(__dirname, '..', 'web', 'server.js');
     if (fs.existsSync(webServerPath)) {
@@ -362,7 +419,7 @@ async function main() {
     return;
   }
 
-  // 6. CLEAN ONLY (Prompt synthesis without Antigravity launch)
+  // 6b. CLEAN ONLY
   if (command === 'clean') {
     let input = filteredArgs.slice(1).join(' ');
     if (!input && !process.stdin.isTTY) {
@@ -379,7 +436,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 7. RUN / GIT / TEST CLI LOG PRUNER (Streamlined terminal output filtering)
+  // 7. RUN / GIT / TEST CLI LOG PRUNER
   if (command === 'run' || command === 'git' || command === 'test') {
     let cmdToRun = command === 'git' ? 'git' : command === 'test' ? 'npm' : filteredArgs[1];
     let cmdArgs = command === 'git' ? filteredArgs.slice(1) : command === 'test' ? ['test', ...filteredArgs.slice(1)] : filteredArgs.slice(2);
@@ -418,7 +475,9 @@ async function main() {
     return;
   }
 
+  // =========================================================================
   // ZERO-TOKEN SUPERPROMPT ASSEMBLY & EXECUTION FLOW
+  // =========================================================================
   let input = command === 'prompt' ? filteredArgs.slice(1).join(' ') : filteredArgs.join(' ');
   if (!input && !process.stdin.isTTY) {
     input = fs.readFileSync(0, 'utf-8');
@@ -433,33 +492,47 @@ async function main() {
   const currentCwd = process.cwd();
   let targetConversationId = null;
   let continueSession = false;
+  let activeTitle = null;
 
   if (isNew) {
     clearWorkspaceSession(currentCwd);
-    console.log(`\x1b[33m[GRAVITON]\x1b[0m Starting fresh session for workspace: \x1b[1m${currentCwd}\x1b[0m`);
-  } else {
-    const existingSession = getWorkspaceSession(currentCwd);
-    if (isContinue) {
-      if (existingSession && existingSession.conversationId) {
-        targetConversationId = existingSession.conversationId;
+    console.log(`\x1b[33m[GRAVITON]\x1b[0m Starting fresh conversation for workspace: \x1b[1m${currentCwd}\x1b[0m`);
+  } else if (isConversationMode) {
+    if (conversationTarget) {
+      const selected = setActiveConversation(currentCwd, conversationTarget);
+      if (selected) {
+        targetConversationId = selected.id;
         continueSession = true;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Resuming workspace session (\x1b[33m${targetConversationId.slice(0, 8)}...\x1b[0m)`);
+        activeTitle = selected.title;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Resuming conversation [${conversationTarget}]: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
       } else {
-        continueSession = true;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing most recent session...`);
+        console.error(`\x1b[31mError: Conversation '${conversationTarget}' not found.\x1b[0m`);
+        process.exit(1);
       }
-    } else if (existingSession && existingSession.conversationId) {
-      // Auto-continue within 24 hours for seamless multi-turn workflow in this workspace
-      const ageHours = (Date.now() - (existingSession.updatedAt || 0)) / (1000 * 60 * 60);
-      if (ageHours < 24) {
-        targetConversationId = existingSession.conversationId;
+    } else {
+      const active = getActiveConversation(currentCwd);
+      if (active && active.id) {
+        targetConversationId = active.id;
         continueSession = true;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing active workspace session (\x1b[33m${targetConversationId.slice(0, 8)}...\x1b[0m) \x1b[90m(use --new for fresh session)\x1b[0m`);
+        activeTitle = active.title;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing conversation: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
+      } else {
+        continueSession = false;
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Belum ada percakapan aktif. Memulai percakapan baru...`);
       }
     }
+  } else {
+    // DEFAULT FLOW: Each new command without -c automatically starts a fresh conversation!
+    continueSession = false;
+    targetConversationId = null;
+    activeTitle = null;
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting new conversation (use \x1b[33m--c\x1b[0m to resume existing topic)...`);
   }
 
-  const superPrompt = constructSuperPrompt(input, currentCwd, { isContinuous: continueSession });
+  const superPrompt = constructSuperPrompt(input, currentCwd, {
+    isContinuous: continueSession,
+    conversationTitle: activeTitle
+  });
 
   const stats = loadStats();
   stats.promptsOptimized++;
@@ -467,7 +540,7 @@ async function main() {
 
   copyToClipboard(superPrompt);
 
-  // Port Conflict Auto-Healer (V2.0.0)
+  // Port Conflict Auto-Healer
   const isDevServerPrompt = /\b(jalankan|start|nyalakan|run|serve|host)\b/i.test(input) && /\b(dev|server|web|vite|next|app|localhost|port)\b/i.test(input);
   if (isDevServerPrompt) {
     const commonPorts = [3000, 5173, 8080];
@@ -500,9 +573,9 @@ async function main() {
   }
 
   const odo = readOdometer();
-  const activeSession = getWorkspaceSession(currentCwd);
-  const sessionTag = activeSession && activeSession.conversationId
-    ? `Session: ${activeSession.conversationId.slice(0, 8)}... | `
+  const activeSession = getActiveConversation(currentCwd);
+  const sessionTag = activeSession && activeSession.id
+    ? `Topic: "${activeSession.title}" (${activeSession.id.slice(0, 8)}...) | `
     : '';
   console.log(`\x1b[32m✔ Execution complete. (${sessionTag}Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
   process.exit(0);

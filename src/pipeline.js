@@ -888,6 +888,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const targetScope = resolveTargetScope(userInput, currentCwd);
   const compactMemory = getCompactMemoryDirective(currentCwd);
   const isContinuous = Boolean(options && options.isContinuous);
+  const conversationTitle = options && options.conversationTitle ? options.conversationTitle : null;
 
   const systemDirective = `You are Antigravity, executed via Graviton in autonomous mode.
 CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
@@ -905,11 +906,14 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 
   const targetDirectiveBlock = targetScope && targetScope.directive ? `\n\n${targetScope.directive}` : '';
   const compactMemoryBlock = compactMemory ? `\n\n${compactMemory}` : '';
+  const topicDirectiveBlock = conversationTitle
+    ? `\n\n[ACTIVE CONVERSATION TOPIC]: "${conversationTitle}"\nStay strictly focused on resolving tasks within this conversation topic.`
+    : '';
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
-${compactMemoryBlock}${targetDirectiveBlock}
+${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}
 
 ${workspaceBlock}${injectedFilesBlock}
 

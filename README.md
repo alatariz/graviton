@@ -239,8 +239,10 @@ Graviton dynamically detects task intents in your prompts and automatically inje
 | `graviton stop [port\|all]`| `grav stop [port\|all]`| Terminates background server or frees occupied dev port |
 | `graviton ports` | `grav ports` | Scans common dev ports (3000, 5173, 8000, 8080) for active processes |
 | `graviton --deep "<prompt>"`| `grav -d "<prompt>"` | High-rigor planning mode for complex technical architecture |
-| `graviton -c "<prompt>"` | `grav -c "<prompt>"` | Resumes previous session with Delta Prompting (prunes redundant tree) |
-| `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Starts fresh session in current workspace (clears previous session) |
+| `graviton --c` | `grav --c` | Buka riwayat percakapan (Antigravity IDE History), pilih topik, atau hapus |
+| `graviton --c <no> [prompt]` | `grav --c <no>` | Lanjutkan topik percakapan nomor tertentu di interactive chat / dengan prompt |
+| `graviton --c del <no>` | `grav --c del <no>` | Hapus topik percakapan dari riwayat workspace |
+| `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Mulai obrolan baru secara eksplisit di workspace ini (reset konteks) |
 | `graviton stats` | `grav stats` | Displays lifetime telemetry dashboard, files shielded, and tokens saved |
 | `graviton map` | `grav map` | Renders prioritized workspace directory map with code-density weighting |
 | `graviton run <cmd>` | `grav run <cmd>` | Executes shell command with streamlined noise filtering |
