@@ -1,5 +1,5 @@
 // src/port-guard.js - Graviton V1.9.0 Background Daemon & Port Guard
-import { execSync, spawn } from 'child_process';
+import { execSync, spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -131,19 +131,42 @@ export function listActivePorts(commonPorts = [3000, 3001, 4200, 5173, 8000, 808
  */
 export function startBackgroundDaemon(commandString, cwd = process.cwd()) {
   const normalizedCwd = path.resolve(cwd);
-  const child = spawn(commandString, [], {
-    cwd: normalizedCwd,
-    shell: true,
-    detached: true,
-    stdio: 'ignore',
-    windowsHide: true
-  });
+  let childPid = null;
 
-  child.unref();
+  // On Windows, use PowerShell Start-Process with -WindowStyle Hidden to prevent Windows Terminal from popping up
+  if (process.platform === 'win32') {
+    try {
+      const psCommand = `Start-Process -FilePath "cmd.exe" -ArgumentList "/c ${commandString.replace(/"/g, '`"')}" -WorkingDirectory "${normalizedCwd}" -WindowStyle Hidden -PassThru | Select-Object -ExpandProperty Id`;
+      const res = spawnSync('powershell.exe', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-WindowStyle', 'Hidden',
+        '-Command',
+        psCommand
+      ], { encoding: 'utf8', windowsHide: true });
+      const parsedPid = parseInt((res.stdout || '').trim(), 10);
+      if (!isNaN(parsedPid) && parsedPid > 0) {
+        childPid = parsedPid;
+      }
+    } catch {}
+  }
+
+  // Fallback for Unix or if Windows Start-Process was not used
+  if (!childPid) {
+    const child = spawn(commandString, [], {
+      cwd: normalizedCwd,
+      shell: true,
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    });
+    child.unref();
+    childPid = child.pid;
+  }
 
   const daemonRecord = {
-    success: Boolean(child.pid),
-    pid: child.pid,
+    success: Boolean(childPid),
+    pid: childPid,
     command: commandString,
     cwd: normalizedCwd,
     startedAt: Date.now()
