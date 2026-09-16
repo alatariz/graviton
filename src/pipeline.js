@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { loadGravitonIgnore, isGravitonIgnored, createGravitonFilter } from './ignore-parser.js';
+import { getTelemetry, recordTelemetry, formatTelemetryDashboard } from './telemetry.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -270,6 +272,7 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
     '.cache', 'venv', '.venv', '.idea', '.vscode'
   ]);
   const gitignorePatterns = [];
+  const gravitonFilter = createGravitonFilter(cwd);
 
   // Gitignore Respecter: Check and parse .gitignore from cwd
   try {
@@ -352,7 +355,9 @@ export function buildWorkspaceMap(cwd = process.cwd(), options = {}) {
 
     const filtered = entries.filter(e => {
       if (e.name.startsWith('.') && e.name !== '.env.example') return false;
-      const relItemPath = path.relative(cwd, path.join(dir, e.name)).replace(/\\/g, '/');
+      const fullItemPath = path.join(dir, e.name);
+      if (gravitonFilter.isIgnored(fullItemPath)) return false;
+      const relItemPath = path.relative(cwd, fullItemPath).replace(/\\/g, '/');
       if (isIgnored(e.name, relItemPath)) return false;
       return true;
     });
@@ -753,6 +758,8 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const currentCwd = cwd || process.cwd();
   const cleanedInput = pruneNoise(userInput || '', { isPrompt: true });
   const workspaceInfo = buildWorkspaceMap(currentCwd);
+  const gravitonFilter = createGravitonFilter(currentCwd);
+  let sessionFilesIgnored = 0;
 
   // Smart File Hydration: detect file names mentioned in userInput
   const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh))\b/gi;
@@ -765,8 +772,16 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
   for (const filename of uniqueFiles) {
     if (filename.startsWith('http://') || filename.startsWith('https://')) continue;
+    if (gravitonFilter.isIgnored(filename)) {
+      sessionFilesIgnored++;
+      continue;
+    }
 
     let candidatePath = path.resolve(currentCwd, filename);
+    if (gravitonFilter.isIgnored(candidatePath)) {
+      sessionFilesIgnored++;
+      continue;
+    }
     let resolved = null;
 
     if (fs.existsSync(candidatePath) && fs.statSync(candidatePath).isFile()) {
@@ -785,7 +800,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
       for (const d of searchDirs) {
         const p = path.join(d, baseName);
-        if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+        if (!gravitonFilter.isIgnored(p) && fs.existsSync(p) && fs.statSync(p).isFile()) {
           resolved = p;
           break;
         }
@@ -820,6 +835,10 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
             const fileDir = path.dirname(resolved);
             for (const depImport of detectedDeps) {
               const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
+              if (resolvedDep && gravitonFilter.isIgnored(resolvedDep)) {
+                sessionFilesIgnored++;
+                continue;
+              }
               if (resolvedDep && !handledPaths.has(resolvedDep)) {
                 handledPaths.add(resolvedDep);
                 const depContent = readAndTruncateFile(resolvedDep, 500);
@@ -869,6 +888,21 @@ ${cleanedInput}`.trim();
   // Local Trip Odometer: Silently track tokens
   const promptTokens = estimateTokens(finalPrompt);
   recordOdometer(promptTokens);
+
+  // Local Analytics Telemetry (V1.7.0)
+  const rawInputTokens = estimateTokens(userInput);
+  const cleanedInputTokens = estimateTokens(cleanedInput);
+  const inputTokensSaved = Math.max(0, rawInputTokens - cleanedInputTokens);
+  const minifiedCount = Array.from(handledPaths).filter(p => {
+    const b = path.basename(p).toLowerCase();
+    return b.endsWith('.min.js') || b.endsWith('.min.css');
+  }).length;
+  const totalTokensSaved = inputTokensSaved + (minifiedCount * 8000);
+  recordTelemetry({
+    calls: 1,
+    filesIgnored: sessionFilesIgnored,
+    tokensSaved: totalTokensSaved
+  });
 
   return finalPrompt;
 }
@@ -936,3 +970,5 @@ if (process.argv[1]) {
     }
   } catch {}
 }
+
+export { loadGravitonIgnore, isGravitonIgnored, createGravitonFilter, getTelemetry, recordTelemetry, formatTelemetryDashboard };

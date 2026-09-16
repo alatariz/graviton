@@ -1,0 +1,19 @@
+# Graviton Ignore Rules (.gravitonignore)
+# Patterns matched here are strictly bypassed during file hydration and dependency scraping.
+
+# Sensitive credentials
+.env*
+*.pem
+*.key
+secrets/
+
+# Build & dependency noise
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Minified bundles
+*.min.js
+*.min.css

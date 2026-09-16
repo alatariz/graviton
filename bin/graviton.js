@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V1.6.1 Interceptor Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V1.7.0 Interceptor Autonomous Execution Layer
 
 process.on('uncaughtException', (err) => {
   const message = err && err.message ? err.message : String(err);
@@ -12,6 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { getTelemetry, formatTelemetryDashboard, recordTelemetry } from '../src/telemetry.js';
 import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
@@ -120,7 +121,7 @@ async function main() {
 \x1b[1mCOMMANDS\x1b[0m
   \x1b[32m"<raw_text>"\x1b[0m            [DEFAULT] Synthesize prompt via Graviton Core & execute with Antigravity Auto-Allow
   \x1b[32minit\x1b[0m [--global]         Initialize ~/.graviton directory and local Skill Vault
-  \x1b[32mgain\x1b[0m, \x1b[32mstats\x1b[0m             Display aggregate tokens & lines pruned across sessions
+  \x1b[32mstats\x1b[0m, \x1b[32mgain\x1b[0m             Display lifetime telemetry dashboard & token savings
   \x1b[32mmap\x1b[0m                     Display workspace directory tree and detected dependencies
   \x1b[32mclean\x1b[0m "<raw_text>"       Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   \x1b[32mrun\x1b[0m <cmd...>             Execute CLI command with streamlined terminal output filtering
@@ -149,7 +150,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.6.1 Open-Source Architecture)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V1.7.0 Enterprise Architecture)`);
     process.exit(0);
   }
 
@@ -181,26 +182,28 @@ async function main() {
       saveStats({ commandsRun: 0, promptsOptimized: 0, tokensSaved: 0, linesFiltered: 0 });
     }
 
+    const localIgnore = path.join(process.cwd(), '.gravitonignore');
+    let ignoreStatus = 'Found';
+    if (!fs.existsSync(localIgnore)) {
+      const defaultIgnore = `# Graviton Ignore Rules (.gravitonignore)\n# Patterns matched here are strictly bypassed during file hydration and dependency scraping.\n\n# Sensitive credentials\n.env*\n*.pem\n*.key\nsecrets/\n\n# Build & dependency noise\nnode_modules/\ndist/\nbuild/\ncoverage/\n*.log\n\n# Minified bundles\n*.min.js\n*.min.css\n`;
+      fs.writeFileSync(localIgnore, defaultIgnore, 'utf8');
+      ignoreStatus = 'Created (.gravitonignore)';
+    }
+
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON INITIALIZATION ===\x1b[0m`);
     console.log(`  \x1b[32m✔\x1b[0m Graviton Config Path : \x1b[1m${gravitonDir}\x1b[0m`);
     console.log(`  \x1b[32m✔\x1b[0m Local Skill Vault    : \x1b[1m${skillsDir}\x1b[0m`);
     console.log(`  \x1b[32m✔\x1b[0m Skills Status        : \x1b[1m${Object.keys(initialSkills).length}\x1b[0m skills available (${createdCount} new)`);
+    console.log(`  \x1b[32m✔\x1b[0m Workspace Ignore     : \x1b[1m${ignoreStatus}\x1b[0m`);
     console.log(`  \x1b[32m✔\x1b[0m Auto-Allow Relay     : Active`);
     console.log(`\x1b[90mGraviton initialized successfully. Ready to accelerate Antigravity.\x1b[0m\n`);
     process.exit(0);
   }
 
-  // 4. GAIN & STATS
-  if (command === 'gain' || command === 'stats' || command === '--gain' || command === '--stats') {
-    const stats = loadStats();
-    const odo = readOdometer();
-    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON EFFICIENCY GAINS ===\x1b[0m`);
-    console.log(`  \x1b[36mCommands Processed    :\x1b[0m ${stats.commandsRun.toLocaleString()}`);
-    console.log(`  \x1b[36mPrompts Synthesized   :\x1b[0m ${stats.promptsOptimized.toLocaleString()}`);
-    console.log(`  \x1b[32mEstimated Tokens Saved:\x1b[0m \x1b[1m${stats.tokensSaved.toLocaleString()}\x1b[0m tokens`);
-    console.log(`  \x1b[32mLines Filtered Out    :\x1b[0m \x1b[1m${stats.linesFiltered.toLocaleString()}\x1b[0m lines`);
-    console.log(`  \x1b[35mOdometer Total Tracked:\x1b[0m \x1b[1m${odo.totalTokens.toLocaleString()}\x1b[0m tokens`);
-    console.log(`\x1b[90mKeep your AI context clean, fast, and focused.\x1b[0m\n`);
+  // 4. TELEMETRY & STATS DASHBOARD (V1.7.0)
+  if (command === 'gain' || command === 'stats' || command === 'status' || command === '--gain' || command === '--stats' || command === '--status') {
+    const dashboard = formatTelemetryDashboard();
+    console.log(dashboard);
     process.exit(0);
   }
 

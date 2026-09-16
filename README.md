@@ -11,7 +11,7 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-1.6.0-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 1.6.0" /></a>
+    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-1.7.0-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 1.7.0" /></a>
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
@@ -91,11 +91,13 @@ pytest 2>&1 | grav Fix failing assertion in test_auth.py
 git status | grav Commit these changes with conventional commit format
 ```
 
-#### 4. Silent Trip Odometer
-Check how many tokens and milliseconds Graviton has saved in your local workspace:
+#### 4. Lifetime Telemetry Dashboard
+View lifetime intercepted sessions, shielded files, and estimated token savings:
 
 ```bash
-graviton status
+grav stats
+# or full command
+graviton stats
 ```
 
 ---
@@ -175,16 +177,21 @@ Graviton's engine operates completely within local Node.js standard libraries (`
   ```
 - **Bounded JSON Whitelist**: Whitelists structural JSON payloads while blocking multi-megabyte serialized JSON dumps, preserving stack traces and valid config objects while incinerating log spam.
 
-### 4. Detached Shadow Backups
+### 4. Custom `.gravitonignore` Rule Engine
+- **Workspace Security & Context Sanitation**: Automatically parses `.gravitonignore` in your project root (`process.cwd()`).
+- **Zero-Dependency Pattern Matching**: Strips comments (`#`), blank lines, and evaluates directory boundaries and glob wildcards (`*.key`, `secrets/`, `.env*`).
+- **Strict Hydration Bypass**: Any matching path is completely excluded from file hydration, shallow dependency scraping, and workspace mapping, preventing sensitive data or noisy files from entering LLM context.
+
+### 5. Detached Shadow Backups
 - **Zero-Collateral Git Safety**: Traditional auto-stash or auto-commit scripts frequently stage unintended sensitive files (`.env`, private keys, secrets) into Git working trees.
 - **Isolated File Mirroring**: Graviton bypasses Git working trees entirely. Before dispatching prompts to Antigravity, every file touched for modification is copied to `~/.graviton/backups/` using timestamped mirrors (`[filename]_[timestamp].bak`).
 - **Detached Garbage Collection**: Purging expired backups (> 7 days) is handed off to an independent OS child process spawned with `{ detached: true, stdio: 'ignore' }` and `child.unref()`. Graviton never blocks the terminal or delays prompt delivery for disk maintenance.
 
-### 5. Path Traversal Jail
+### 6. Path Traversal Jail
 - Enforces strict boundary validation on all relative and absolute path references.
 - Any attempt to reference files outside `process.cwd()` or escape via `../../../etc/passwd` is caught by path canonicalization and rejected before context assembly.
 
-### 6. Auto-Allow Hook & Credential Redaction
+### 7. Auto-Allow Hook & Credential Redaction
 - Wraps execution with `--dangerously-skip-permissions` quietly in the background, transforming interactive sessions into an autonomous, non-blocking flow.
 - Automated regex interception identifies bearer tokens, JWTs, private keys, and cloud credentials in command output, substituting them with `[[REDACTED]]` before context ingestion.
 
@@ -226,7 +233,7 @@ Graviton dynamically detects task intents in your prompts and automatically inje
 | `graviton --deep <prompt>` | `grav -d <prompt>` | Triggers deep architectural reasoning mode with high-rigor planning |
 | `graviton run <cmd>` | `grav run <cmd>` | Executes shell command, strips terminal noise, and feeds tracebacks to Antigravity |
 | `graviton pipe <file>` | `grav pipe <file>` | Sanitizes input file and attaches it to prompt context |
-| `graviton status` | `grav status` | Displays total lifetime tokens saved and local session odometer |
+| `graviton stats` | `grav stats` | Displays lifetime telemetry dashboard, files shielded, and tokens saved |
 | `graviton init` | `grav init` | Generates recommended `.gravitonrc` configuration in the current directory |
 | `graviton doctor` | `grav doctor` | Verifies Node.js runtime, `agy` binary location, and environment health |
 
