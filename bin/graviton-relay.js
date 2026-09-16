@@ -91,33 +91,69 @@ export function resolveAgyExecutable(commandName = 'agy') {
 }
 
 /**
- * Executes Antigravity in pure One-Shot mode via Stdin.
- * Writes promptText to child.stdin and immediately closes it (stdin.end()),
- * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
- *
- * Uses ironclad cross-platform child_process.spawn without 'shell: true' (avoiding DEP0190),
- * dynamically resolving .cmd on Windows and passing arguments as a standard array.
+ * Computes spawn configuration dynamically checking the OS.
+ * Windows Node.js Security Patch:
+ * - On Windows (win32): spawn command is 'cmd.exe', args are ['/c', baseCommand, ...originalArgs], shell: false.
+ *   This avoids EINVAL when spawning .cmd files and eliminates DEP0190 deprecation warning.
+ * - On non-Windows: spawn command is baseCommand, args are originalArgs, shell: false.
  */
-export function runAntigravityWithAutoAllow(promptText, options = {}) {
-  // Fire-and-forget self-cleaning shadow backup (zero latency impact)
-  purgeOldBackups();
-
-  const commandName = options.command || 'agy';
-  const agyExecutable = resolveAgyExecutable(commandName);
-
-  const args = [
+export function getSpawnConfig(options = {}) {
+  const baseCommand = options.command || 'agy';
+  const originalArgs = [
     '--dangerously-skip-permissions',
     '--effort', options.effort || 'high',
     '--mode', options.mode || 'accept-edits'
   ];
 
   if (options.continueSession) {
-    args.push('--continue');
+    originalArgs.push('--continue');
   }
 
-  // Ironclad cross-platform spawn: no shell: true (avoids DEP0190 deprecation warning)
-  const child = spawn(agyExecutable, args, {
-    stdio: ['pipe', process.stdout, process.stderr]
+  const isWindows = process.platform === 'win32';
+  const spawnCmd = isWindows ? 'cmd.exe' : baseCommand;
+  const spawnArgs = isWindows ? ['/c', baseCommand, ...originalArgs] : originalArgs;
+
+  return {
+    baseCommand,
+    originalArgs,
+    spawnCmd,
+    spawnArgs
+  };
+}
+
+/**
+ * Executes Antigravity in pure One-Shot mode via Stdin.
+ * Writes promptText to child.stdin and immediately closes it (stdin.end()),
+ * forcing Antigravity to execute with --dangerously-skip-permissions and exit cleanly.
+ *
+ * Windows Node.js Security Patch:
+ * - On Windows (win32): spawn 'cmd.exe' with ['/c', baseCommand, ...originalArgs] and shell: false.
+ * - On non-Windows: spawn baseCommand directly with originalArgs and shell: false.
+ */
+export function runAntigravityWithAutoAllow(promptText, options = {}) {
+  // Fire-and-forget self-cleaning shadow backup (zero latency impact)
+  purgeOldBackups();
+
+  const { spawnCmd, spawnArgs } = getSpawnConfig(options);
+
+  // Ensure ~/.gemini/bin is in PATH for seamless cmd.exe resolution
+  const homeDir = process.env.USERPROFILE || process.env.HOME || '';
+  const geminiBin = homeDir ? path.join(homeDir, '.gemini', 'bin') : '';
+  let env = process.env;
+  if (geminiBin && fs.existsSync(geminiBin)) {
+    const currentPath = process.env.PATH || process.env.Path || '';
+    if (!currentPath.includes(geminiBin)) {
+      env = Object.assign({}, process.env, {
+        PATH: `${geminiBin}${path.delimiter}${currentPath}`
+      });
+    }
+  }
+
+  // Pure Node.js spawn with shell: false across all platforms
+  const child = spawn(spawnCmd, spawnArgs, {
+    stdio: ['pipe', process.stdout, process.stderr],
+    shell: false,
+    env
   });
 
   // Programmatically write promptText into child.stdin and close stream
