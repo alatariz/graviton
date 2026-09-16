@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { purgeOldBackups, readOdometer } from '../src/pipeline.js';
@@ -126,19 +126,17 @@ export function getSpawnConfig(options = {}) {
 }
 
 /**
- * Executes Antigravity with full terminal I/O streaming.
+ * Executes Antigravity synchronously with full terminal I/O streaming.
  *
- * Graviton V1.8.1 Bulletproof I/O:
- * 1. Windows: Single String Shell ('antigravity ' + originalArgs.join(' ')) with { stdio: 'inherit', shell: true }.
- * 2. Non-Windows: standard spawn with ('antigravity', originalArgs, { stdio: 'inherit', shell: false }).
- * 3. Error Catching: .on('error', (err) => console.error('[GRAVITON CRASH]', err)).
- * 4. Exit Code Logging: .on('close'), if code !== 0 logs bold red [GRAVITON ERROR]; if code === 0 resolves and prints success.
+ * Graviton V1.8.2 Nuclear Synchronous Relay:
+ * 1. Uses spawnSync('antigravity', process.argv.slice(2), { stdio: 'inherit', shell: true })
+ * 2. Blocks the Node.js main thread strictly until Antigravity finishes.
+ * 3. Checks result.error and exits cleanly with error log.
+ * 4. Completely eliminates async fall-through or microtask premature termination.
  */
 export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
-
-  const { baseCommand, originalArgs, fullCmd } = getSpawnConfig(options);
 
   // Ensure ~/.gemini/bin is in PATH for seamless executable resolution
   const homeDir = process.env.USERPROFILE || process.env.HOME || '';
@@ -153,95 +151,32 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  const timeoutMs = options.timeoutMs || (15 * 60 * 1000); // 15-minute max execution timeout
+  const args = options.args || process.argv.slice(2);
+  const stdioMode = options.stdio || 'inherit';
 
-  return new Promise((resolve, reject) => {
-    let child;
-    const stdioMode = options.stdio || 'inherit';
-
-    // 1 & 5. Set spawn options to { stdio: 'inherit', shell: true }
-    const isWindows = process.platform === 'win32';
-    const spawnCmd = isWindows ? fullCmd : baseCommand;
-    const spawnArgs = isWindows ? [] : originalArgs;
-
-    child = spawn(spawnCmd, spawnArgs, {
-      stdio: stdioMode,
-      shell: true,
-      env
-    });
-
-    let settled = false;
-
-    // Helper to safely force-kill child process (preventing zombie processes)
-    const killChildProcess = (signal = 'SIGKILL') => {
-      if (child && !child.killed) {
-        try {
-          if (process.platform === 'win32' && child.pid) {
-            try {
-              spawn('taskkill', ['/F', '/T', '/PID', String(child.pid)], { stdio: 'ignore', shell: false });
-            } catch {}
-          }
-          child.kill(signal);
-        } catch {}
-      }
-    };
-
-    const cleanup = () => {
-      clearTimeout(timeoutTimer);
-      process.removeListener('SIGINT', sigintHandler);
-      process.removeListener('SIGTERM', sigtermHandler);
-    };
-
-    // Timeout Guardrails: 15-minute max execution timeout
-    const timeoutTimer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      killChildProcess('SIGKILL');
-      cleanup();
-      reject(new Error('Antigravity execution timed out after 15 minutes (max execution guardrail exceeded).'));
-    }, timeoutMs);
-
-    // SIGINT Interceptor: cleanly kill child process on Ctrl+C to prevent zombie background processes
-    const sigintHandler = () => {
-      killChildProcess('SIGINT');
-      cleanup();
-      process.exit(130);
-    };
-
-    const sigtermHandler = () => {
-      killChildProcess('SIGTERM');
-      cleanup();
-      process.exit(143);
-    };
-
-    process.on('SIGINT', sigintHandler);
-    process.on('SIGTERM', sigtermHandler);
-
-    // 3. Error Catching: Add a .on('error', (err) => console.error('[GRAVITON CRASH]', err)) listener
-    child.on('error', (err) => {
-      console.error('[GRAVITON CRASH]', err);
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(err);
-    });
-
-    // 2. Inside the Promise, resolve() MUST only be called inside the child.on('close') event
-    child.on('close', (code) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-
-      if (code !== 0) {
-        console.log(`\x1b[1;31m[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}\x1b[0m`);
-        if (options.rejectOnError) {
-          reject(new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
-        } else {
-          process.exit(code || 1);
-        }
-      } else {
-        resolve(code || 0);
-      }
-    });
+  // 3. Execute the relay using spawnSync
+  const result = spawnSync('antigravity', args, {
+    stdio: stdioMode,
+    shell: true,
+    env
   });
+
+  // 4. After the spawnSync line, check the result:
+  if (result.error) {
+    console.error('Spawn Error:', result.error);
+    if (options.rejectOnError) {
+      throw result.error;
+    }
+    process.exit(1);
+  }
+
+  if (result.status !== 0 && result.status !== null) {
+    console.log(`\x1b[1;31m[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}\x1b[0m`);
+    if (options.rejectOnError) {
+      throw new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}`);
+    }
+    process.exit(result.status || 1);
+  }
+
+  return result;
 }
