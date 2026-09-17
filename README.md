@@ -15,6 +15,9 @@
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
+    <a href="https://github.com/alatariz/graviton/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alatariz/graviton/ci.yml?branch=main&label=CI%20Matrix&style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Matrix" /></a>
+    <a href="https://github.com/alatariz/graviton/actions/workflows/security.yml"><img src="https://img.shields.io/github/actions/workflow/status/alatariz/graviton/security.yml?branch=main&label=CodeQL%20Security&style=for-the-badge&logo=github&logoColor=white" alt="CodeQL Security" /></a>
+    <a href="SECURITY.md"><img src="https://img.shields.io/badge/Security-100%25%20Offline%20%7C%20Zero%20Telemetry-00f0ff.svg?style=for-the-badge&logo=shield" alt="100% Offline & Zero Telemetry" /></a>
   </p>
 
   <p align="center">
@@ -24,8 +27,10 @@
     <a href="#core-features--usage">Features & Usage</a> &bull;
     <a href="#cli-command-reference">CLI Reference</a> &bull;
     <a href="#empirical-benchmarks">Benchmarks</a> &bull;
+    <a href="#security-privacy--trust">Security & Trust</a> &bull;
     <a href="#troubleshooting--faq">Troubleshooting & FAQ</a>
   </p>
+
 
 </div>
 
@@ -466,8 +471,62 @@ Reopen your terminal and verify with `agy --version`, then run `grav doctor`.
 
 ---
 
+<h2 id="security-privacy--trust">Security, Privacy & Trust Guarantees</h2>
+
+As a command-line tool handling developer instructions and code paths, Graviton follows strict security-first principles. We believe that **trust is earned through verifiability, not claims**.
+
+### 🛡️ Five Pillars of Graviton Security
+
+1. **100% Offline by Design (Zero External Telemetry)**
+   - Graviton has **zero** outbound tracking, telemetry, or analytics beacons.
+   - Prompts, filenames, and diffs never leave your local workstation.
+   - All heuristics, AST scoping, and compression run purely in-memory via Node.js V8 stdlib.
+
+2. **Zero Runtime Dependencies**
+   - The CLI runtime engine in `bin/` and `src/` requires **0 external npm dependencies**.
+   - Completely eliminates third-party supply-chain attacks, typosquatting packages, and dependency bloat.
+
+3. **Continuous Automated Secret Redaction**
+   - Every prompt and terminal output is automatically screened against credential patterns (OpenAI keys, GitHub PATs, AWS keys, Slack webhooks, PEM certificates).
+   - Sensitive credentials are sanitized into `[REDACTED_SECRET]` before Antigravity ingestion.
+
+4. **Human-Auditable, Unobfuscated Source Code**
+   - Graviton is distributed as clean, readable ES Modules.
+   - You can inspect every line directly on your machine:
+     ```bash
+     cat $(which grav)
+     ```
+
+5. **Pre-Session File Snapshots & Safety Rollback Guard**
+   - File state is automatically preserved in `~/.graviton/backups/` before modifications occur.
+   - Broken syntax or unintended edits can be reviewed via `grav diff` and reverted in milliseconds with `grav rb`.
+
+### 🔍 How to Independently Audit Graviton
+
+You do not need to take our word for it. You can verify Graviton's network silence yourself using standard networking inspection tools:
+
+```bash
+# 1. Run Graviton with Wi-Fi/Ethernet disabled (Air-gapped verification):
+grav doc
+grav cmp
+grav pin src/index.js
+# All commands execute instantly without any network error!
+
+# 2. Monitor open TCP/UDP sockets while running prompt synthesis:
+# Linux/macOS:
+netstat -an | grep -E 'ESTABLISHED|SYN_SENT'
+
+# Windows PowerShell:
+Get-NetTCPConnection -State Established
+```
+
+For full threat models, security practices, and responsible disclosure instructions, read our official [SECURITY.md](SECURITY.md).
+
+---
+
 <h2 id="license">License</h2>
 
 Distributed under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
 
 &copy; 2026 **[@alatariz](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
+
