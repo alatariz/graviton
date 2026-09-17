@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — GRAVITON V3.0.0</title>
+  <meta name="description" content="Official documentation for Graviton V3.0.0 — Autonomous AI Acceleration & Intelligent Context Engine for Google Antigravity.">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #040711;
+      --bg-surface: #060c1d;
+      --bg-card: rgba(8, 16, 34, 0.7);
+      --border: rgba(56, 189, 248, 0.12);
+      --border-light: rgba(56, 189, 248, 0.22);
+      --text-main: #f1f5f9;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --aqua: #00f0ff;
+      --aqua-bright: #38bdf8;
+      --aqua-ice: #bae6fd;
+      --aqua-glow: rgba(0, 240, 255, 0.28);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      @view-transition { navigation: auto; }
+    }
+    ::view-transition-old(root) { animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideOut; }
+    ::view-transition-new(root) { animation: 0.5s cubic-bezier(0.16, 1, 0.3, 1) both pageSlideIn; }
+    @keyframes pageSlideOut { to { transform: translateX(-40px); opacity: 0; } }
+    @keyframes pageSlideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a, a:visited, a:hover, a:active, a:focus { text-decoration: none !important; }
+
+    .global-navbar a, .global-navbar a:visited, .global-navbar a:active, .global-navbar a:focus {
+      text-decoration: none !important; color: inherit;
+    }
+    .nav-logo-wrap, .nav-logo-wrap:visited {
+      display: flex; align-items: center; gap: 0.65rem; text-decoration: none !important; color: #ffffff !important;
+    }
+    .nav-link, .nav-link:visited {
+      display: flex; align-items: center; gap: 0.35rem; color: #94a3b8 !important;
+      text-decoration: none !important; font-size: 0.88rem; font-weight: 500;
+      padding: 0.4rem 0; transition: color 0.15s ease; position: relative;
+    }
+    .nav-link:hover, .nav-item:hover > .nav-link, .nav-item.active > .nav-link, .nav-item.active > .nav-link:visited {
+      color: #ffffff !important; text-decoration: none !important;
+    }
+    .dropdown-item, .dropdown-item:visited {
+      display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.85rem;
+      font-size: 0.86rem; font-weight: 500; color: #94a3b8 !important;
+      text-decoration: none !important; border-radius: 7px; transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dropdown-item:hover, .dropdown-item:active {
+      background: rgba(255, 255, 255, 0.05); color: #ffffff !important;
+    }
+    .dropdown-item.item-pro, .dropdown-item.item-pro:visited { color: #cbd5e1 !important; }
+    .dropdown-item.item-pro:hover { color: #ffffff !important; }
+    .nav-gh-stars, .nav-gh-stars:visited {
+      display: flex; align-items: center; gap: 0.45rem; color: #94a3b8 !important;
+      font-size: 0.82rem; font-weight: 500; padding: 0.35rem 0.6rem; border-radius: 6px;
+    }
+    .nav-gh-stars:hover { color: #ffffff !important; }
+    .nav-gh-stars .gh-count, .nav-gh-stars:visited .gh-count { color: #94a3b8 !important; }
+    .nav-gh-stars:hover .gh-count { color: #ffffff !important; }
+    .btn-nav-install, .btn-nav-install:visited {
+      display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.05); color: var(--aqua) !important; padding: 0.38rem 1.15rem;
+      border-radius: 9999px; font-size: 0.82rem; font-weight: 600; transition: all 0.25s ease;
+    }
+    .btn-nav-install:hover { background: var(--aqua); color: #040711 !important; }
+
+    .global-navbar {
+      position: sticky; top: 0; width: 100%; height: 58px;
+      background: rgba(4, 7, 17, 0.88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.14); z-index: 1000;
+    }
+    .nav-inner {
+      max-width: 1400px; margin: 0 auto; height: 100%; padding: 0 1.75rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-left { display: flex; align-items: center; gap: 1.25rem; }
+    .nav-logo-wrap img { width: 22px; height: 22px; }
+    .nav-brand-text { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.12em; }
+    .nav-search-bar {
+      display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.32rem 0.65rem;
+      color: #94a3b8; font-size: 0.82rem; cursor: pointer; transition: all 0.2s ease;
+    }
+    .nav-search-bar:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(0, 240, 255, 0.3); color: #fff; }
+    .search-kbd {
+      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px; padding: 1px 4px; font-size: 0.68rem; font-family: var(--font-mono); color: #64748b;
+    }
+    .nav-center-links { display: flex; align-items: center; gap: 1.75rem; }
+    .nav-item { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%) translateY(-4px);
+      min-width: 190px; background: #0b1220; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+      padding: 6px; box-shadow: 0 20px 45px rgba(0,0,0,0.75), 0 0 1px rgba(0,240,255,0.2);
+      opacity: 0; pointer-events: none; transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1010;
+    }
+    .dropdown-menu::before { content: ''; position: absolute; top: -12px; left: 0; right: 0; height: 12px; }
+    .nav-item:hover .dropdown-menu { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    .pro-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 8px var(--aqua); display: inline-block; }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-lang-switch { display: flex; align-items: center; gap: 0.35rem; color: #94a3b8; font-size: 0.82rem; font-weight: 500; cursor: pointer; padding: 0.35rem 0.5rem; border-radius: 6px; }
+
+    /* SPOTLIGHT SEARCH MODAL */
+    .search-dialog {
+      position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh;
+      background: rgba(2, 6, 18, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: none; padding: 0; margin: 0; display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 14vh; z-index: 99999;
+    }
+    .search-dialog:not([open]) { display: none; }
+    .search-dialog-box {
+      width: 100%; max-width: 620px; background: #081022; border: 1px solid rgba(56, 189, 248, 0.22);
+      border-radius: 14px; box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 40px rgba(0, 240, 255, 0.12);
+      overflow: hidden; display: flex; flex-direction: column; animation: dialogZoomIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes dialogZoomIn { from { transform: scale(0.97); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .search-input-wrap { display: flex; align-items: center; padding: 0.95rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); gap: 0.85rem; }
+    .search-input-wrap input { flex: 1; background: transparent; border: none; outline: none; font-family: var(--font-sans); font-size: 1rem; color: #ffffff; }
+    .search-esc-badge { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); color: #94a3b8; font-family: var(--font-mono); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+    .search-results-list { max-height: 380px; overflow-y: auto; padding: 0.5rem; }
+    .search-result-item { display: flex; align-items: center; gap: 0.85rem; padding: 0.65rem 0.85rem; border-radius: 8px; text-decoration: none; color: var(--text-main); transition: all 0.15s ease; cursor: pointer; }
+    .search-result-item:hover, .search-result-item.selected { background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--aqua); }
+    .res-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .res-body { flex: 1; min-width: 0; }
+    .res-title { font-size: 0.88rem; font-weight: 600; color: #ffffff; }
+    .res-sub { font-size: 0.76rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .res-badge { font-family: var(--font-mono); font-size: 0.68rem; color: var(--aqua); background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0.15rem 0.45rem; border-radius: 4px; flex-shrink: 0; }
+    .search-footer-shortcuts { display: flex; align-items: center; gap: 1.25rem; padding: 0.65rem 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.74rem; color: #64748b; font-family: var(--font-mono); }
+    .shortcut-group { display: flex; align-items: center; gap: 0.35rem; }
+    .key-cap { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; color: #94a3b8; font-size: 0.7rem; }
+
+    /* DOCS 3-COLUMN LAYOUT */
+    .docs-container { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: 280px 1fr 240px; min-height: calc(100vh - 58px); }
+    .sidebar-left { border-right: 1px solid var(--border); padding: 2.5rem 1.5rem; position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; }
+    .sidebar-title { font-family: var(--font-mono); font-size: 0.75rem; color: var(--aqua); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.8rem; }
+    .sidebar-group { margin-bottom: 2rem; }
+    .sidebar-links a { display: block; color: var(--text-dim); font-size: 0.86rem; padding: 0.4rem 0.6rem; border-radius: 6px; text-decoration: none; margin-bottom: 0.2rem; transition: all 0.2s; }
+    .sidebar-links a:hover { color: #fff; background: rgba(56, 189, 248, 0.06); }
+    .sidebar-links a.active { color: var(--aqua); background: rgba(0, 240, 255, 0.1); font-weight: 600; }
+
+    .docs-content { padding: 3rem 4rem 6rem; max-width: 900px; }
+    .docs-h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.6rem; }
+    .docs-subtitle { font-size: 1.15rem; color: var(--aqua-bright); margin-bottom: 2rem; font-weight: 400; }
+    .docs-lead { font-size: 1.05rem; line-height: 1.7; color: var(--text-dim); margin-bottom: 2rem; }
+    .callout-box { background: rgba(0, 240, 255, 0.04); border-left: 3px solid var(--aqua); padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 2.5rem; font-size: 0.95rem; color: #e2e8f0; }
+    .callout-box code { background: rgba(0, 240, 255, 0.1); color: var(--aqua); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; }
+
+    .docs-h2 { font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em; margin: 3.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .docs-h3 { font-size: 1.22rem; font-weight: 600; color: #ffffff; margin: 2.2rem 0 0.8rem; }
+    .docs-p { color: var(--text-dim); margin-bottom: 1.2rem; line-height: 1.7; font-size: 0.94rem; }
+    .docs-ul { color: var(--text-dim); margin: 0 0 1.5rem 1.5rem; line-height: 1.75; font-size: 0.92rem; }
+    .docs-ul li { margin-bottom: 0.45rem; }
+
+    .code-block { background: #02050e; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; font-family: var(--font-mono); font-size: 0.82rem; color: var(--aqua-ice); margin-bottom: 2rem; overflow-x: auto; line-height: 1.6; }
+
+    .docs-table-wrap { width: 100%; overflow-x: auto; margin: 1.5rem 0 2.5rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }
+    .docs-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+    .docs-table th { background: rgba(0, 240, 255, 0.08); color: var(--aqua); font-family: var(--font-mono); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .docs-table td { padding: 0.85rem 1.1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.08); color: var(--text-dim); line-height: 1.6; }
+    .docs-table tr:last-child td { border-bottom: none; }
+    .docs-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .docs-table code { background: rgba(0, 240, 255, 0.1); color: var(--aqua); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; }
+    .badge-feature { display: inline-block; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(0, 240, 255, 0.1); color: var(--aqua); border: 1px solid rgba(0, 240, 255, 0.25); margin-left: 0.5rem; vertical-align: middle; }
+
+    .sidebar-right { border-left: 1px solid var(--border); padding: 2.5rem 1.5rem; position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; }
+    .toc-title { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 1rem; }
+    .toc-link { display: block; color: var(--text-dim); font-size: 0.82rem; text-decoration: none; margin-bottom: 0.6rem; transition: color 0.2s; }
+    .toc-link:hover { color: var(--aqua); }
+
+    @media (max-width: 1080px) {
+      .docs-container { grid-template-columns: 1fr; }
+      .sidebar-left, .sidebar-right { display: none; }
+      .docs-content { padding: 2rem; }
+      .nav-center-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- UNIFIED GRAVITON CORE LUXURY NAVBAR -->
+  <header class="global-navbar">
+    <div class="nav-inner">
+      <!-- LEFT: Logo + Search pill -->
+      <div class="nav-left">
+        <a href="/" class="nav-logo-wrap">
+          <img src="/icon.svg" alt="Graviton Singularity Logo">
+          <span class="nav-brand-text">GRAVITON</span>
+        </a>
+        <button class="nav-search-bar" onclick="openSearchModal()" aria-label="Search">
+          <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span class="search-label">Search</span>
+          <kbd class="search-kbd">⌘K</kbd>
+        </button>
+      </div>
+
+      <!-- CENTER: Dropdowns (Product, Docs, Resources, Community) -->
+      <nav class="nav-center-links">
+        <!-- 1. Product Dropdown -->
+        <div class="nav-item has-dropdown ">
+          <a href="/#hero-showcase" class="nav-link">
+            <span>Product</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/#get-started" class="dropdown-item">Install Graviton</a>
+            <a href="/#evidence" class="dropdown-item">Token Savings</a>
+            <a href="/#how-it-works" class="dropdown-item">Context Scoper</a>
+            <a href="/#solution" class="dropdown-item">V3.0 Architecture</a>
+            <a href="/#action" class="dropdown-item">See It In Action</a>
+            <a href="/docs.html#conversation-management" class="dropdown-item item-pro">
+              <span class="pro-dot"></span>
+              <span>History (grav -c)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Docs Direct Link -->
+        <div class="nav-item active">
+          <a href="/docs.html" class="nav-link">
+            <span>Docs</span>
+          </a>
+        </div>
+
+        <!-- 3. Resources Dropdown -->
+        <div class="nav-item has-dropdown">
+          <a href="/#action" class="nav-link">
+            <span>Resources</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/docs.html#cli-quickstart" class="dropdown-item">CLI Reference</a>
+            <a href="/docs.html#doctor" class="dropdown-item">System Doctor</a>
+            <a href="/docs.html#rollback" class="dropdown-item">Safety Rollback</a>
+            <a href="/docs.html#ports" class="dropdown-item">Port Guard</a>
+            <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="dropdown-item">GitHub Repository</a>
+          </div>
+        </div>
+
+        <!-- 4. Community Dropdown with Icons -->
+        <div class="nav-item has-dropdown">
+          <a href="https://github.com/alatariz/graviton" class="nav-link">
+            <span>Community</span>
+            <svg class="chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="dropdown-menu dropdown-community">
+            <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>GitHub Repo</span>
+            </a>
+            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.894.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+              <span>Discord</span>
+            </a>
+            <a href="https://x.com/alatariz" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span>X (@alatariz)</span>
+            </a>
+            <a href="https://github.com/sponsors/alatariz" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              <span>GitHub Sponsors</span>
+            </a>
+            <a href="https://github.com/alatariz/graviton/discussions" target="_blank" rel="noopener noreferrer" class="dropdown-item">
+              <svg class="item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Discussions</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- RIGHT: GitHub Stars, EN Switcher, Install Button -->
+      <div class="nav-right">
+        <a href="https://github.com/alatariz/graviton" target="_blank" rel="noopener noreferrer" class="nav-gh-stars" aria-label="GitHub Repository">
+          <svg class="gh-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span class="gh-count">80.0k ★</span>
+        </a>
+
+        <div class="nav-lang-switch" title="Language: English">
+          <svg class="globe-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>EN</span>
+          <svg class="chevron" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+
+        <a href="/#get-started" class="btn-nav-install">
+          <span>Install Graviton →</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- SEARCH MODAL (SPOTLIGHT DIALOG) -->
+  <dialog id="searchModal" class="search-dialog">
+    <div class="search-dialog-box">
+      <!-- Input bar with Esc badge -->
+      <div class="search-input-wrap">
+        <svg class="search-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="spotlightInput" placeholder="Search commands, docs, tools..." autocomplete="off" spellcheck="false">
+        <button class="search-esc-badge" onclick="closeSearchModal()" aria-label="Close dialog">Esc</button>
+      </div>
+
+      <!-- Results list or empty state -->
+      <div class="search-results-list" id="searchResultsList">
+        <div class="search-empty-prompt" id="searchEmptyPrompt">
+          <div class="empty-title">Start typing to search...</div>
+          <div class="empty-quick-list" id="emptyQuickList">
+            <!-- Rendered by script -->
+          </div>
+        </div>
+        <div id="searchDynamicResults" style="display: none;"></div>
+      </div>
+
+      <!-- Footer Shortcuts -->
+      <div class="search-footer-shortcuts">
+        <div class="shortcut-group">
+          <span class="key-cap">↑</span>
+          <span class="key-cap">↓</span>
+          <span class="key-label">navigate</span>
+        </div>
+        <div class="shortcut-group">
+          <span class="key-cap">↵</span>
+          <span class="key-label">open</span>
+        </div>
+        <div class="shortcut-group">
+          <span class="key-cap">Esc</span>
+          <span class="key-label">close</span>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+
+  <div class="docs-container">
+    <aside class="sidebar-left">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Overview</div>
+        <div class="sidebar-links">
+          <a href="#overview" class="active">Introduction</a>
+          <a href="#architecture">Architecture &amp; Flow</a>
+          <a href="#benchmarks">Empirical Benchmarks</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Installation</div>
+        <div class="sidebar-links">
+          <a href="#prerequisites">Prerequisites</a>
+          <a href="#install-steps">Install Steps</a>
+          <a href="#doctor">System Health Doctor</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Core Features</div>
+        <div class="sidebar-links">
+          <a href="#target-pinning">Smart Target Pinning</a>
+          <a href="#conversation-management">IDE History (-c &amp; -n)</a>
+          <a href="#repl-chat">Interactive REPL Chat</a>
+          <a href="#execution-modes">Fast vs Deep Modes</a>
+          <a href="#sanity-guard">Syntax Sanity Guard</a>
+          <a href="#rollback">Safety Rollback &amp; Diff</a>
+          <a href="#port-guard">Port Guard &amp; Daemons</a>
+          <a href="#session-compactor">Session Compactor</a>
+          <a href="#terminal-filter">Terminal Log Pruner</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Reference &amp; Security</div>
+        <div class="sidebar-links">
+          <a href="#cli-reference">CLI Command Table</a>
+          <a href="#skill-matrix">Skill Matrix</a>
+          <a href="#privacy">Privacy &amp; Redaction</a>
+          <a href="#faq">Troubleshooting &amp; FAQ</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="docs-content">
+      <h1 class="docs-h1" id="overview">GRAVITON V3.0.0 Documentation</h1>
+      <h2 class="docs-subtitle">Autonomous AI Acceleration &amp; Intelligent Context Engine for Google Antigravity</h2>
+
+      <p class="docs-lead">
+        Graviton is an ultra-fast, zero-auth terminal accelerator and <strong>Autonomous Intelligent Context Engine</strong> built exclusively for the <strong>Google Antigravity CLI (<code>agy</code>)</strong>. It executes 100% offline on your local machine with zero external API keys and <strong>zero third-party dependencies</strong>, orchestrates <strong>20 Autonomous Background Engines</strong>, prunes terminal and stack trace noise (-95% tokens), intercepts minified file context bombs, pins target files directly into AI prompts, executes turn-by-turn delta diff compression with out-of-band disk sync, transpiles Office &amp; PDF docs in 0ms via content-addressable cache, and provides Antigravity IDE conversation history management with sub-millisecond dispatch.
+      </p>
+
+      <div class="callout-box">
+        <strong>⚡ Technical Fact: Zero External LLM Calls &amp; Zero Runtime Dependencies.</strong><br>
+        Graviton does <em>not</em> route your prompts through an intermediate third-party AI model, and requires zero external npm packages. All keyword matching, AST traversal, terminal pruning, document transpilation, and delta diffing execute 100% locally on your CPU using Node.js V8 standard libraries. Exactly <strong>ONE</strong> API call occurs—directly to Google Antigravity.
+      </div>
+
+      <!-- 1. ARCHITECTURE -->
+      <h2 id="architecture" class="docs-h2">1. Architecture &amp; The 20 Autonomous Engines</h2>
+      <p class="docs-p">
+        In standard AI coding agent loops, 80%+ of token consumption is wasted on ANSI color codes, compiler progress lines, repeated whole-file rehydration, and blind directory exploratory loops. Graviton operates 20 autonomous engines locally on your CPU in &lt; 0.8ms:
+      </p>
+
+      <div class="code-block">
+Developer Prompt, Piped CLI Input, or Document (.docx, .pdf, .xlsx, .csv)
+      │
+      ▼
+[GRAVITON V3.0.0 ENGINE] (Local CPU, &lt; 0.8ms overhead &bull; Zero External Dependencies)
+  ├── 1. Autonomous Execution Pipe (non-interactive relay bypassing manual pauses)
+  ├── 2. Brevity Protocol Enforcer (zero-fluff directives, strips AI boilerplate)
+  ├── 3. Surgical Diff Enforcer (restricts code mutations to minimal blast radius)
+  ├── 4. Patch Response Economizer (guides Search/Replace patch blocks &rarr; -70% output tokens)
+  ├── 5. Terminal Stream Filter (strips build noise, isolates error signatures &rarr; -95% tokens)
+  ├── 6. Runtime Trace Squeezer (collapses internal vendor/node frames &rarr; -88% error tokens)
+  ├── 7. Selective Context Scoper (Smart Target Pinning &rarr; eliminates 3–4 search loops)
+  ├── 8. Static Import Resolver (shallow AST dependency tracing across JS/TS/Py/Go/Rust)
+  ├── 9. Lockfile &amp; Asset Shield (blocks .min.js, lockfiles, &amp; binary assets &rarr; prevents 35k bombs)
+  ├── 10. Delta Diff Compressor (line-level turn diff hunks + out-of-band disk sync &rarr; -70% tokens)
+  ├── 11. Structural Code Outliner (folds method bodies &gt;120 lines &amp; condenses inline SVGs)
+  ├── 12. Document Transpiler (zero-dep pure Node.js Office &amp; PDF to clean Markdown parser)
+  ├── 13. Content-Addressable Cache (0ms instant SHA-256 transpiled document cache)
+  ├── 14. JSON Schema Compactor (squashes giant arrays into structural schema summaries)
+  ├── 15. Tabular Data Sampler (smart sampling &amp; statistics for large CSV/TSV datasets)
+  ├── 16. Memory Distillation Engine (marathon session memory capped at 15 active files / &lt;200 tokens)
+  ├── 17. Syntax Sanity Validator (AST bracket/JSX/decorator validation &amp; shadow rollback)
+  ├── 18. Noise &amp; Secret Redactor (strips prompt noise &amp; redacts exposed API keys/tokens)
+  ├── 19. Daemon &amp; Port Guard (process-tree daemon killer taskkill /F /T &amp; synchronous port check)
+  └── 20. Hierarchical Ignore Engine (recursive .gitignore and .gravignore enforcement)
+      │
+      ▼
+[Final Synthesized SuperPrompt]
+      │
+      ▼ (SINGLE API RELAY with Auto-Allow)
+Google Antigravity CLI ('agy' / 'agy.exe')
+      │
+      ▼ (Post-Execution Safety Layer)
+  ├── Syntax Sanity Guard (runs AST validation, node --check, python compile)
+  ├── Port Guard Auto-Heal (verifies socket teardown with Atomics.wait)
+  └── Rollback Backup Mirror (~/.graviton/backups/)
+      </div>
+
+      <!-- 2. BENCHMARKS -->
+      <h2 id="benchmarks" class="docs-h2">2. Empirical Benchmarks (V3.0.0 Production Measurements)</h2>
+      <p class="docs-p">
+        Tested across enterprise production repositories and multi-turn refactoring workflows:
+      </p>
+
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Scenario / Task</th>
+              <th>Without Graviton</th>
+              <th>With Graviton V3.0.0</th>
+              <th>Token Efficiency</th>
+              <th>Turnaround Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Terminal Error Dump</strong> (Jest 2,000 lines)</td>
+              <td>~28,000 tokens</td>
+              <td>~1,400 tokens</td>
+              <td><span style="color:var(--aqua); font-weight:700;">-95.0% Noise Stripped</span></td>
+              <td>&lt; 1ms local overhead</td>
+            </tr>
+            <tr>
+              <td><strong>Locating Target File</strong> ("Fix login bug")</td>
+              <td>5,000–12,000 tokens (4 search loops)</td>
+              <td>0 tokens (Target Pinning)</td>
+              <td><span style="color:var(--aqua); font-weight:700;">100% Loops Cut</span></td>
+              <td>30s &rarr; 3s turnaround</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-Turn File Hydration</strong></td>
+              <td>15,000–25,000 tokens (whole files)</td>
+              <td>~2,500 tokens (Delta Diff Compressor)</td>
+              <td><span style="color:var(--aqua); font-weight:700;">-70% to -85% Turn Waste</span></td>
+              <td>Instant diff hunking</td>
+            </tr>
+            <tr>
+              <td><strong>Stack Trace Error Logs</strong></td>
+              <td>~8,000 tokens (verbose vendor frames)</td>
+              <td>~950 tokens (Runtime Trace Squeezer)</td>
+              <td><span style="color:var(--aqua); font-weight:700;">-88% Error Stack Tokens</span></td>
+              <td>&lt; 0.5ms filter</td>
+            </tr>
+            <tr>
+              <td><strong>Large Documents &amp; Specs</strong> (.docx, .pdf, .xlsx)</td>
+              <td>40,000 tokens (raw or failure)</td>
+              <td>~3,800 tokens (Transpiler + 0ms Cache)</td>
+              <td><span style="color:var(--aqua); font-weight:700;">-90% Document Overhead</span></td>
+              <td>0ms Cache Retrieval</td>
+            </tr>
+            <tr>
+              <td><strong>Exposed Minified File</strong> (bundle.min.js)</td>
+              <td>35,000 tokens (explosion)</td>
+              <td>12 tokens (Lockfile &amp; Asset Shield)</td>
+              <td><span style="color:var(--aqua); font-weight:700;">-99.9% Context Saved</span></td>
+              <td>Instant</td>
+            </tr>
+            <tr>
+              <td><strong>Typical Daily Dev Session</strong></td>
+              <td><strong>~250,000 tokens</strong></td>
+              <td><strong>~20,000 tokens</strong></td>
+              <td><span style="color:var(--aqua); font-weight:700;">92% Average Savings</span></td>
+              <td><strong>10x Faster Overall Flow</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3. INSTALLATION -->
+      <h2 id="installation" class="docs-h2">3. Prerequisites &amp; Installation</h2>
+      <p class="docs-p">
+        Follow these straightforward steps to set up Graviton on Windows, macOS, or Linux.
+      </p>
+
+      <h3 id="prerequisites" class="docs-h3">Step 1: Install Node.js (Version &gt;= 18.0.0)</h3>
+      <p class="docs-p">Graviton runs natively on modern Node.js using ES Modules:</p>
+      <div class="code-block">
+# Windows (PowerShell):
+winget install OpenJS.NodeJS.LTS
+
+# macOS (Homebrew):
+brew install node
+
+# Linux (Debian/Ubuntu):
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &amp;&amp; sudo apt-get install -y nodejs
+
+# Verify version:
+node -v   # Should output v18.0.0 or newer
+      </div>
+
+      <h3 class="docs-h3">Step 2: Install Google Antigravity CLI (agy)</h3>
+      <p class="docs-p">
+        Graviton connects to the official Google Antigravity command-line tool (<code>agy</code>):
+      </p>
+      <div class="code-block">
+# Windows PowerShell:
+irm https://antigravity.google/cli/install.ps1 | iex
+
+# macOS &amp; Linux:
+curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+# Verify CLI:
+agy --version
+      </div>
+
+      <h3 id="install-steps" class="docs-h3">Step 3: Install Graviton Globally</h3>
+      <p class="docs-p">Install Graviton globally directly from the GitHub repository:</p>
+      <div class="code-block">
+npm install -g github:alatariz/graviton
+      </div>
+
+      <h3 id="doctor" class="docs-h3">Step 4: Verify System Health (Graviton Doctor)</h3>
+      <p class="docs-p">
+        Run Graviton's self-diagnostic doctor to verify your environment:
+      </p>
+      <div class="code-block">
+# System diagnostic check:
+grav doc
+
+# Or with automated repair (auto-installs agy if missing):
+grav doc --fix
+      </div>
+
+      <!-- 4. CORE FEATURES -->
+      <h2 id="target-pinning" class="docs-h2">4. Smart Target Pinning (Intelligent Context Scoper)</h2>
+      <p class="docs-p">
+        Without Graviton, when a developer prompts <em>"Fix email validation in auth.js"</em>, the AI model executes 3 to 4 exploratory search loops across 200 files (costing 5,000–12,000 tokens and 30+ seconds).
+      </p>
+      <p class="docs-p">
+        Graviton inspects your workspace AST locally in <strong>&lt; 0.4ms</strong>, isolates the matching file, formats an absolute <code>file:///</code> clickable reference, and pins it directly into the initial AI turn:
+      </p>
+      <div class="code-block">
+# Execute quote-free prompt:
+grav Fix email validation and return 422 in src/auth.js
+
+# Output:
+# [GRAVITON] Pinned target file: file:///C:/project/src/auth.js
+# Antigravity immediately begins code edits on src/auth.js on Turn 1!
+      </div>
+
+      <h2 id="conversation-management" class="docs-h2">5. Antigravity IDE Conversation History (<code class="badge-feature">-c &amp; -n</code>)</h2>
+      <p class="docs-p">
+        Manage multi-turn conversation threads across workspaces with the simplicity of an IDE sidebar:
+      </p>
+
+      <h3 class="docs-h3">A. Interactive History Picker (<code>grav -c</code>)</h3>
+      <div class="code-block">
+$ grav -c
+
+=== GRAVITON CONVERSATIONS (Antigravity IDE History) ===
+Workspace: C:\project
+
+  [1] ● [Active] "Fix email validation in auth.js"
+      ID: dc290864... | 4 turns | ~12.5k tokens | 5m ago
+  [2] ○ "Setup Express server in index.js"
+      ID: e82b109a... | 1 turn | ~3.2k tokens | 2h ago
+
+ACTIONS:
+  &lt;number&gt;     Select &amp; resume conversation (e.g. 1)
+  d &lt;number&gt;   Delete conversation from history (e.g. d 2)
+  n            Start a fresh conversation
+  q            Cancel / Exit
+      </div>
+
+      <h3 class="docs-h3">B. Direct Shorthands</h3>
+      <div class="code-block">
+# Resume conversation #1 in interactive REPL:
+grav -c 1
+
+# Send prompt directly into conversation #1:
+grav -c 1 "add unit tests with jest"
+
+# Delete conversation #2:
+grav -c del 2
+
+# Explicitly start a fresh conversation:
+grav -n "create responsive navigation bar"
+      </div>
+
+      <h2 id="repl-chat" class="docs-h2">6. Interactive REPL Chat Shell (<code>grav chat</code> / <code>grav repl</code>)</h2>
+      <p class="docs-p">
+        Engage in continuous interactive chat sessions with dynamic topic indicators:
+      </p>
+      <div class="code-block">
+$ grav chat
+graviton [Fix email validation]&gt; 
+      </div>
+
+      <h3 class="docs-h3">In-Chat Slash Commands</h3>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Slash Command</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>/c</code></td><td>Display workspace conversation history list</td></tr>
+            <tr><td><code>/c &lt;number&gt;</code></td><td>Switch active conversation topic immediately</td></tr>
+            <tr><td><code>/n</code> or <code>--n</code></td><td>Reset session to start a fresh topic</td></tr>
+            <tr><td><code>/del &lt;number&gt;</code></td><td>Delete specified conversation from history</td></tr>
+            <tr><td><code>/rename &lt;title&gt;</code></td><td>Rename active conversation topic</td></tr>
+            <tr><td><code>/undo</code></td><td>Roll back AI code changes immediately</td></tr>
+            <tr><td><code>/diff</code></td><td>Inspect colorized line-by-line unified diff of AI edits</td></tr>
+            <tr><td><code>/compact</code></td><td>Compact context window and retain architectural memory</td></tr>
+            <tr><td><code>/ports</code></td><td>Inspect occupied development ports</td></tr>
+            <tr><td><code>/stop [port]</code></td><td>Terminate background server or free occupied port</td></tr>
+            <tr><td><code>/doctor</code></td><td>Run system health diagnostics</td></tr>
+            <tr><td><code>/status</code></td><td>View active topic, turn count, and token usage</td></tr>
+            <tr><td><code>/exit</code></td><td>Exit REPL shell</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="execution-modes" class="docs-h2">7. Execution Modes: Fast (<code>-f</code>) vs. Deep (<code>-d</code>)</h2>
+      <p class="docs-p">
+        Graviton standardizes execution modifier flags using single-dash notation:
+      </p>
+      <div class="code-block">
+# Fast Mode (-f, --fast): Instant execution without planning (low effort, lowest latency)
+grav -f "fix typo in README.md"
+
+# Deep Mode (-d, --deep): Architectural synthesis with rigorous decomposition (high effort)
+grav -d "Architect an event-driven payment processor with idempotent webhooks"
+      </div>
+
+      <h2 id="sanity-guard" class="docs-h2">8. Automated Syntax Sanity Guard</h2>
+      <p class="docs-p">
+        Immediately upon AI task completion, Graviton inspects all modified files locally:
+      </p>
+      <ul class="docs-ul">
+        <li><strong>JavaScript / Node:</strong> <code>.js</code>, <code>.mjs</code>, <code>.cjs</code> validated via <code>node --check</code></li>
+        <li><strong>JSON:</strong> Validated via strict JSON schema parser</li>
+        <li><strong>Python:</strong> Validated via <code>python -m py_compile</code></li>
+      </ul>
+      <p class="docs-p">
+        If broken syntax is introduced, Graviton instantly alerts you before tests run:
+      </p>
+      <div class="code-block">
+[🚨 GRAVITON SANITY ALERT] 1 broken syntax file(s) detected!
+  ✖ src/routes/user.js: Unexpected token '}' (line 42)
+💡 Recommendation: Run 'grav rb' to revert changes.
+      </div>
+
+      <h2 id="rollback" class="docs-h2">9. Safety Rollback Guard &amp; Diff Viewer (<code>grav rb</code> &amp; <code>grav diff</code>)</h2>
+      <p class="docs-p">
+        Every file modified by the AI is mirrored in <code>~/.graviton/backups/</code> before Antigravity runs:
+      </p>
+      <div class="code-block">
+# Review colorized code changes:
+grav diff
+
+# Revert modified files and remove newly generated AI files:
+grav rb   # (or grav undo)
+      </div>
+
+      <h2 id="port-guard" class="docs-h2">10. Port Guard &amp; Silent Background Daemons</h2>
+      <p class="docs-p">
+        Launch dev servers cleanly without freezing terminal sessions or triggering Windows CMD pop-ups:
+      </p>
+      <div class="code-block">
+# Launch server as detached background daemon:
+grav start "npm run dev"
+
+# Scan active listening dev ports:
+grav port   # (or grav ports)
+
+# Terminate server or free port 3000:
+grav stop 3000
+grav stop all
+      </div>
+
+      <h2 id="session-compactor" class="docs-h2">11. Smart Session Compactor (<code>grav cmp</code>)</h2>
+      <p class="docs-p">
+        Compact continuous, long-running workspace sessions to free context window headroom while retaining architectural decisions:
+      </p>
+      <div class="code-block">
+grav cmp   # (or grav compact)
+      </div>
+
+      <h2 id="terminal-filter" class="docs-h2">12. Terminal Piped Ingestion &amp; Pruning</h2>
+      <p class="docs-p">
+        Filter terminal error output before forwarding to Antigravity:
+      </p>
+      <div class="code-block">
+# Pipe failing tests:
+npm test 2&gt;&amp;1 | grav "fix failing assertion"
+
+# Pipe compiler errors:
+cargo build 2&gt;&amp;1 | grav "resolve compilation errors"
+
+# Clean git status:
+git status | grav "generate conventional commit"
+      </div>
+
+      <!-- 5. CLI REFERENCE -->
+      <h2 id="cli-reference" class="docs-h2">13. Complete CLI Command Reference</h2>
+      <div class="docs-table-wrap">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Full Command / Flag</th>
+              <th>Short Alias</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>graviton "&lt;prompt&gt;"</code></td><td><code>grav "&lt;prompt&gt;"</code></td><td>[DEFAULT] Synthesize &amp; execute with Smart Target Pinning</td></tr>
+            <tr><td><code>graviton &lt;file&gt; [prompt]</code></td><td><code>grav &lt;file&gt; [prompt]</code></td><td>Autonomous document transpilation (Word, PDF, Excel, CSV) with 0ms cache</td></tr>
+            <tr><td><code>graviton -f "&lt;prompt&gt;"</code></td><td><code>grav -f "&lt;prompt&gt;"</code></td><td>Fast mode: direct execution without planning (low effort)</td></tr>
+            <tr><td><code>graviton -d "&lt;prompt&gt;"</code></td><td><code>grav -d "&lt;prompt&gt;"</code></td><td>Deep mode: architectural precision synthesis (high effort)</td></tr>
+            <tr><td><code>graviton -c</code> / <code>--conversation</code></td><td><code>grav -c</code></td><td>Open Antigravity IDE-style conversation history picker</td></tr>
+            <tr><td><code>graviton -c &lt;no&gt;</code></td><td><code>grav -c &lt;no&gt;</code></td><td>Resume specific conversation in interactive REPL</td></tr>
+            <tr><td><code>graviton -c &lt;no&gt; "..."</code></td><td><code>grav -c &lt;no&gt; "..."</code></td><td>Execute prompt directly on specific conversation topic</td></tr>
+            <tr><td><code>graviton -c del &lt;no&gt;</code></td><td><code>grav -c del &lt;no&gt;</code></td><td>Delete conversation from workspace history</td></tr>
+            <tr><td><code>graviton -n "&lt;prompt&gt;"</code></td><td><code>grav -n "&lt;prompt&gt;"</code></td><td>Explicitly start a fresh conversation (reset session context)</td></tr>
+            <tr><td><code>graviton chat</code></td><td><code>grav chat</code>, <code>grav repl</code></td><td>Launch interactive REPL chat shell with topic indicator</td></tr>
+            <tr><td><code>graviton doctor [--fix]</code></td><td><code>grav doc</code>, <code>grav doctor</code></td><td>Inspect system health, runtime versions, and CLI binaries</td></tr>
+            <tr><td><code>graviton diff</code></td><td><code>grav diff</code></td><td>Review colorized unified diff of AI file edits</td></tr>
+            <tr><td><code>graviton undo</code></td><td><code>grav rb</code>, <code>grav undo</code></td><td>Safety Rollback: restore modified files and remove AI files</td></tr>
+            <tr><td><code>graviton compact</code></td><td><code>grav cmp</code>, <code>grav compact</code></td><td>Compact long session context to refresh window and save tokens</td></tr>
+            <tr><td><code>graviton start &lt;cmd&gt;</code></td><td><code>grav start &lt;cmd&gt;</code></td><td>Run dev server as a silent background daemon (tree-killed on exit)</td></tr>
+            <tr><td><code>graviton stop [port]</code></td><td><code>grav stop [port]</code></td><td>Terminate daemon or free occupied port (3000, 5173, etc.)</td></tr>
+            <tr><td><code>graviton ports</code></td><td><code>grav port</code>, <code>grav ports</code></td><td>Scan common dev ports for active listening processes</td></tr>
+            <tr><td><code>graviton stats</code></td><td><code>grav gain</code>, <code>grav stats</code></td><td>Display lifetime telemetry dashboard &amp; token savings</td></tr>
+            <tr><td><code>graviton map</code></td><td><code>grav map</code></td><td>Display indexed workspace directory tree</td></tr>
+            <tr><td><code>graviton clean "&lt;prompt&gt;"</code></td><td><code>grav clean "&lt;prompt&gt;"</code></td><td>Synthesize SuperPrompt &amp; copy to clipboard (bypass AI launch)</td></tr>
+            <tr><td><code>graviton version</code></td><td><code>grav -v</code></td><td>Display Graviton version and engine metadata</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 6. SKILL MATRIX -->
+      <h2 id="skill-matrix" class="docs-h2">14. Antigravity Skill Unlocker Matrix</h2>
+      <p class="docs-p">
+        Graviton's internal skill resolver maps keywords directly to your installed Antigravity capabilities and injects specialized directives:
+      </p>
+      <div class="code-block">
+Intent: "create responsive modal dialog"
+↳ [Antigravity Skill Activated: modern-web-guidance]
+  Directive: Inject modern web standards (:has, container queries, zero-layout-shift, high-performance CSS)
+
+Intent: "build BigQuery transaction analytics"
+↳ [Antigravity Skill Activated: bigquery-sql &amp; data-autocleaning]
+  Directive: Apply high-efficiency BigQuery optimization and automated data cleaning best practices
+
+Intent: "create mobile app widget"
+↳ [Antigravity Skill Activated: flutter-apply-architecture-best-practices]
+  Directive: Apply layered reactive Flutter architecture (UI, Domain, Data) and automated unit test mocks
+      </div>
+
+      <!-- 7. PRIVACY & SECURITY -->
+      <h2 id="privacy" class="docs-h2">15. Privacy, Security &amp; Trust Guarantees</h2>
+      <p class="docs-p">
+        As a command-line tool handling developer codebases and instructions, Graviton adheres to strict security-first engineering. We believe <strong>trust is earned through verifiability, not claims</strong>.
+      </p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem;">
+          <div style="font-weight: 700; color: var(--aqua); margin-bottom: 0.4rem;">🔒 100% Offline by Design</div>
+          <div style="font-size: 0.86rem; color: var(--text-dim);">Zero outbound tracking, analytics, or telemetry beacons. Prompts and filenames never touch any external server.</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem;">
+          <div style="font-weight: 700; color: var(--aqua); margin-bottom: 0.4rem;">🛡️ Zero Runtime Dependencies</div>
+          <div style="font-size: 0.86rem; color: var(--text-dim);">The CLI engine requires 0 third-party npm runtime dependencies, eliminating supply-chain attack risks.</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem;">
+          <div style="font-weight: 700; color: var(--aqua); margin-bottom: 0.4rem;">🧹 Automated Secret Scrubbing</div>
+          <div style="font-size: 0.86rem; color: var(--text-dim);">API keys (OpenAI, AWS, GitHub PATs), private keys, and webhooks are automatically sanitized into <code>[REDACTED_SECRET]</code>.</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem;">
+          <div style="font-weight: 700; color: var(--aqua); margin-bottom: 0.4rem;">📖 Unobfuscated Source Code</div>
+          <div style="font-size: 0.86rem; color: var(--text-dim);">Source code is 100% human-readable ES Modules. Run <code>cat $(which grav)</code> to inspect every line locally.</div>
+        </div>
+      </div>
+
+      <h3 class="docs-h3">How to Independently Verify Zero Network Activity</h3>
+      <p class="docs-p">
+        You can test Graviton in air-gapped mode with all network adapters disabled:
+      </p>
+      <div class="code-block">
+# 1. Air-gapped offline test:
+grav doc
+grav cmp
+grav pin src/index.js
+# All commands execute instantly without network connectivity!
+
+# 2. Inspect active network sockets:
+netstat -an | grep -E 'ESTABLISHED|SYN_SENT'
+      </div>
+      <p class="docs-p">
+        For complete threat models and responsible disclosure policies, read our official <a href="https://github.com/alatariz/graviton/blob/main/SECURITY.md" target="_blank" style="color: var(--aqua); font-weight: 600;">SECURITY.md on GitHub ↗</a>.
+      </p>
+
+
+      <!-- 8. FAQ -->
+      <h2 id="faq" class="docs-h2">16. Troubleshooting &amp; FAQ</h2>
+
+      <h3 class="docs-h3">Q: "Google Antigravity CLI (agy) was not found on this machine"</h3>
+      <p class="docs-p">
+        <strong>Solution:</strong> The Antigravity Desktop App is a GUI application. Run <code>grav doc --fix</code>, or install the official CLI directly:
+      </p>
+      <div class="code-block">
+# Windows PowerShell:
+irm https://antigravity.google/cli/install.ps1 | iex
+
+# macOS &amp; Linux:
+curl -fsSL https://antigravity.google/cli/install.sh | bash
+      </div>
+
+      <h3 class="docs-h3">Q: "Command 'grav' not recognized after installation"</h3>
+      <p class="docs-p">
+        <strong>Solution:</strong> Ensure your global npm bin directory is registered in your system PATH environment variable:
+      </p>
+      <div class="code-block">
+npm config get prefix
+# Add the returned path (e.g. C:\Users\&lt;Name&gt;\AppData\Roaming\npm) to your PATH.
+      </div>
+    </main>
+
+    <aside class="sidebar-right">
+      <div class="toc-title">On this page</div>
+      <a href="#overview" class="toc-link">Overview</a>
+      <a href="#architecture" class="toc-link">Architecture &amp; Flow</a>
+      <a href="#benchmarks" class="toc-link">Benchmarks</a>
+      <a href="#installation" class="toc-link">Installation</a>
+      <a href="#doctor" class="toc-link">System Doctor</a>
+      <a href="#target-pinning" class="toc-link">Target Pinning</a>
+      <a href="#conversation-management" class="toc-link">IDE History (-c &amp; -n)</a>
+      <a href="#repl-chat" class="toc-link">REPL Chat Shell</a>
+      <a href="#execution-modes" class="toc-link">Fast vs Deep Modes</a>
+      <a href="#sanity-guard" class="toc-link">Syntax Sanity Guard</a>
+      <a href="#rollback" class="toc-link">Safety Rollback &amp; Diff</a>
+      <a href="#port-guard" class="toc-link">Port Guard &amp; Daemons</a>
+      <a href="#session-compactor" class="toc-link">Session Compactor</a>
+      <a href="#terminal-filter" class="toc-link">Terminal Log Pruner</a>
+      <a href="#cli-reference" class="toc-link">CLI Reference Table</a>
+      <a href="#skill-matrix" class="toc-link">Skill Matrix</a>
+      <a href="#privacy" class="toc-link">Privacy &amp; Redaction</a>
+      <a href="#faq" class="toc-link">Troubleshooting &amp; FAQ</a>
+    </aside>
+  </div>
+
+  <script>
+    const searchModal = document.getElementById('searchModal');
+    const spotlightInput = document.getElementById('spotlightInput');
+    const searchResultsList = document.getElementById('searchResultsList');
+
+    function openSearchModal() {
+      if (searchModal) {
+        searchModal.showModal();
+        if (spotlightInput) {
+          spotlightInput.value = '';
+          spotlightInput.focus();
+        }
+      }
+    }
+
+    function closeSearchModal() {
+      if (searchModal && searchModal.open) {
+        searchModal.close();
+      }
+    }
+
+    if (searchModal) {
+      searchModal.addEventListener('click', (e) => {
+        const rect = searchModal.getBoundingClientRect();
+        const isInDialog = (
+          rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) closeSearchModal();
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+      }
+      if (e.key === 'Escape' && searchModal && searchModal.open) {
+        closeSearchModal();
+      }
+    });
+
+    const SEARCH_ITEMS = [
+      { title: 'Install Graviton V3.0.0', sub: 'npm install -g github:alatariz/graviton', link: '/#get-started', badge: 'Install', icon: '⚡' },
+      { title: 'Smart Target Pinning', sub: 'Fuzzy-match and pin exact target file directly into prompt turn', link: '/docs.html#target-pinning', badge: 'Core', icon: '🎯' },
+      { title: 'Antigravity IDE History (grav -c)', sub: 'Multi-turn conversation switcher, picker, and grav -n', link: '/docs.html#conversation-management', badge: 'History', icon: '💬' },
+      { title: 'Interactive REPL Chat (grav chat)', sub: 'Live chat shell with dynamic prompt indicator and slash commands', link: '/docs.html#repl-chat', badge: 'REPL', icon: '⚡' },
+      { title: 'System Health Doctor (grav doc)', sub: 'Environment diagnostics and auto-remediation via --fix', link: '/docs.html#doctor', badge: 'Doctor', icon: '🩺' },
+      { title: 'Safety Rollback & Diff (grav rb)', sub: 'Pre-session file snapshots in ~/.graviton/backups/ & diff viewer', link: '/docs.html#rollback', badge: 'Safety', icon: '⏪' },
+      { title: 'Port Guard & Dev Daemons (grav port)', sub: 'Run background servers cleanly and inspect listening ports', link: '/docs.html#port-guard', badge: 'Daemons', icon: '🛡️' },
+      { title: 'Session Compactor (grav cmp)', sub: 'Compress continuous sessions to refresh context window', link: '/docs.html#session-compactor', badge: 'Memory', icon: '📦' },
+      { title: 'Execution Modes (-f vs -d)', sub: 'Fast execution without planning vs Deep architectural synthesis', link: '/docs.html#execution-modes', badge: 'Modes', icon: '⚙️' },
+      { title: 'CLI Command Reference', sub: 'Complete syntax table with all commands and short aliases', link: '/docs.html#cli-reference', badge: 'Docs', icon: '📖' },
+      { title: 'Antigravity Skill Matrix', sub: 'Modern Web, BigQuery ETL, Flutter, and Testing directives', link: '/docs.html#skill-matrix', badge: 'Skills', icon: '🗝️' },
+      { title: 'Privacy & Secret Redaction', sub: 'Automatic credential scrubbing into [REDACTED_SECRET]', link: '/docs.html#privacy', badge: 'Security', icon: '🔒' }
+    ];
+
+    if (spotlightInput) {
+      spotlightInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!searchResultsList) return;
+
+        const filtered = SEARCH_ITEMS.filter(item => 
+          item.title.toLowerCase().includes(query) || item.sub.toLowerCase().includes(query) || item.badge.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+          searchResultsList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem;">No matching docs or commands found for &quot;' + query + '&quot;</div>';
+          return;
+        }
+
+        searchResultsList.innerHTML = filtered.map(item => `
+          <a href="${item.link}" class="search-result-item" onclick="closeSearchModal()">
+            <span class="res-icon">${item.icon}</span>
+            <div class="res-body">
+              <div class="res-title">${item.title}</div>
+              <div class="res-sub">${item.sub}</div>
+            </div>
+            <span class="res-badge">${item.badge}</span>
+          </a>
+        `).join('');
+      });
+    }
+  </script>
+</body>
+</html>

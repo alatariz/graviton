@@ -1,0 +1,109 @@
+/* Graviton Master Global Stylesheet */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background: transparent;
+}
+pre, code, .code-block, .action-code-pane, .evidence-pre {
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+  /* ========================================================= */
+  /* PROFESSIONAL SITE FOOTER (FULL IMMACULATE STYLES)         */
+  /* ========================================================= */
+  .site-footer {
+    border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08)) !important;
+    background: rgba(4, 7, 17, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    padding: 3.5rem 2rem 2.5rem !important;
+    margin-top: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 10 !important;
+    clear: both !important;
+  }
+  .site-footer .footer-inner {
+    max-width: 1340px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 3rem !important;
+    flex-wrap: wrap !important;
+  }
+  .site-footer .footer-left {
+    max-width: 380px !important;
+  }
+  .site-footer .footer-brand-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    margin-bottom: 0.85rem !important;
+  }
+  .site-footer .footer-brand-title {
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.12em !important;
+    color: #ffffff !important;
+  }
+  .site-footer .footer-badge-version {
+    font-size: 0.7rem !important;
+    font-family: var(--font-mono, monospace) !important;
+    color: var(--neon-aqua, #00f0ff) !important;
+    background: rgba(0, 240, 255, 0.1) !important;
+    padding: 0.1rem 0.45rem !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(0, 240, 255, 0.25) !important;
+  }
+  .site-footer .footer-copy {
+    font-size: 0.85rem !important;
+    color: var(--text-dim, #94a3b8) !important;
+    line-height: 1.6 !important;
+  }
+  .site-footer .footer-author-link {
+    color: var(--neon-aqua, #00f0ff) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    transition: color 0.2s ease !important;
+  }
+  .site-footer .footer-author-link:hover {
+    color: #ffffff !important;
+    text-decoration: underline !important;
+  }
+  .site-footer .footer-right {
+    display: flex !important;
+    gap: 4rem !important;
+    flex-wrap: wrap !important;
+  }
+  .site-footer .footer-links-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.6rem !important;
+  }
+  .site-footer .footer-col-head {
+    font-size: 0.775rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    color: #ffffff !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .site-footer .footer-links-col a {
+    color: var(--text-dim, #94a3b8) !important;
+    font-size: 0.85rem !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease !important;
+  }
+  .site-footer .footer-links-col a:hover {
+    color: #ffffff !important;
+  }
+

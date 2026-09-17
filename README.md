@@ -496,6 +496,7 @@ Prevent unwanted files, proprietary secrets, and build directories from leaking 
 | `graviton stats` | `grav gain`, `grav stats` | Display lifetime telemetry dashboard & token savings |
 | `graviton map` | `grav map` | Display indexed workspace directory tree |
 | `graviton clean "<prompt>"` | `grav clean "<prompt>"` | Synthesize SuperPrompt & copy to clipboard (bypass AI launch) |
+| `graviton web` | `grav web`, `grav studio` | Launch Graviton Web Studio, live playground & visualizer (http://localhost:3000) |
 | `graviton version` | `grav -v` | Display Graviton version and engine metadata |
 
 ---

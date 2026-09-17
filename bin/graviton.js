@@ -250,6 +250,7 @@ async function main() {
   stats, gain                    Display lifetime telemetry dashboard & token savings
   map                            Display workspace directory tree and detected dependencies
   clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
+  web, studio                    Launch Graviton Web Studio, live playground & visualizer (http://localhost:3000)
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
 
@@ -375,6 +376,30 @@ async function main() {
   if (command === 'gain' || command === 'stats' || command === 'status' || command === '--gain' || command === '--stats' || command === '--status') {
     const dashboard = formatTelemetryDashboard();
     console.log(dashboard);
+    process.exit(0);
+  }
+
+  // 4b. WEB STUDIO & VISUALIZER
+  if (command === 'web' || command === 'studio' || command === 'ui') {
+    const webDir = path.join(__dirname, '..', 'web');
+    const serverPath = path.join(webDir, 'server.js');
+    if (fs.existsSync(serverPath)) {
+      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON V3.0.0 WEB STUDIO ===\x1b[0m`);
+      console.log(`\x1b[90mLocation: ${webDir}\x1b[0m\n`);
+      const nodeModules = path.join(webDir, 'node_modules');
+      if (!fs.existsSync(nodeModules)) {
+        console.log(`\x1b[33mTo launch the local web visualizer and studio:\x1b[0m`);
+        console.log(`  \x1b[36mcd web && npm install && npm start\x1b[0m\n`);
+        console.log(`Then open \x1b[1mhttp://localhost:3000\x1b[0m in your browser.\n`);
+      } else {
+        console.log(`Starting Graviton Web Studio at \x1b[1mhttp://localhost:3000\x1b[0m...`);
+        const proc = spawn('node', [serverPath], { cwd: webDir, stdio: 'inherit' });
+        proc.on('close', code => process.exit(code || 0));
+        return;
+      }
+    } else {
+      console.log(`\x1b[33mGraviton Web Studio is located in the repository at ./web\x1b[0m`);
+    }
     process.exit(0);
   }
 

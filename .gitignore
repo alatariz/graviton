@@ -1,11 +1,11 @@
-# Graviton V2.0.0 Git Ignore Rules
+# Graviton V3.0.0 Git Ignore Rules
 node_modules/
 .env*
 .DS_Store
 *.log
 
-# Web Dashboard & Studio (Excluded from GitHub repository)
-web/
+# Web studio dependencies
+web/node_modules/
 
 # Local Graviton session state & manifests
 .graviton/

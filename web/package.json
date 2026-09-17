@@ -1,0 +1,13 @@
+{
+  "name": "graviton-web-studio",
+  "version": "3.0.0",
+  "description": "Graviton V3.0.0 Web Studio, Documentation & Visualizer",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
