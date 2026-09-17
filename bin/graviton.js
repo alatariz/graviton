@@ -107,7 +107,7 @@ async function main() {
 
   for (let i = 0; i < rawArgs.length; i++) {
     const arg = rawArgs[i];
-    if (arg === '--deep') {
+    if (arg === '--deep' || arg === '-d') {
       isDeep = true;
     } else if (arg === '--fast' || arg === '-f') {
       isFast = true;
@@ -131,21 +131,37 @@ async function main() {
 
   const command = filteredArgs[0];
 
+  // 1a. Handle standalone flags without commands
+  if (isDeep && !command && !isConversationMode) {
+    console.log(`\n\x1b[33m[GRAVITON TIP]\x1b[0m \x1b[1m-d, --deep\x1b[0m activates deep architecture synthesis for a prompt.\n` +
+      `  Usage: \x1b[36mgrav -d "<prompt>"\x1b[0m (e.g. grav -d "architect a microservices backend")\n` +
+      `  For system diagnostics, run: \x1b[36mgrav doc\x1b[0m or \x1b[36mgrav doctor\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  if (isFast && !command && !isConversationMode) {
+    console.log(`\n\x1b[33m[GRAVITON TIP]\x1b[0m \x1b[1m-f, --fast\x1b[0m activates ultra-fast execution (low effort, skip planning).\n` +
+      `  Usage: \x1b[36mgrav -f "<prompt>"\x1b[0m (e.g. grav -f "fix typo in README")\n`);
+    process.exit(0);
+  }
+
   // Check if piped from stdin (e.g. `git status | graviton` or `cat prompt.txt | graviton`)
-  if (!process.stdin.isTTY && !command && !isConversationMode) {
-    const rawPiped = fs.readFileSync(0, 'utf-8');
-    if (rawPiped.trim()) {
-      if (rawPiped.includes('On branch') || rawPiped.includes('test') || rawPiped.includes('PASS') || rawPiped.includes('FAIL') || rawPiped.includes('error:')) {
-        const filtered = filterCliOutput('', rawPiped);
-        console.log(filtered);
-        process.exit(0);
-      } else {
-        const res = await synthesizePrompt(rawPiped);
-        copyToClipboard(res.optimizedText);
-        console.log(res.optimizedText);
-        process.exit(0);
+  if (!process.stdin.isTTY && !command && !isConversationMode && !isDeep && !isFast) {
+    try {
+      const rawPiped = fs.readFileSync(0, 'utf-8');
+      if (rawPiped && rawPiped.trim()) {
+        if (rawPiped.includes('On branch') || rawPiped.includes('test') || rawPiped.includes('PASS') || rawPiped.includes('FAIL') || rawPiped.includes('error:')) {
+          const filtered = filterCliOutput('', rawPiped);
+          console.log(filtered);
+          process.exit(0);
+        } else {
+          const res = await synthesizePrompt(rawPiped);
+          copyToClipboard(res.optimizedText);
+          console.log(res.optimizedText);
+          process.exit(0);
+        }
       }
-    }
+    } catch {}
   }
 
   // =========================================================================
@@ -165,7 +181,7 @@ async function main() {
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Direct ultra-fast execution without planning (effort: low)
-  --deep                         Activate deep precision synthesis for complex architecture
+  -d, --deep                     Activate deep precision synthesis for complex architecture
   -c, --conversation             Open conversation history (Antigravity IDE History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
 
@@ -173,12 +189,12 @@ async function main() {
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
   chat, repl                     Launch interactive REPL chat session (Antigravity IDE History support)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
-  doctor                         Diagnose system health, Node.js runtime, & Antigravity (agy) installation
-  compact                        Compact long continuous session to refresh context window & save tokens
-  undo, rollback                 Revert files modified or created during the most recent AI session
+  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity (agy) installation
+  compact, cmp                   Compact long continuous session to refresh context window & save tokens
+  undo, rollback, rb             Revert files modified or created during the most recent AI session
   start <cmd...>                 Launch long-running dev server cleanly as background daemon (non-hanging)
   stop [port|all]                Terminate background daemon or free blocked development port
-  ports                          Scan and display active listening development ports (3000, 5173, etc.)
+  ports, port                    Scan and display active listening development ports (3000, 5173, etc.)
   init [--global]                Initialize ~/.graviton directory and local Skill Vault
   stats, gain                    Display lifetime telemetry dashboard & token savings
   map                            Display workspace directory tree and detected dependencies
@@ -315,7 +331,7 @@ async function main() {
   }
 
   // 5b. SAFETY ROLLBACK GUARD
-  if (command === 'undo' || command === 'rollback' || command === '--undo' || command === '--rollback') {
+  if (command === 'undo' || command === 'rollback' || command === 'rb' || command === '--undo' || command === '--rollback') {
     console.log('\x1b[36m[GRAVITON]\x1b[0m Initiating Safety Rollback Guard...');
     const res = executeRollback(process.cwd());
     if (res.success) {
@@ -365,7 +381,7 @@ async function main() {
   }
 
   // 5e. PORT SCANNER
-  if (command === 'ports' || command === '--ports') {
+  if (command === 'ports' || command === '--ports' || command === 'port') {
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON PORT GUARD: ACTIVE DEV PORTS ===\x1b[0m`);
     const active = listActivePorts();
     if (active.length === 0) {
@@ -386,7 +402,7 @@ async function main() {
   }
 
   // 5g. SMART SESSION COMPACTOR
-  if (command === 'compact' || command === '--compact') {
+  if (command === 'compact' || command === '--compact' || command === 'cmp') {
     console.log('\x1b[36m[GRAVITON]\x1b[0m Compacting active workspace session...');
     const res = compactWorkspaceSession(process.cwd());
     if (res.success) {
@@ -398,7 +414,7 @@ async function main() {
   }
 
   // 5h. SYSTEM HEALTH DOCTOR
-  if (command === 'doctor' || command === '--doctor') {
+  if (command === 'doctor' || command === '--doctor' || command === 'doc') {
     const docResult = runDoctor(process.cwd(), { fix: rawArgs.includes('--fix') });
     console.log(formatDoctorReport(docResult));
     process.exit(docResult.allHealthy ? 0 : 1);

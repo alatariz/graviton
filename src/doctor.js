@@ -31,7 +31,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       name: 'Node.js Engine',
       status: 'error',
       details: `${nodeVer} (Minimum required is v18.0.0)`,
-      fix: 'Unduh versi Node.js terbaru dari https://nodejs.org'
+      fix: 'Download the latest Node.js version from https://nodejs.org'
     });
   }
 
@@ -115,7 +115,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Graviton',
       name: 'Global Config & Cache',
       status: 'ok',
-      details: `Dapat diakses di ${gravitonDir}`
+      details: `Accessible at ${gravitonDir}`
     });
   } catch (err) {
     allHealthy = false;
@@ -123,8 +123,8 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Graviton',
       name: 'Global Config & Cache',
       status: 'error',
-      details: `Gagal menulis ke ${gravitonDir}: ${err.message}`,
-      fix: 'Pastikan folder user memiliki izin read/write.'
+      details: `Failed to write to ${gravitonDir}: ${err.message}`,
+      fix: 'Ensure user home directory has read/write permissions.'
     });
   }
 
@@ -199,15 +199,15 @@ export function formatDoctorReport(result) {
 
     lines.push(`  ${icon} \x1b[1m${item.name}\x1b[0m: ${item.details}`);
     if (item.fix) {
-      lines.push(`     \x1b[36m👉 Solusi:\x1b[0m ${item.fix}`);
+      lines.push(`     \x1b[36m👉 Fix:\x1b[0m ${item.fix}`);
     }
   }
 
   lines.push('');
   if (result.allHealthy) {
-    lines.push(`\x1b[1m\x1b[32m✔ Sistem Anda 100% siap menjalankan Graviton & Google Antigravity!\x1b[0m\n`);
+    lines.push(`\x1b[1m\x1b[32m✔ Your environment is 100% ready to run Graviton & Google Antigravity!\x1b[0m\n`);
   } else {
-    lines.push(`\x1b[1m\x1b[31m✖ Ditemukan kendala konfigurasi. Silakan ikuti solusi di atas.\x1b[0m\n`);
+    lines.push(`\x1b[1m\x1b[31m✖ Configuration issues detected. Please follow the recommendations above.\x1b[0m\n`);
   }
 
   return lines.join('\n');

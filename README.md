@@ -234,8 +234,11 @@ Never struggle with escaping nested quotes in Windows PowerShell or CMD again:
 # Execute prompt directly without external quotes:
 grav Fix email validation and return 422 in src/auth.js
 
-# High-rigor planning mode for complex architecture (effort: high):
-grav --deep Architect an event-driven payment processor with idempotent webhooks
+# Fast mode (low effort, instant execution without planning):
+grav -f "Fix typo in README"
+
+# Deep precision mode (high effort, architectural planning & synthesis):
+grav -d "Architect an event-driven payment processor with idempotent webhooks"
 ```
 
 ---
@@ -388,23 +391,25 @@ grav stats
 
 <h2 id="cli-command-reference">CLI Command Reference</h2>
 
-| Full Command | Short Alias | Description |
+| Full Command / Flag | Short Alias | Description |
 | :--- | :--- | :--- |
 | `graviton "<prompt>"` | `grav "<prompt>"` | [DEFAULT] Synthesize & execute with Smart Target Pinning (defaults to fresh chat) |
+| `graviton -f "<prompt>"` | `grav -f "<prompt>"` | Fast mode: direct execution without planning (low effort, lowest latency) |
+| `graviton -d "<prompt>"` | `grav -d "<prompt>"` | Deep mode: deep precision synthesis & planning for complex architecture |
 | `graviton -c` / `--conversation` | `grav -c` | Open Antigravity IDE-style conversation history picker |
 | `graviton -c <no>` | `grav -c <no>` | Resume specific conversation in interactive REPL |
 | `graviton -c <no> "<prompt>"` | `grav -c <no> "..."` | Execute prompt directly on specific conversation topic |
 | `graviton -c del <no>` | `grav -c del <no>` | Delete conversation from workspace history |
 | `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Explicitly start a fresh conversation (reset session context) |
-| `graviton chat` | `grav chat` | Launch interactive REPL chat shell with dynamic topic indicator |
-| `graviton doctor [--fix]` | `grav doctor [--fix]` | Inspect system health, runtime versions, and CLI binaries |
+| `graviton chat` | `grav chat`, `grav repl` | Launch interactive REPL chat shell with dynamic topic indicator |
+| `graviton doctor [--fix]` | `grav doc`, `grav doctor` | Inspect system health, runtime versions, and CLI binaries |
 | `graviton diff` | `grav diff` | Review colorized unified diff of AI file edits |
-| `graviton undo` | `grav undo` | Safety Rollback: restore modified files and remove AI-created files |
-| `graviton compact` | `grav compact` | Compact long session context to refresh window and save tokens |
+| `graviton undo` | `grav rb`, `grav undo` | Safety Rollback: restore modified files and remove AI-created files |
+| `graviton compact` | `grav cmp`, `grav compact` | Compact long session context to refresh window and save tokens |
 | `graviton start <cmd>` | `grav start <cmd>` | Run dev server as a silent background daemon |
 | `graviton stop [port]` | `grav stop [port]` | Terminate daemon or free occupied port (3000, 5173, etc.) |
-| `graviton ports` | `grav ports` | Scan common dev ports for active listening processes |
-| `graviton stats` | `grav stats` | Display lifetime telemetry dashboard & token savings |
+| `graviton ports` | `grav port`, `grav ports` | Scan common dev ports for active listening processes |
+| `graviton stats` | `grav gain`, `grav stats` | Display lifetime telemetry dashboard & token savings |
 | `graviton map` | `grav map` | Display indexed workspace directory tree |
 | `graviton clean "<prompt>"` | `grav clean "<prompt>"` | Synthesize SuperPrompt & copy to clipboard (bypass AI launch) |
 | `graviton version` | `grav -v` | Display Graviton version and engine metadata |
