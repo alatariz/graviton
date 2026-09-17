@@ -1,11 +1,10 @@
-// src/doctor.js - Graviton V2.4.0 System Health & Environment Doctor
+// src/doctor.js - Graviton V3.0.0 System Health & Environment Doctor
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawnSync } from 'child_process';
 import { resolveAgyExecutable } from '../bin/graviton-relay.js';
 import { getBrainDir } from './session-manager.js';
-import { getClipboardDir } from './clipboard.js';
 
 /**
  * Runs a comprehensive system health check for Graviton & Antigravity.
@@ -172,24 +171,6 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       name: 'Python Runtime',
       status: 'ok',
       details: 'Not installed (Optional if you are not working on Python projects).'
-    });
-  }
-
-  // 7. Clipboard Ingestion Support (-p / /paste)
-  try {
-    const clipDir = getClipboardDir(cwd);
-    diagnostics.push({
-      category: 'Graviton',
-      name: 'Clipboard Ingestion (-p, /p)',
-      status: 'ok',
-      details: `Active (Directory: ${clipDir})`
-    });
-  } catch (err) {
-    diagnostics.push({
-      category: 'Graviton',
-      name: 'Clipboard Ingestion (-p, /p)',
-      status: 'warn',
-      details: `Clipboard cache initialization note: ${err.message}`
     });
   }
 
