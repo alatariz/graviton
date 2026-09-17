@@ -225,6 +225,14 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     details: 'Active (Conversational line-level deduplication & diff hunks)'
   });
 
+  // 12. Stack Trace Squeezer & Output Economizer
+  diagnostics.push({
+    category: 'Graviton',
+    name: 'Stack Trace Squeezer & Output Economizer',
+    status: 'ok',
+    details: 'Active (Filtering runtime stack frames & guiding response diffs)'
+  });
+
   return {
     allHealthy,
     diagnostics,
@@ -240,7 +248,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V2.5.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON V2.6.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

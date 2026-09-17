@@ -7,6 +7,7 @@ import { isProtectedFile, generateDependencySummary } from './shield.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
 import { isSkeletonCandidate, skeletonizeCode, shrinkSvg } from './code-outliner.js';
 import { resolveDeltaHydration } from './delta-compressor.js';
+import { squeezeMixedContent } from './stack-squeezer.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -763,6 +764,20 @@ export function recordOdometer(sessionTokens) {
 }
 
 /**
+ * Graviton V2.6.0 Output Token Economizer:
+ * Injects concise diff-response directives unless the user is explicitly creating a new file from scratch.
+ * @param {string} userInput
+ * @param {object} options
+ * @returns {string}
+ */
+export function generateEconomizerDirective(userInput, options = {}) {
+  if (options && options.rawOutput) return '';
+  const isCreatingNewFile = /\b(?:buat(?:kan)?\s+file\s+baru|create\s+(?:a\s+)?new\s+file|write\s+(?:the\s+)?entire\s+file|buatkan\s+dari\s+nol|scaffold)\b/i.test(userInput || '');
+  if (isCreatingNewFile) return '';
+  return `[GRAVITON RESPONSE ECONOMIZER]\nWhen modifying existing files, DO NOT rewrite full files in response output. Output localized Search/Replace blocks or Unified Diffs to conserve tokens.\n`;
+}
+
+/**
  * Graviton V2.0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
  * Zero token cost, zero external API calls.
  */
@@ -771,7 +786,16 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   purgeOldBackups();
 
   const currentCwd = cwd || process.cwd();
-  const cleanedInput = pruneNoise(userInput || '', { isPrompt: true });
+  let cleanedInput = pruneNoise(userInput || '', { isPrompt: true });
+
+  // Stack Trace Squeezer (V2.6.0)
+  if (!options.noSqueeze) {
+    const traceResult = squeezeMixedContent(cleanedInput, currentCwd);
+    if (traceResult.hasTrace) {
+      cleanedInput = traceResult.squeezedText;
+    }
+  }
+
   const workspaceInfo = buildWorkspaceMap(currentCwd);
   const gravitonFilter = createGravitonFilter(currentCwd);
   let sessionFilesIgnored = 0;
@@ -944,7 +968,8 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 4. DEV & WEB SERVER LIFECYCLE: When asked to run, start, or serve a web project: Antigravity CLI terminates background child processes on session exit. Therefore, NEVER run persistent continuous web servers (e.g. 'node server.js', 'npm run dev', 'vite', 'python -m http.server') directly with run_command in an infinite wait. Instead, inspect/prepare the web files (e.g. server.js, index.html), report the local URL (e.g. http://localhost:3000/), and finish immediately — Graviton's daemon engine will automatically launch and manage the persistent background daemon.
 5. TOKEN SHIELD & ASSET GUARD: NEVER read, search, or dump raw dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, composer.lock, Cargo.lock) or minified assets (.min.js, .min.css). If analyzing dependencies or troubleshooting packages, read package.json exclusively. Lockfiles contain redundant resolution metadata that wastes tens of thousands of tokens.
 6. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.
-7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.`;
+7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
+8. OUTPUT TOKEN ECONOMIZER: When modifying existing files, DO NOT rewrite entire files in textual responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.`;
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous
@@ -956,11 +981,13 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
   const topicDirectiveBlock = conversationTitle
     ? `\n\n[ACTIVE CONVERSATION TOPIC]: "${conversationTitle}"\nStay strictly focused on resolving tasks within this conversation topic.`
     : '';
+  const economizerDirective = generateEconomizerDirective(userInput, options);
+  const economizerBlock = economizerDirective ? `\n\n${economizerDirective}` : '';
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
-${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}
+${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}${economizerBlock}
 
 ${workspaceBlock}${injectedFilesBlock}
 
