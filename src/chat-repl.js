@@ -23,6 +23,7 @@ import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
 import { resolveTargetScope } from './context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from './clipboard.js';
+import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
@@ -92,6 +93,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
   \x1b[33m/c <number>\x1b[0m       Switch to and view conversation history (e.g. \x1b[1m/c 2\x1b[0m)
   \x1b[33m/n\x1b[0m, \x1b[33m--n\x1b[0m, \x1b[33m/new\x1b[0m, \x1b[33mn\x1b[0m    Start a fresh conversation in this workspace
   \x1b[33m/p\x1b[0m, \x1b[33m/paste [prompt]\x1b[0m    Attach image/files/text from clipboard to prompt
+  \x1b[33m/m <file>\x1b[0m, \x1b[33m/markdown\x1b[0m     Transpile Office/data document to Markdown
   \x1b[33m/del <number>\x1b[0m, \x1b[33md <n>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)
   \x1b[33m/rename <title>\x1b[0m    Rename active conversation topic
   \x1b[33m/undo\x1b[0m            Undo last AI changes (Rollback)
@@ -291,6 +293,30 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         }
       }
 
+      let markdownFiles = [];
+      if (input === '/m' || input.startsWith('/m ') || input === '/markdown' || input.startsWith('/markdown ')) {
+        const parts = input.replace(/^(\/markdown|\/m)\s*/i, '').trim().split(/\s+/);
+        const targetFile = parts[0];
+        const restPrompt = parts.slice(1).join(' ');
+        if (!targetFile) {
+          console.log(`\x1b[33m[!] Usage: /m <filepath> [optional prompt]\x1b[0m`);
+          updatePrompt();
+          rl.prompt();
+          return;
+        }
+        const fullDocPath = path.resolve(cwd, targetFile);
+        if (!fs.existsSync(fullDocPath)) {
+          console.log(`\x1b[31m✖ File '${targetFile}' not found in workspace.\x1b[0m`);
+          updatePrompt();
+          rl.prompt();
+          return;
+        }
+        console.log(`\x1b[36m[GRAVITON MARKITDOWN]\x1b[0m Transpiling \x1b[1m${path.basename(fullDocPath)}\x1b[0m to clean Markdown...`);
+        const transpiled = transpileFileToMarkdown(fullDocPath);
+        executionPrompt = `${transpiled}\n\nUser Request:\n${restPrompt || 'Please inspect and analyze this document, then assist with any necessary code changes.'}`;
+        markdownFiles.push(path.relative(cwd, fullDocPath).replace(/\\/g, '/'));
+      }
+
       const existingSession = getActiveConversation(cwd);
       let targetConvId = null;
       let continueSession = false;
@@ -300,9 +326,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON V2.0]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON V2.2]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
       } else {
-        console.log(`\x1b[36m[GRAVITON V2.0]\x1b[0m Starting new conversation in workspace...`);
+        console.log(`\x1b[36m[GRAVITON V2.2]\x1b[0m Starting new conversation in workspace...`);
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {
@@ -315,6 +341,13 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         for (const cf of clipboardFiles) {
           if (!targetScope.targets.includes(cf)) {
             targetScope.targets.unshift(cf);
+          }
+        }
+      }
+      if (markdownFiles.length > 0) {
+        for (const mf of markdownFiles) {
+          if (!targetScope.targets.includes(mf)) {
+            targetScope.targets.unshift(mf);
           }
         }
       }

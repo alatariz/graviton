@@ -38,6 +38,7 @@ import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js';
+import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdown.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,7 +94,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V2.1.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V2.2.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -102,6 +103,8 @@ async function main() {
   let isDeep = false;
   let isFast = false;
   let isPaste = false;
+  let isMarkdown = false;
+  let markdownFile = null;
   let isNew = false;
   let isConversationMode = false;
   let conversationAction = null;
@@ -116,6 +119,13 @@ async function main() {
       isFast = true;
     } else if (arg === '--paste' || arg === '-p') {
       isPaste = true;
+    } else if (arg === '--markdown' || arg === '-m') {
+      isMarkdown = true;
+      const next = rawArgs[i + 1];
+      if (next && !next.startsWith('-')) {
+        markdownFile = next;
+        i++;
+      }
     } else if (arg === '-n' || arg === '--n' || arg === '--new' || arg === '--fresh') {
       isNew = true;
     } else if (arg === '-c' || arg === '--c' || arg === '--conversation' || arg === 'conversation') {
@@ -187,6 +197,7 @@ async function main() {
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Direct ultra-fast execution without planning (effort: low)
   -p, --paste                    Attach image/files/text from system clipboard to prompt
+  -m, --markdown <file>          Transpile Office/CSV/JSON file to clean Markdown before sending
   -d, --deep                     Activate deep precision synthesis for complex architecture
   -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
@@ -276,7 +287,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.1.0 Intelligent Context Engine & Token Shield)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.2.0 MarkItDown & Context Engine)`);
     process.exit(0);
   }
 
@@ -538,6 +549,19 @@ async function main() {
     }
   }
 
+  let markdownTargetFile = null;
+  if (isMarkdown && markdownFile) {
+    const fullDocPath = path.resolve(currentCwd, markdownFile);
+    if (fs.existsSync(fullDocPath)) {
+      console.log(`\x1b[36m[GRAVITON MARKITDOWN]\x1b[0m Transpiling \x1b[1m${path.basename(fullDocPath)}\x1b[0m to clean Markdown...`);
+      const transpiled = transpileFileToMarkdown(fullDocPath);
+      input = `${transpiled}\n\nUser Request:\n${input || 'Please inspect and analyze this document, then assist with any necessary code changes.'}`;
+      markdownTargetFile = path.relative(currentCwd, fullDocPath).replace(/\\/g, '/');
+    } else {
+      console.log(`\x1b[33m[!] Document file '${markdownFile}' was not found in workspace.\x1b[0m`);
+    }
+  }
+
   if (!input) {
     console.error('\x1b[31mError: Please provide prompt text, use -p with clipboard, or pipe into graviton.\x1b[0m');
     process.exit(1);
@@ -595,6 +619,9 @@ async function main() {
         targetScope.targets.unshift(tf);
       }
     }
+  }
+  if (markdownTargetFile && !targetScope.targets.includes(markdownTargetFile)) {
+    targetScope.targets.unshift(markdownTargetFile);
   }
   if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
     const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';

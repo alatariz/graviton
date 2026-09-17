@@ -1,4 +1,4 @@
-// src/doctor.js - Graviton V2.0.0 System Health & Environment Doctor
+// src/doctor.js - Graviton V2.2.0 System Health & Environment Doctor
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -201,6 +201,14 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     details: 'Active (Guarding package-lock.json, yarn.lock, .min.js/css)'
   });
 
+  // 9. Office & Data Transpiler (MarkItDown)
+  diagnostics.push({
+    category: 'Graviton',
+    name: 'Office & Data Transpiler (MarkItDown)',
+    status: 'ok',
+    details: 'Active (Zero-dep parser for .docx, .xlsx, .csv, .tsv, .json)'
+  });
+
   return {
     allHealthy,
     diagnostics,
@@ -216,7 +224,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V2.1.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON V2.2.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

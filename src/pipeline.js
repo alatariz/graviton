@@ -4,6 +4,7 @@ import { getTelemetry, recordTelemetry, formatTelemetryDashboard } from './telem
 import { resolveTargetScope } from './context-scoper.js';
 import { getCompactMemoryDirective } from './session-compactor.js';
 import { isProtectedFile, generateDependencySummary } from './shield.js';
+import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -774,7 +775,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   let sessionFilesIgnored = 0;
 
   // Smart File Hydration: detect file names mentioned in userInput
-  const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh))\b/gi;
+  const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh|docx|xlsx|csv|tsv))\b/gi;
   const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
   const uniqueFiles = Array.from(new Set(matches));
 
@@ -827,6 +828,12 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     if (resolved && !handledPaths.has(resolved)) {
       handledPaths.add(resolved);
       try {
+        if (isTranspilableDocument(resolved)) {
+          const transpiled = transpileFileToMarkdown(resolved);
+          injectedFiles.push(transpiled);
+          continue;
+        }
+
         const cappedContent = readAndTruncateFile(resolved, 500);
         if (cappedContent !== null) {
           const ext = path.extname(resolved).slice(1) || '';
