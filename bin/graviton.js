@@ -201,23 +201,26 @@ async function main() {
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
 \x1b[1mAUTONOMOUS ENGINES\x1b[0m
-  Terminal Stream Filter         Strips build chatter, progress bars, and isolates errors
-  JSON Schema Compactor          Squashes oversized JSON arrays into structural summaries
+  Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
   Brevity Protocol Enforcer      Enforces zero-fluff technical directives & strips AI preambles
   Surgical Diff Enforcer         Restricts code mutations to minimal blast radius & diff hunks
-  Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
+  Patch Response Economizer      Enforces Search/Replace patch responses instead of full rewrites
+  Terminal Stream Filter         Strips build chatter, progress bars, and isolates errors
+  Runtime Trace Squeezer         Prunes internal vendor & framework frames from error logs
   Selective Context Scoper       Targeted workspace mapping & referenced file extraction
   Static Import Resolver         Shallow dependency graph tracing across JS, TS, Py, Go, Rust
   Lockfile & Asset Shield        Blocks bulky dependency lockfiles and minified bundles
-  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
-  Tabular Data Sampler           Smart tabular compaction for CSV, TSV, and large datasets
-  Structural Code Outliner       Collapses function bodies (>120 lines) & shrinks SVG paths
   Delta Diff Compressor          Sends only line-level diff hunks across conversational turns
-  Runtime Trace Squeezer         Prunes internal vendor & framework frames from error logs
-  Patch Response Economizer      Enforces Search/Replace patch responses instead of full rewrites
+  Structural Code Outliner       Collapses function bodies (>120 lines) & shrinks SVG paths
+  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
+  Content-Addressable Cache      Instant 0ms retrieval of transpiled documents via SHA-256 hashing
+  JSON Schema Compactor          Squashes oversized JSON arrays into structural summaries
+  Tabular Data Sampler           Smart tabular compaction for CSV, TSV, and large datasets
+  Memory Distillation Engine     Compacts long multi-turn sessions into distilled memory blocks
+  Syntax Sanity Validator        Pre/post-flight syntax checks with automated shadow rollback
   Noise & Secret Redactor        Prunes prompt filler noise and automatically redacts exposed keys
   Daemon & Port Guard            Automated background dev server management & conflict resolution
-  Syntax Sanity Validator        Pre/post-flight syntax checks with automated shadow rollback
+  Hierarchical Ignore Engine     Enforces recursive .gitignore and .gravitonignore exclusions
 
 \x1b[1mUSAGE\x1b[0m
   graviton "<prompt>"
