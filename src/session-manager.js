@@ -13,8 +13,21 @@ import readline from 'readline';
  * - Backwards-compatible session persistence (.graviton-session and ~/.graviton/sessions.json)
  */
 
+export function getBrainCandidates() {
+  const homeDir = process.env.USERPROFILE || process.env.HOME || os.homedir() || '';
+  const candidates = [
+    path.join(homeDir, '.gemini', 'antigravity-cli', 'brain'),
+    path.join(homeDir, '.gemini', 'antigravity', 'brain')
+  ];
+  return candidates.filter(d => fs.existsSync(d));
+}
+
 export function getBrainDir() {
   const homeDir = process.env.USERPROFILE || process.env.HOME || os.homedir() || '';
+  const cliBrain = path.join(homeDir, '.gemini', 'antigravity-cli', 'brain');
+  if (fs.existsSync(cliBrain)) {
+    return cliBrain;
+  }
   return path.join(homeDir, '.gemini', 'antigravity', 'brain');
 }
 
@@ -313,12 +326,18 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
   }
 
   const title = targetConv ? targetConv.title : 'Conversation';
-  const brainDir = getBrainDir();
-  const transcriptFile = path.join(brainDir, convId, '.system_generated', 'logs', 'transcript.jsonl');
+  let transcriptFile = null;
+  for (const bDir of getBrainCandidates()) {
+    const candidate = path.join(bDir, convId, '.system_generated', 'logs', 'transcript.jsonl');
+    if (fs.existsSync(candidate)) {
+      transcriptFile = candidate;
+      break;
+    }
+  }
 
   const parsedTurns = [];
 
-  if (fs.existsSync(transcriptFile)) {
+  if (transcriptFile && fs.existsSync(transcriptFile)) {
     try {
       const content = fs.readFileSync(transcriptFile, 'utf8');
       const lines = content.trim().split(/\r?\n/);
