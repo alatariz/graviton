@@ -775,7 +775,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   let sessionFilesIgnored = 0;
 
   // Smart File Hydration: detect file names mentioned in userInput
-  const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh|docx|xlsx|csv|tsv))\b/gi;
+  const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh|docx|xlsx|pptx|pdf|csv|tsv))\b/gi;
   const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
   const uniqueFiles = Array.from(new Set(matches));
 

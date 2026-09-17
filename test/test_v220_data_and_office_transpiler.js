@@ -222,8 +222,8 @@ try {
   assert.strictEqual(transpilerCheck.status, 'ok', 'Status must be ok');
 
   const report = formatDoctorReport(docRes);
-  assert(report.includes('GRAVITON V2.2.0 DOCTOR'), 'Report must feature V2.2.0 banner');
-  console.log('✔ PASS: Doctor diagnostics verified for MarkItDown & V2.2.0.\n');
+  assert(report.includes('GRAVITON') && report.includes('DOCTOR'), 'Report must feature doctor banner');
+  console.log('✔ PASS: Doctor diagnostics verified for MarkItDown.\n');
 
   console.log('====================================================');
   console.log('✔ ALL V2.2.0 DATA & TRANSPILER TESTS PASSED 100%!');

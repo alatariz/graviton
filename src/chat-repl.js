@@ -93,7 +93,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
   \x1b[33m/c <number>\x1b[0m       Switch to and view conversation history (e.g. \x1b[1m/c 2\x1b[0m)
   \x1b[33m/n\x1b[0m, \x1b[33m--n\x1b[0m, \x1b[33m/new\x1b[0m, \x1b[33mn\x1b[0m    Start a fresh conversation in this workspace
   \x1b[33m/p\x1b[0m, \x1b[33m/paste [prompt]\x1b[0m    Attach image/files/text from clipboard to prompt
-  \x1b[33m/m <file>\x1b[0m, \x1b[33m/markdown\x1b[0m     Transpile Office/data document to Markdown
+  \x1b[33m/m <file>\x1b[0m, \x1b[33m/markdown\x1b[0m     Transpile Office/PDF/data document to Markdown
   \x1b[33m/del <number>\x1b[0m, \x1b[33md <n>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)
   \x1b[33m/rename <title>\x1b[0m    Rename active conversation topic
   \x1b[33m/undo\x1b[0m            Undo last AI changes (Rollback)
@@ -326,9 +326,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON V2.2]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON V2.3]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
       } else {
-        console.log(`\x1b[36m[GRAVITON V2.2]\x1b[0m Starting new conversation in workspace...`);
+        console.log(`\x1b[36m[GRAVITON V2.3]\x1b[0m Starting new conversation in workspace...`);
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {

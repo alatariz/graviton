@@ -94,7 +94,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V2.2.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V2.3.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -197,7 +197,7 @@ async function main() {
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Direct ultra-fast execution without planning (effort: low)
   -p, --paste                    Attach image/files/text from system clipboard to prompt
-  -m, --markdown <file>          Transpile Office/CSV/JSON file to clean Markdown before sending
+  -m, --markdown <file>          Transpile Office/PDF/CSV/JSON file to clean Markdown before sending
   -d, --deep                     Activate deep precision synthesis for complex architecture
   -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
@@ -287,7 +287,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.2.0 MarkItDown & Context Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.3.0 MarkItDown Full & Document Cache)`);
     process.exit(0);
   }
 

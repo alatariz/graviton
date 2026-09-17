@@ -1,11 +1,12 @@
-// src/markitdown.js - Graviton V2.2.0 Zero-Dependency Office & Document to Markdown Transpiler
+// src/markitdown.js - Graviton V2.3.0 Zero-Dependency Office, PDF & Document to Markdown Transpiler
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
 import { spawnSync } from 'child_process';
 import { sampleCsvData, sampleJsonData } from './data-sampler.js';
+import { getCachedMarkdown, setCachedMarkdown } from './cache-manager.js';
 
-export const SUPPORTED_EXTENSIONS = new Set(['.docx', '.xlsx', '.csv', '.tsv', '.json']);
+export const SUPPORTED_EXTENSIONS = new Set(['.docx', '.xlsx', '.pptx', '.pdf', '.csv', '.tsv', '.json']);
 
 /**
  * Checks if a file path is a transpilable document or data format.
@@ -16,6 +17,45 @@ export function isTranspilableDocument(filePath = '') {
   if (!filePath || typeof filePath !== 'string') return false;
   const ext = path.extname(filePath).toLowerCase();
   return SUPPORTED_EXTENSIONS.has(ext);
+}
+
+/**
+ * Lists all file entry names inside a ZIP archive buffer in pure Node.js.
+ * @param {Buffer} zipBuffer
+ * @returns {string[]}
+ */
+export function listZipEntries(zipBuffer) {
+  if (!zipBuffer || !Buffer.isBuffer(zipBuffer)) return [];
+  const entries = new Set();
+
+  // 1. Central Directory Scan
+  try {
+    let cdOffset = zipBuffer.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+    while (cdOffset !== -1 && cdOffset >= 0) {
+      const filenameLen = zipBuffer.readUInt16LE(cdOffset + 28);
+      const filename = zipBuffer.toString('utf8', cdOffset + 46, cdOffset + 46 + filenameLen);
+      entries.add(filename);
+      cdOffset = zipBuffer.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]), cdOffset - 1);
+    }
+  } catch {}
+
+  // 2. Local File Header Scan
+  try {
+    let offset = 0;
+    while (offset < zipBuffer.length - 4) {
+      const sig = zipBuffer.readUInt32LE(offset);
+      if (sig !== 0x04034b50) break;
+      const compressedSize = zipBuffer.readUInt32LE(offset + 18);
+      const filenameLen = zipBuffer.readUInt16LE(offset + 26);
+      const extraLen = zipBuffer.readUInt16LE(offset + 28);
+      const filename = zipBuffer.toString('utf8', offset + 30, offset + 30 + filenameLen);
+      entries.add(filename);
+      if (compressedSize === 0) break;
+      offset = offset + 30 + filenameLen + extraLen + compressedSize;
+    }
+  } catch {}
+
+  return Array.from(entries);
 }
 
 /**
@@ -299,41 +339,246 @@ ${mdTable.join('\n')}${footer}
 }
 
 /**
- * Universal dispatcher: transpiles DOCX, XLSX, CSV, or JSON to clean Markdown representation.
+ * Transpiles Microsoft PowerPoint (.pptx) presentations to Clean Markdown slides.
  * @param {string} filePath
+ * @param {number} maxSlides
  * @returns {string}
  */
-export function transpileFileToMarkdown(filePath) {
+export function transpilePptx(filePath, maxSlides = 30) {
+  const buf = fs.readFileSync(filePath);
+  const allEntries = listZipEntries(buf);
+  const slideEntries = allEntries
+    .filter(e => /ppt\/slides\/slide\d+\.xml/i.test(e))
+    .sort((a, b) => {
+      const numA = parseInt((a.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
+      const numB = parseInt((b.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
+      return numA - numB;
+    });
+
+  // If listZipEntries didn't catch, sequentially probe slide1.xml to slide100.xml
+  if (slideEntries.length === 0) {
+    for (let i = 1; i <= 100; i++) {
+      const probeName = `ppt/slides/slide${i}.xml`;
+      const xml = extractZipEntry(buf, probeName, filePath);
+      if (xml) {
+        slideEntries.push(probeName);
+      } else {
+        break;
+      }
+    }
+  }
+
+  if (slideEntries.length === 0) {
+    return `[MARKITDOWN NOTICE: No slides detected in PowerPoint ${path.basename(filePath)}]`;
+  }
+
+  const totalSlides = slideEntries.length;
+  const processedSlides = slideEntries.slice(0, maxSlides);
+  const slideOutputs = [];
+
+  for (let idx = 0; idx < processedSlides.length; idx++) {
+    const slideName = processedSlides[idx];
+    const slideXml = extractZipEntry(buf, slideName, filePath);
+    if (!slideXml) continue;
+
+    const slideNum = idx + 1;
+    let slideTitle = '';
+    const bodyItems = [];
+
+    // Detect shapes: <p:sp>...</p:sp>
+    const shapeRegex = /<p:sp[\s\S]*?<\/p:sp>/g;
+    let spMatch;
+
+    while ((spMatch = shapeRegex.exec(slideXml)) !== null) {
+      const shape = spMatch[0];
+      const isTitleShape = /<p:ph[^>]*type=["'](?:title|ctrTitle)["']/i.test(shape);
+      const shapeText = extractDrawingMlText(shape);
+
+      if (isTitleShape && shapeText) {
+        slideTitle = shapeText.trim();
+      } else if (shapeText) {
+        const paragraphs = shapeText.split('\n').map(p => p.trim()).filter(Boolean);
+        for (const p of paragraphs) {
+          bodyItems.push(p);
+        }
+      }
+    }
+
+    // Fallback: If no explicit title shape found, take first paragraph as title
+    if (!slideTitle && bodyItems.length > 0) {
+      slideTitle = bodyItems.shift();
+    }
+
+    const titleHeader = `## Slide ${slideNum}: ${slideTitle || `Slide ${slideNum}`}`;
+    const formattedBody = bodyItems.map(item => item.startsWith('-') ? item : `- ${item}`).join('\n');
+
+    slideOutputs.push(`${titleHeader}\n\n${formattedBody || '*(No text content)*'}`.trim());
+  }
+
+  const footer = totalSlides > maxSlides
+    ? `\n\n*Note to AI: Presentation contains ${totalSlides} slides. Top ${maxSlides} slides displayed above by MarkItDown.*`
+    : '';
+
+  const baseName = path.basename(filePath);
+  return `
+[GRAVITON MARKITDOWN: POWERPOINT TRANSPILER]
+Presentation: \`${baseName}\` (${totalSlides} Slides)
+
+${slideOutputs.join('\n\n---\n\n')}${footer}
+`.trim();
+}
+
+/**
+ * Transpiles PDF documents to Clean Markdown pages.
+ * Zero-dependency pure Node.js FlateDecode stream parser with native fallbacks.
+ * @param {string} filePath
+ * @param {number} maxPages
+ * @returns {string}
+ */
+export function transpilePdf(filePath, maxPages = 40) {
+  const buf = fs.readFileSync(filePath);
+  const content = buf.toString('binary');
+  const pages = [];
+  let pageNum = 1;
+
+  // Scan PDF streams
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
+  let match;
+
+  while ((match = streamRegex.exec(content)) !== null) {
+    if (pages.length >= maxPages) break;
+    const rawStream = Buffer.from(match[1], 'binary');
+    let decompressed = '';
+
+    try {
+      decompressed = zlib.inflateSync(rawStream).toString('utf8');
+    } catch {
+      try {
+        decompressed = zlib.inflateRawSync(rawStream).toString('utf8');
+      } catch {
+        decompressed = rawStream.toString('utf8');
+      }
+    }
+
+    if (decompressed && decompressed.includes('BT')) {
+      const pageLines = extractTextFromPdfStream(decompressed);
+      if (pageLines.length > 0) {
+        pages.push({
+          page: pageNum++,
+          text: pageLines.join('\n')
+        });
+      }
+    }
+  }
+
+  // Fallback: uncompressed ASCII string extraction if no FlateDecode streams matched
+  if (pages.length === 0) {
+    const rawStrings = [];
+    const tjRegex = /\(([^)]{2,})\)\s*Tj/g;
+    let rMatch;
+    while ((rMatch = tjRegex.exec(content)) !== null) {
+      const cleaned = cleanPdfString(rMatch[1]);
+      if (cleaned.trim()) rawStrings.push(cleaned.trim());
+    }
+    if (rawStrings.length > 0) {
+      pages.push({ page: 1, text: rawStrings.join('\n') });
+    }
+  }
+
+  if (pages.length === 0) {
+    return `[MARKITDOWN NOTICE: No extractable text found in ${path.basename(filePath)} (Scanned/Image-only PDF)]`;
+  }
+
+  const baseName = path.basename(filePath);
+  const pagesMd = pages.map(p => `### Page ${p.page}\n\n${p.text}`).join('\n\n---\n\n');
+
+  return `
+[GRAVITON MARKITDOWN: PDF TRANSPILER]
+Document: \`${baseName}\` (${pages.length} Pages Extracted)
+
+${pagesMd}
+`.trim();
+}
+
+/**
+ * Universal dispatcher: transpiles DOCX, XLSX, PPTX, PDF, CSV, TSV, or JSON to clean Markdown.
+ * Uses caching layer for sub-millisecond repeated responses.
+ * @param {string} filePath
+ * @param {object} [options]
+ * @returns {string}
+ */
+export function transpileFileToMarkdown(filePath, options = {}) {
   if (!fs.existsSync(filePath)) {
     return `[MARKITDOWN ERROR: File not found -> ${filePath}]`;
   }
 
+  // Check cache first
+  const cached = getCachedMarkdown(filePath, options.cwd || process.cwd());
+  if (cached) {
+    return cached;
+  }
+
   const ext = path.extname(filePath).toLowerCase();
+  let result = '';
 
   if (ext === '.docx') {
-    return transpileDocx(filePath);
-  }
-  if (ext === '.xlsx') {
-    return transpileXlsx(filePath);
-  }
-  if (ext === '.csv' || ext === '.tsv') {
+    result = transpileDocx(filePath);
+  } else if (ext === '.xlsx') {
+    result = transpileXlsx(filePath);
+  } else if (ext === '.pptx') {
+    result = transpilePptx(filePath);
+  } else if (ext === '.pdf') {
+    result = transpilePdf(filePath);
+  } else if (ext === '.csv' || ext === '.tsv') {
     const raw = fs.readFileSync(filePath, 'utf8');
-    return sampleCsvData(raw);
-  }
-  if (ext === '.json') {
+    result = sampleCsvData(raw);
+  } else if (ext === '.json') {
     const raw = fs.readFileSync(filePath, 'utf8');
     const sampled = sampleJsonData(raw);
     if (!sampled.startsWith('[GRAVITON DATA SAMPLER')) {
-      return `\`\`\`json\n// File: ${path.basename(filePath)}\n${sampled}\n\`\`\``;
+      result = `\`\`\`json\n// File: ${path.basename(filePath)}\n${sampled}\n\`\`\``;
+    } else {
+      result = sampled;
     }
-    return sampled;
+  } else {
+    result = fs.readFileSync(filePath, 'utf8');
   }
 
-  return fs.readFileSync(filePath, 'utf8');
+  // Save to cache
+  if (result) {
+    setCachedMarkdown(filePath, result, options.cwd || process.cwd());
+  }
+
+  return result;
 }
 
 /**
- * Helper to pull text from XML tags (<w:t>, <t>, etc.)
+ * Helper to pull text from DrawingML tags (<a:t>) inside PowerPoint shapes.
+ */
+function extractDrawingMlText(shapeXml) {
+  const pRegex = /<a:p[\s\S]*?<\/a:p>/g;
+  const paragraphs = [];
+  let pMatch;
+
+  while ((pMatch = pRegex.exec(shapeXml)) !== null) {
+    const pBlock = pMatch[0];
+    const tRegex = /<a:t\b[^>]*>([\s\S]*?)<\/a:t>/g;
+    const pieces = [];
+    let tMatch;
+    while ((tMatch = tRegex.exec(pBlock)) !== null) {
+      pieces.push(tMatch[1]);
+    }
+    const full = pieces.join('').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').trim();
+    if (full) {
+      paragraphs.push(full);
+    }
+  }
+
+  return paragraphs.join('\n');
+}
+
+/**
+ * Helper to pull text from Word/Spreadsheet XML tags (<w:t>, <t>, etc.)
  */
 function extractTextFromXml(xmlStr) {
   const tRegex = /<(?:\w+:)?t\b[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/g;
@@ -343,4 +588,75 @@ function extractTextFromXml(xmlStr) {
     pieces.push(m[1]);
   }
   return pieces.join('').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+}
+
+/**
+ * Decodes text strings and positioning from decompressed PDF stream.
+ */
+function extractTextFromPdfStream(decompressed) {
+  const lines = [];
+  const btRegex = /BT([\s\S]*?)ET/g;
+  let btMatch;
+
+  while ((btMatch = btRegex.exec(decompressed)) !== null) {
+    const block = btMatch[1];
+    let currentLine = '';
+
+    // Regex for Tj, TJ, and text line breaks
+    const opRegex = /(?:\(([^)]*)\)\s*Tj)|(?:\[([\s\S]*?)\]\s*TJ)|(?:\(([^)]*)\)\s*['"])|(?:(?:[-0-9.]+\s+)+T[dD])|(?:T\*)/g;
+    let opMatch;
+
+    while ((opMatch = opRegex.exec(block)) !== null) {
+      if (opMatch[1] !== undefined) {
+        // (string) Tj
+        currentLine += cleanPdfString(opMatch[1]);
+      } else if (opMatch[2] !== undefined) {
+        // [(str) kern (str)] TJ
+        const inner = opMatch[2];
+        const innerRegex = /(?:\(([^)]*)\))|(-?\d+(?:\.\d+)?)/g;
+        let item;
+        while ((item = innerRegex.exec(inner)) !== null) {
+          if (item[1] !== undefined) {
+            currentLine += cleanPdfString(item[1]);
+          } else if (item[2] !== undefined) {
+            const kern = parseFloat(item[2]);
+            if (kern < -100) {
+              currentLine += ' ';
+            }
+          }
+        }
+      } else if (opMatch[3] !== undefined) {
+        // ' or " newline operator
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        currentLine = cleanPdfString(opMatch[3]);
+      } else {
+        // Td, TD, T* line break
+        if (currentLine.trim()) {
+          lines.push(currentLine.trim());
+          currentLine = '';
+        }
+      }
+    }
+
+    if (currentLine.trim()) {
+      lines.push(currentLine.trim());
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * Unescapes characters in PDF string objects.
+ */
+function cleanPdfString(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\([0-7]{1,3})/g, (m, oct) => String.fromCharCode(parseInt(oct, 8)))
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\\\/g, '\\');
 }
