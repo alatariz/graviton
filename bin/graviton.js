@@ -200,6 +200,20 @@ async function main() {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
+\x1b[1mAUTONOMOUS ENGINES\x1b[0m
+  Context Scoper                 Selective workspace mapping & target file extraction
+  Dependency Resolver            Shallow local import tracing across JS, TS, Python, Go, Rust
+  Token Shield                   Blocks bulky dependency lockfiles and minified bundles
+  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
+  Data Sampler                   Smart tabular compaction for CSV, TSV, and oversized JSON
+  Code Skeletonizer              Outlines large code (>120 lines) & shrinks vector SVG paths
+  Delta Compressor               Sends only line-level diff hunks across conversational turns
+  Stack Trace Squeezer           Prunes vendor & runtime internal frames from error logs
+  Output Economizer              Enforces Search/Replace patch responses instead of full rewrites
+  Noise & Secret Guard           Prunes prompt filler noise and automatically redacts exposed keys
+  Port Conflict Guard            Automated background dev server management & conflict resolution
+  Syntax Sanity Guard            Pre/post-flight syntax validation with automated shadow rollback
+
 \x1b[1mUSAGE\x1b[0m
   graviton "<prompt>"
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
@@ -230,21 +244,6 @@ async function main() {
   clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
-
-\x1b[1mAUTONOMOUS ENGINES (Active in Background — Zero Configuration Required)\x1b[0m
-  Context Scoper                 Selective workspace mapping & target file extraction
-  Dependency Resolver            Shallow local import tracing across JS, TS, Python, Go, Rust
-  Token Shield                   Blocks bulky dependency lockfiles and minified bundles
-  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
-  Data Sampler                   Smart tabular compaction for CSV, TSV, and oversized JSON
-  Image Auto-Downscaler          Downscales high-res images to prevent vision token blowup
-  Code Skeletonizer              Outlines large code (>120 lines) & shrinks vector SVG paths
-  Delta Compressor               Sends only line-level diff hunks across conversational turns
-  Stack Trace Squeezer           Prunes vendor & runtime internal frames from error logs
-  Output Economizer              Enforces Search/Replace patch responses instead of full rewrites
-  Noise & Secret Guard           Prunes prompt filler noise and automatically redacts exposed keys
-  Port Conflict Guard            Automated background dev server management & conflict resolution
-  Syntax Sanity Guard            Pre/post-flight syntax validation with automated shadow rollback
 
 \x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
   # Open interactive conversation history picker:
