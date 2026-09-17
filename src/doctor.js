@@ -193,6 +193,14 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     });
   }
 
+  // 8. Token Shield (Lockfile & Minified Asset Guard)
+  diagnostics.push({
+    category: 'Graviton',
+    name: 'Token Shield (Lockfile & Asset Guard)',
+    status: 'ok',
+    details: 'Active (Guarding package-lock.json, yarn.lock, .min.js/css)'
+  });
+
   return {
     allHealthy,
     diagnostics,
@@ -208,7 +216,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V2.0.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON V2.1.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

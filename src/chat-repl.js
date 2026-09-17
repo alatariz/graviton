@@ -41,7 +41,7 @@ export async function startChatRepl(options = {}) {
 
   console.log(`
 \x1b[1m\x1b[36m===============================================================
-  GRAVITON V2.0.0 INTERACTIVE REPL CHAT (CLI HISTORY)
+  GRAVITON V2.1.0 INTERACTIVE REPL CHAT (CLI HISTORY)
 ===============================================================\x1b[0m
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}

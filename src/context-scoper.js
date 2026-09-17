@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createGravitonFilter } from './ignore-parser.js';
+import { isProtectedFile } from './shield.js';
 
 const IGNORE_DIRS = new Set([
   'node_modules', '.git', 'dist', 'build', '__pycache__',
@@ -40,7 +41,7 @@ export function getWorkspaceFiles(cwd = process.cwd(), maxDepth = 4) {
           walk(fullPath, depth + 1);
         } else if (entry.isFile()) {
           const fullPath = path.join(currentDir, entry.name);
-          if (filter.isIgnored(fullPath)) continue;
+          if (filter.isIgnored(fullPath) || isProtectedFile(entry.name)) continue;
           const relPath = path.relative(cwd, fullPath).replace(/\\/g, '/');
           files.push(relPath);
         }
@@ -77,12 +78,12 @@ export function getLastTouchedFiles(cwd = process.cwd()) {
     if (Array.isArray(data.modified)) {
       for (const item of data.modified) {
         const p = typeof item === 'string' ? item : item.original;
-        if (p) touched.push(path.relative(cwd, p).replace(/\\/g, '/'));
+        if (p && !isProtectedFile(p)) touched.push(path.relative(cwd, p).replace(/\\/g, '/'));
       }
     }
     if (Array.isArray(data.created)) {
       for (const item of data.created) {
-        if (item) touched.push(path.relative(cwd, item).replace(/\\/g, '/'));
+        if (item && !isProtectedFile(item)) touched.push(path.relative(cwd, item).replace(/\\/g, '/'));
       }
     }
     return touched.filter(Boolean);

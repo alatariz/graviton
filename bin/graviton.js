@@ -93,7 +93,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V2.0.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V2.1.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -276,7 +276,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.0.0 Intelligent Context Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.1.0 Intelligent Context Engine & Token Shield)`);
     process.exit(0);
   }
 
@@ -464,6 +464,12 @@ async function main() {
     copyToClipboard(superPrompt);
     console.log(superPrompt);
     console.error(`\n\x1b[32m✔ SuperPrompt assembled & Copied to clipboard!\x1b[0m \x1b[90m(Graviton Zero-Token Middleware)\x1b[0m`);
+    process.exit(0);
+  }
+
+  // 6c. VERSION
+  if (command === 'version' || command === '--version' || command === '-v') {
+    console.log('GRAVITON v2.1.0 (Graviton V2.1.0 Intelligent Context Engine & Token Shield)');
     process.exit(0);
   }
 

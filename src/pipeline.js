@@ -3,6 +3,7 @@ import { loadGravIgnore, isGravIgnored, createGravFilter, loadGravitonIgnore, is
 import { getTelemetry, recordTelemetry, formatTelemetryDashboard } from './telemetry.js';
 import { resolveTargetScope } from './context-scoper.js';
 import { getCompactMemoryDirective } from './session-compactor.js';
+import { isProtectedFile, generateDependencySummary } from './shield.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -787,6 +788,11 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
       sessionFilesIgnored++;
       continue;
     }
+    if (isProtectedFile(filename)) {
+      sessionFilesIgnored++;
+      injectedFiles.push(generateDependencySummary(currentCwd));
+      continue;
+    }
 
     let candidatePath = path.resolve(currentCwd, filename);
     if (gravitonFilter.isIgnored(candidatePath)) {
@@ -896,8 +902,9 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 2. You MUST create all new files, project structures, code, dependencies, and folders strictly INSIDE this [CWD] directory (or relative to it).
 3. NEVER create files or projects in ~/.gemini, in scratch directories, or in any parent/root directory outside [CWD].
 4. DEV & WEB SERVER LIFECYCLE: When asked to run, start, or serve a web project: Antigravity CLI terminates background child processes on session exit. Therefore, NEVER run persistent continuous web servers (e.g. 'node server.js', 'npm run dev', 'vite', 'python -m http.server') directly with run_command in an infinite wait. Instead, inspect/prepare the web files (e.g. server.js, index.html), report the local URL (e.g. http://localhost:3000/), and finish immediately — Graviton's daemon engine will automatically launch and manage the persistent background daemon.
-5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.
-6. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.`;
+5. TOKEN SHIELD & ASSET GUARD: NEVER read, search, or dump raw dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, composer.lock, Cargo.lock) or minified assets (.min.js, .min.css). If analyzing dependencies or troubleshooting packages, read package.json exclusively. Lockfiles contain redundant resolution metadata that wastes tens of thousands of tokens.
+6. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.
+7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.`;
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous

@@ -53,9 +53,25 @@ try {
   if ([System.Windows.Forms.Clipboard]::ContainsImage()) {
     $img = [System.Windows.Forms.Clipboard]::GetImage();
     if ($img -ne $null) {
-      $img.Save('${escapedDest}', [System.Drawing.Imaging.ImageFormat]::Png);
+      $maxDim = 1280;
+      $wasDownscaled = $false;
+      if ($img.Width -gt $maxDim -or $img.Height -gt $maxDim) {
+        $ratio = [Math]::Min([double]$maxDim / $img.Width, [double]$maxDim / $img.Height);
+        $newW = [Math]::Max(1, [int]($img.Width * $ratio));
+        $newH = [Math]::Max(1, [int]($img.Height * $ratio));
+        $resized = New-Object System.Drawing.Bitmap $newW, $newH;
+        $graphics = [System.Drawing.Graphics]::FromImage($resized);
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic;
+        $graphics.DrawImage($img, 0, 0, $newW, $newH);
+        $graphics.Dispose();
+        $resized.Save('${escapedDest}', [System.Drawing.Imaging.ImageFormat]::Png);
+        $resized.Dispose();
+        $wasDownscaled = $true;
+      } else {
+        $img.Save('${escapedDest}', [System.Drawing.Imaging.ImageFormat]::Png);
+      }
       $img.Dispose();
-      Write-Output "TYPE:IMAGE|${escapedDest}";
+      Write-Output "TYPE:IMAGE|${escapedDest}|$($wasDownscaled)";
       exit 0;
     }
   }
@@ -190,11 +206,13 @@ function parseClipboardOutput(rawOut, destImg, cwd) {
 
   if (typeTag === 'IMAGE') {
     const imgPath = parts[1] || destImg;
+    const wasDownscaled = parts[2] === 'True';
     const rel = path.relative(cwd, imgPath).replace(/\\/g, '/');
     return {
       type: 'image',
       path: imgPath,
-      relPath: rel.startsWith('.') ? rel : `./${rel}`
+      relPath: rel.startsWith('.') ? rel : `./${rel}`,
+      wasDownscaled
     };
   }
 
@@ -237,7 +255,9 @@ export function formatClipboardAttachment(clipResult, promptText = '') {
 
   if (clipResult.type === 'image') {
     targetFiles.push(clipResult.relPath);
-    summary = `Image captured: ${clipResult.relPath}`;
+    summary = clipResult.wasDownscaled
+      ? `Image captured & downscaled to 1280px (Token Vision Optimized): ${clipResult.relPath}`
+      : `Image captured: ${clipResult.relPath}`;
     const userInstruction = cleanPrompt || 'Please analyze this screenshot image carefully and implement/fix the corresponding interface or code.';
     const enhancedPrompt = `
 [GRAVITON CLIPBOARD IMAGE ATTACHMENT]

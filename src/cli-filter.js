@@ -119,10 +119,32 @@ export function filterCliOutput(command, rawOutput) {
   }
 
   let cleaned = stripAnsi(rawOutput);
+  // Handle carriage return spinners and progress bars
+  cleaned = cleaned.replace(/\r/g, '\n');
   cleaned = cleaned.replace(/^[-\\|/]\s*.*$/gm, '');
-  cleaned = cleaned.replace(/\b(?:\d{1,3}%|\d+\/\d+)\s+\[[=>\s]+\]/g, '');
+  cleaned = cleaned.replace(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]\s*.*$/gm, '');
+  cleaned = cleaned.replace(/\[[=>\s#-]{3,}\]\s*(?:\d{1,3}%|\d+\/\d+)?/g, '');
+  cleaned = cleaned.replace(/(?:\d{1,3}%|\d+\/\d+)\s*\[[=>\s#-]{3,}\]/g, '');
+  cleaned = cleaned.replace(/^npm\s+(?:http|verb|timing)\s+.*$/gm, '');
+
+  const rawLines = cleaned.split('\n').map(l => l.trimEnd()).filter(l => l.length > 0);
   
-  const lines = cleaned.split('\n').map(l => l.trimEnd()).filter(l => l.length > 0);
+  // Stack frame compaction: collapse contiguous node_modules traces
+  const lines = [];
+  let nodeModulesCount = 0;
+
+  for (const l of rawLines) {
+    if (l.includes('node_modules') && l.trim().startsWith('at ')) {
+      nodeModulesCount++;
+      if (nodeModulesCount === 1) {
+        lines.push('    ↳ [... internal node_modules call frames omitted ...]');
+      }
+    } else {
+      nodeModulesCount = 0;
+      lines.push(l);
+    }
+  }
+
   if (lines.length > 30) {
     return `${lines.slice(0, 10).join('\n')}\n   ↳ [... ${lines.length - 20} lines filtered by Graviton ...]\n${lines.slice(-10).join('\n')}`;
   }
