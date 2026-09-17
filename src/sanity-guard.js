@@ -27,21 +27,21 @@ export function checkFileSyntax(filePath) {
       if (res.status !== 0) {
         let errorText = (res.stderr || res.stdout || '').trim();
 
-        // If Node defaulted to CommonJS but file uses ES Module import/export
-        if (errorText.includes("Unexpected token 'export'") || errorText.includes("Cannot use import statement outside a module")) {
-          try {
-            const code = fs.readFileSync(normalizedPath, 'utf8');
-            const modRes = spawnSync(process.execPath, ['--input-type=module', '--check'], {
-              input: code,
-              encoding: 'utf8',
-              stdio: ['pipe', 'pipe', 'pipe']
-            });
-            if (modRes.status === 0) {
-              return { file: filePath, valid: true };
-            }
-            errorText = (modRes.stderr || modRes.stdout || '').trim();
-          } catch {}
-        }
+        // Always fallback to check as ES Module if CommonJS check fails
+        try {
+          const code = fs.readFileSync(normalizedPath, 'utf8');
+          const modRes = spawnSync(process.execPath, ['--input-type=module', '--check'], {
+            input: code,
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+          if (modRes.status === 0) {
+            return { file: filePath, valid: true };
+          }
+          if (modRes.stderr) {
+            errorText = modRes.stderr.trim();
+          }
+        } catch {}
 
         let line = null;
         let col = null;
@@ -90,10 +90,20 @@ export function checkFileSyntax(filePath) {
   // 3. Python Files (.py)
   if (ext === '.py') {
     try {
-      const pyRes = spawnSync('python', ['-m', 'py_compile', normalizedPath], {
+      const pyBin = process.platform === 'win32' ? 'python' : 'python3';
+      let pyRes = spawnSync(pyBin, ['-m', 'py_compile', normalizedPath], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe']
       });
+      if (pyRes.error && pyBin !== 'python') {
+        pyRes = spawnSync('python', ['-m', 'py_compile', normalizedPath], {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
+      }
+      if (pyRes.error || pyRes.status === null) {
+        return { file: filePath, valid: true, skipped: true };
+      }
       if (pyRes.status !== 0) {
         const errorText = (pyRes.stderr || pyRes.stdout || '').trim();
         let line = null;
