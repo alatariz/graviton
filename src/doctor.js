@@ -189,7 +189,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V3.0.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

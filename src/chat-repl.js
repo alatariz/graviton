@@ -43,7 +43,7 @@ export async function startChatRepl(options = {}) {
 
   console.log(`
 \x1b[1m\x1b[36m===============================================================
-  GRAVITON V3.0.0 INTERACTIVE REPL CHAT (20 AUTONOMOUS ENGINES ACTIVE)
+  GRAVITON INTERACTIVE REPL CHAT
 ===============================================================\x1b[0m
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}
@@ -355,9 +355,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON V2.6]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
-      } else {
-        console.log(`\x1b[36m[GRAVITON V2.6]\x1b[0m Starting new conversation in workspace...`);
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing topic: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {
@@ -384,8 +382,6 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
         const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
         console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
-      } else {
-        console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Workspace Mapping Active \x1b[90m(General Exploration)\x1b[0m`);
       }
 
       runAntigravityWithAutoAllow(superPrompt, {
@@ -394,6 +390,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         cwd,
         isDeep: options.isDeep || false
       });
+
+      const odo = readOdometer();
+      console.log(`\x1b[32m✔  Execution complete. (Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
 
       // Post-execution: Syntax Sanity Check & Compaction advisory
       inspectSessionFiles(cwd);

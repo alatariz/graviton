@@ -95,7 +95,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V3.0.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -395,7 +395,7 @@ async function main() {
     const webDir = path.join(__dirname, '..', 'web');
     const serverPath = path.join(webDir, 'server.js');
     if (fs.existsSync(serverPath)) {
-      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON V3.0.0 WEB STUDIO ===\x1b[0m`);
+      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON WEB STUDIO ===\x1b[0m`);
       console.log(`\x1b[90mStarting zero-dependency web studio from ${webDir}...\x1b[0m\n`);
       const proc = spawn('node', [serverPath], { cwd: webDir, stdio: 'inherit' });
       proc.on('close', code => process.exit(code || 0));

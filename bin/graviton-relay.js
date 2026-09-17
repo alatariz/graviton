@@ -6,7 +6,6 @@ import { getLatestConversationId, saveWorkspaceSession } from '../src/session-ma
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 import { inspectSessionFiles } from '../src/sanity-guard.js';
 import { trackSessionTurn, checkCompactionStatus } from '../src/session-compactor.js';
-import { startAiProgressIndicator } from '../src/progress-indicator.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -307,8 +306,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  const isDefaultPromptMode = !options.stdio && !options.interactive && !options.args;
-  const stdioMode = options.stdio ? options.stdio : (isDefaultPromptMode ? ['inherit', 'pipe', 'pipe'] : 'inherit');
+  const stdioMode = options.stdio || 'inherit';
 
   // Determine shell option:
   // On Windows, if executable is .cmd or .bat or non-absolute, shell: true is needed.
@@ -324,34 +322,14 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Start Live AI Progress Indicator if interactive prompt mode
-  const progress = isDefaultPromptMode
-    ? startAiProgressIndicator({ stdio: options.stdio })
-    : { stop: () => {} };
-
-  let result;
-  try {
-    // Execute the relay using spawnSync with workspace directory confinement
-    result = spawnSync(agyExecutable, args, {
-      cwd: executionCwd,
-      stdio: stdioMode,
-      shell: useShell,
-      maxBuffer: 64 * 1024 * 1024,
-      env
-    });
-  } finally {
-    progress.stop();
-  }
-
-  // If buffered in default prompt mode, stream output cleanly after progress indicator
-  if (isDefaultPromptMode && result) {
-    if (result.stdout && result.stdout.length > 0) {
-      process.stdout.write(result.stdout);
-    }
-    if (result.stderr && result.stderr.length > 0) {
-      process.stderr.write(result.stderr);
-    }
-  }
+  // Execute the relay using spawnSync with workspace directory confinement
+  const result = spawnSync(agyExecutable, args, {
+    cwd: executionCwd,
+    stdio: stdioMode,
+    shell: useShell,
+    maxBuffer: 64 * 1024 * 1024,
+    env
+  });
 
   // Auto-detect and record conversation ID and session manifest for rollback guard
   try {
