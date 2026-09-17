@@ -488,6 +488,10 @@ export function readAndTruncateFile(filePath, maxLines = 500) {
     if (fileName.endsWith('.min.js') || fileName.endsWith('.min.css')) {
       return '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]';
     }
+    const stat = fs.statSync(filePath);
+    if (stat.size > 10 * 1024 * 1024) {
+      return '// [GRAVITON DEFENSIVE GUARD: File exceeds 10MB safety limit. Content omitted for stability.]';
+    }
     const raw = fs.readFileSync(filePath, 'utf8');
     const firstLineEnd = raw.indexOf('\n');
     const firstLine = firstLineEnd === -1 ? raw : raw.slice(0, firstLineEnd);
@@ -857,6 +861,12 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
         if (isTranspilableDocument(resolved)) {
           const transpiled = transpileFileToMarkdown(resolved);
           injectedFiles.push(transpiled);
+          continue;
+        }
+
+        const stat = fs.statSync(resolved);
+        if (stat.size > 10 * 1024 * 1024) {
+          injectedFiles.push(`// [GRAVITON DEFENSIVE GUARD: "${path.relative(currentCwd, resolved).replace(/\\/g, '/')}" exceeds 10MB safety limit (${(stat.size / (1024 * 1024)).toFixed(1)}MB). Content omitted for stability.]`);
           continue;
         }
 

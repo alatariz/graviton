@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { normalizePosixPath } from './ignore-parser.js';
 
 /**
  * Computes a SHA-256 hash of text content.
@@ -77,7 +78,7 @@ function saveManifest(snapshotDir, manifest) {
 export function recordFileSnapshot(cwd, relPath, content, conversationId = 'default') {
   const snapshotDir = getSnapshotDir(cwd, conversationId);
   const hash = computeFileHash(content);
-  const normalizedRel = relPath.replace(/\\/g, '/');
+  const normalizedRel = normalizePosixPath(relPath);
   const lineCount = content.split(/\r?\n/).length;
 
   const manifest = getManifest(snapshotDir);
@@ -108,7 +109,7 @@ export function recordFileSnapshot(cwd, relPath, content, conversationId = 'defa
  */
 export function getPreviousSnapshot(cwd, relPath, conversationId = 'default') {
   const snapshotDir = getSnapshotDir(cwd, conversationId);
-  const normalizedRel = relPath.replace(/\\/g, '/');
+  const normalizedRel = normalizePosixPath(relPath);
   const manifest = getManifest(snapshotDir);
 
   if (!manifest.files || !manifest.files[normalizedRel]) {
@@ -303,9 +304,11 @@ export function computeHunkDiff(oldText, newText, relPath = 'file', contextLines
  */
 export function resolveDeltaHydration(filePath, rawContent, cwd = process.cwd(), options = {}) {
   const currentCwd = path.resolve(cwd);
-  const relPath = path.isAbsolute(filePath)
-    ? path.relative(currentCwd, filePath).replace(/\\/g, '/')
-    : filePath.replace(/\\/g, '/');
+  const relPath = normalizePosixPath(
+    path.isAbsolute(filePath)
+      ? path.relative(currentCwd, filePath)
+      : filePath
+  );
 
   const conversationId = options.conversationId || 'default';
   const threshold = typeof options.threshold === 'number' ? options.threshold : 0.4;

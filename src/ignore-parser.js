@@ -49,6 +49,25 @@ export function loadGravIgnore(cwd = process.cwd()) {
 export const loadGravitonIgnore = loadGravIgnore;
 
 /**
+ * Normalizes any file path into a clean, relative/absolute POSIX path with forward slashes
+ * and stripped leading './'.
+ * @param {string} filePath
+ * @returns {string}
+ */
+export function normalizePosixPath(filePath) {
+  if (!filePath || typeof filePath !== 'string') return '';
+  let normalized = filePath.replace(/\\/g, '/');
+  normalized = path.posix.normalize(normalized);
+  while (normalized.startsWith('./')) {
+    normalized = normalized.slice(2);
+  }
+  if (normalized.startsWith('/') && !normalized.startsWith('//')) {
+    normalized = normalized.replace(/^\/+/, '');
+  }
+  return normalized;
+}
+
+/**
  * Compiles a single .gravignore pattern into a fast matcher function.
  * @param {string} pattern
  * @returns {(relPath: string, baseName: string) => boolean}
@@ -66,18 +85,20 @@ export function compilePattern(pattern) {
   }
 
   const hasWildcard = p.includes('*') || p.includes('?');
+  const isWindows = process.platform === 'win32';
+  const pLower = p.toLowerCase();
 
   if (!hasWildcard) {
     return (relPath, baseName) => {
       // Direct basename match (e.g. pattern "foo.js" matches "sub/foo.js" if not fromRoot)
-      if (!fromRoot && baseName === p) return true;
+      if (!fromRoot && (baseName === p || (isWindows && baseName.toLowerCase() === pLower))) return true;
       // Relative path match
-      if (relPath === p) return true;
+      if (relPath === p || (isWindows && relPath.toLowerCase() === pLower)) return true;
       // Directory prefix match
-      if (relPath.startsWith(p + '/')) return true;
+      if (relPath.startsWith(p + '/') || (isWindows && relPath.toLowerCase().startsWith(pLower + '/'))) return true;
       // In-path directory segment match if not anchored to root
-      if (!fromRoot && relPath.includes('/' + p + '/')) return true;
-      if (!fromRoot && relPath.endsWith('/' + p)) return true;
+      if (!fromRoot && (relPath.includes('/' + p + '/') || (isWindows && relPath.toLowerCase().includes('/' + pLower + '/')))) return true;
+      if (!fromRoot && (relPath.endsWith('/' + p) || (isWindows && relPath.toLowerCase().endsWith('/' + pLower)))) return true;
       return false;
     };
   }
@@ -119,11 +140,7 @@ export function isGravIgnored(targetPath, patterns = [], cwd = process.cwd()) {
   }
 
   const absPath = path.isAbsolute(targetPath) ? targetPath : path.resolve(cwd, targetPath);
-  let relPath = path.relative(cwd, absPath).replace(/\\/g, '/');
-  if (relPath.startsWith('./')) {
-    relPath = relPath.slice(2);
-  }
-
+  const relPath = normalizePosixPath(path.relative(cwd, absPath));
   const baseName = path.basename(absPath);
 
   for (const pattern of patterns) {
@@ -153,10 +170,7 @@ export function createGravFilter(cwd = process.cwd()) {
     isIgnored(targetPath) {
       if (matchers.length === 0 || !targetPath) return false;
       const absPath = path.isAbsolute(targetPath) ? targetPath : path.resolve(cwd, targetPath);
-      let relPath = path.relative(cwd, absPath).replace(/\\/g, '/');
-      if (relPath.startsWith('./')) {
-        relPath = relPath.slice(2);
-      }
+      const relPath = normalizePosixPath(path.relative(cwd, absPath));
       const baseName = path.basename(absPath);
 
       for (let i = 0; i < matchers.length; i++) {

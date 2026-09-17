@@ -123,6 +123,7 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
   const allFiles = getWorkspaceFiles(cwd);
   const keywords = extractKeywords(prompt);
   const promptLower = prompt.toLowerCase();
+  const normalizedPromptLower = promptLower.replace(/\\/g, '/');
 
   const scoredFiles = [];
 
@@ -132,10 +133,10 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
     const nameWithoutExt = baseName.includes('.') ? baseName.slice(0, baseName.lastIndexOf('.')) : baseName;
     let score = 0;
 
-    // 1. Direct explicit file mention in prompt
-    if (promptLower.includes(baseName) || promptLower.includes(lowerRel)) {
+    // 1. Direct explicit file mention in prompt (supporting both slash and backslash)
+    if (promptLower.includes(baseName) || normalizedPromptLower.includes(lowerRel) || promptLower.includes(lowerRel)) {
       score += 100;
-    } else if (nameWithoutExt.length >= 3 && promptLower.includes(nameWithoutExt)) {
+    } else if (nameWithoutExt.length >= 3 && (promptLower.includes(nameWithoutExt) || normalizedPromptLower.includes(nameWithoutExt))) {
       score += 80;
     }
 

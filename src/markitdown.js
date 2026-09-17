@@ -7,6 +7,7 @@ import { sampleCsvData, sampleJsonData } from './data-sampler.js';
 import { getCachedMarkdown, setCachedMarkdown } from './cache-manager.js';
 
 export const SUPPORTED_EXTENSIONS = new Set(['.docx', '.xlsx', '.pptx', '.pdf', '.csv', '.tsv', '.json']);
+export const MAX_TRANSPILATION_SIZE = 20 * 1024 * 1024; // 20 MB safety limit
 
 /**
  * Checks if a file path is a transpilable document or data format.
@@ -169,78 +170,86 @@ $zip.Dispose();
  * @returns {string}
  */
 export function transpileDocx(filePath) {
-  const buf = fs.readFileSync(filePath);
-  const docXml = extractZipEntry(buf, 'word/document.xml', filePath);
-  if (!docXml) {
-    return `[MARKITDOWN NOTICE: Could not extract word/document.xml from ${path.basename(filePath)}]`;
-  }
+  try {
+    const buf = fs.readFileSync(filePath);
+    if (buf.length < 4 || buf[0] !== 0x50 || buf[1] !== 0x4b) {
+      return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" is not a valid ZIP/Office document (corrupted or unrecognized file header).]`;
+    }
+    const docXml = extractZipEntry(buf, 'word/document.xml', filePath);
+    if (!docXml) {
+      return `[MARKITDOWN NOTICE: Could not extract word/document.xml from ${path.basename(filePath)}]`;
+    }
 
-  const outputLines = [];
+    const outputLines = [];
 
-  // Match tables: <w:tbl>...</w:tbl>
-  // Or paragraphs: <w:p>...</w:p>
-  const blockRegex = /<w:tbl[\s\S]*?<\/w:tbl>|<w:p[\s\S]*?<\/w:p>/g;
-  let match;
+    // Match tables: <w:tbl>...</w:tbl>
+    // Or paragraphs: <w:p>...</w:p>
+    const blockRegex = /<w:tbl[\s\S]*?<\/w:tbl>|<w:p[\s\S]*?<\/w:p>/g;
+    let match;
 
-  while ((match = blockRegex.exec(docXml)) !== null) {
-    const block = match[0];
+    while ((match = blockRegex.exec(docXml)) !== null) {
+      const block = match[0];
 
-    if (block.startsWith('<w:tbl')) {
-      // Parse Table
-      const rows = [];
-      const rowRegex = /<w:tr[\s\S]*?<\/w:tr>/g;
-      let rMatch;
-      while ((rMatch = rowRegex.exec(block)) !== null) {
-        const rBlock = rMatch[0];
-        const cells = [];
-        const cellRegex = /<w:tc[\s\S]*?<\/w:tc>/g;
-        let cMatch;
-        while ((cMatch = cellRegex.exec(rBlock)) !== null) {
-          const cText = extractTextFromXml(cMatch[0]);
-          cells.push(cText.replace(/\|/g, '\\|').trim());
+      if (block.startsWith('<w:tbl')) {
+        // Parse Table
+        const rows = [];
+        const rowRegex = /<w:tr[\s\S]*?<\/w:tr>/g;
+        let rMatch;
+        while ((rMatch = rowRegex.exec(block)) !== null) {
+          const rBlock = rMatch[0];
+          const cells = [];
+          const cellRegex = /<w:tc[\s\S]*?<\/w:tc>/g;
+          let cMatch;
+          while ((cMatch = cellRegex.exec(rBlock)) !== null) {
+            const cText = extractTextFromXml(cMatch[0]);
+            cells.push(cText.replace(/\|/g, '\\|').trim());
+          }
+          if (cells.length > 0) rows.push(cells);
         }
-        if (cells.length > 0) rows.push(cells);
-      }
 
-      if (rows.length > 0) {
-        const maxCols = Math.max(...rows.map(r => r.length));
-        const header = rows[0];
-        while (header.length < maxCols) header.push('');
-        outputLines.push(`| ${header.join(' | ')} |`);
-        outputLines.push(`| ${header.map(() => '---').join(' | ')} |`);
-        for (let i = 1; i < rows.length; i++) {
-          const row = rows[i];
-          while (row.length < maxCols) row.push('');
-          outputLines.push(`| ${row.join(' | ')} |`);
+        if (rows.length > 0) {
+          const maxCols = Math.max(...rows.map(r => r.length));
+          const header = rows[0];
+          while (header.length < maxCols) header.push('');
+          outputLines.push(`| ${header.join(' | ')} |`);
+          outputLines.push(`| ${header.map(() => '---').join(' | ')} |`);
+          for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            while (row.length < maxCols) row.push('');
+            outputLines.push(`| ${row.join(' | ')} |`);
+          }
+          outputLines.push('');
         }
-        outputLines.push('');
-      }
-    } else {
-      // Parse Paragraph
-      const text = extractTextFromXml(block).trim();
-      if (!text) continue;
-
-      const headingMatch = block.match(/<w:pStyle\s+[^>]*w:val=["']Heading(\d)["']/i);
-      const isBullet = block.includes('<w:numPr');
-
-      if (headingMatch) {
-        const level = Math.min(6, parseInt(headingMatch[1], 10) || 1);
-        outputLines.push(`${'#'.repeat(level)} ${text}\n`);
-      } else if (isBullet) {
-        outputLines.push(`- ${text}`);
       } else {
-        outputLines.push(`${text}\n`);
+        // Parse Paragraph
+        const text = extractTextFromXml(block).trim();
+        if (!text) continue;
+
+        const headingMatch = block.match(/<w:pStyle\s+[^>]*w:val=["']Heading(\d)["']/i);
+        const isBullet = block.includes('<w:numPr');
+
+        if (headingMatch) {
+          const level = Math.min(6, parseInt(headingMatch[1], 10) || 1);
+          outputLines.push(`${'#'.repeat(level)} ${text}\n`);
+        } else if (isBullet) {
+          outputLines.push(`- ${text}`);
+        } else {
+          outputLines.push(`${text}\n`);
+        }
       }
     }
-  }
 
-  const baseName = path.basename(filePath);
-  return `
+    const baseName = path.basename(filePath);
+    return `
 [GRAVITON MARKITDOWN: DOCX TRANSPILER]
 Document: \`${baseName}\` (Converted to Clean Markdown)
 
 ${outputLines.join('\n').trim()}
 `.trim();
+  } catch (err) {
+    const errorMsg = err && err.message ? err.message : String(err);
+    return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" could not be parsed (${errorMsg}). File may be corrupted or encrypted.]`;
+  }
 }
 
 /**
@@ -250,92 +259,100 @@ ${outputLines.join('\n').trim()}
  * @returns {string}
  */
 export function transpileXlsx(filePath, maxRows = 25) {
-  const buf = fs.readFileSync(filePath);
-  const sharedXml = extractZipEntry(buf, 'xl/sharedStrings.xml', filePath);
-  const sheetXml = extractZipEntry(buf, 'xl/worksheets/sheet1.xml', filePath);
-
-  if (!sheetXml) {
-    return `[MARKITDOWN NOTICE: Could not extract sheet1.xml from ${path.basename(filePath)}]`;
-  }
-
-  // 1. Build shared strings dictionary
-  const sharedStrings = [];
-  if (sharedXml) {
-    const siRegex = /<si[\s\S]*?<\/si>/g;
-    let sMatch;
-    while ((sMatch = siRegex.exec(sharedXml)) !== null) {
-      sharedStrings.push(extractTextFromXml(sMatch[0]));
+  try {
+    const buf = fs.readFileSync(filePath);
+    if (buf.length < 4 || buf[0] !== 0x50 || buf[1] !== 0x4b) {
+      return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" is not a valid ZIP/Office document (corrupted or unrecognized file header).]`;
     }
-  }
+    const sharedXml = extractZipEntry(buf, 'xl/sharedStrings.xml', filePath);
+    const sheetXml = extractZipEntry(buf, 'xl/worksheets/sheet1.xml', filePath);
 
-  // 2. Parse sheet rows
-  const parsedRows = [];
-  const rowRegex = /<row\s+[^>]*r=["'](\d+)["'][\s\S]*?<\/row>/g;
-  let rMatch;
+    if (!sheetXml) {
+      return `[MARKITDOWN NOTICE: Could not extract sheet1.xml from ${path.basename(filePath)}]`;
+    }
 
-  while ((rMatch = rowRegex.exec(sheetXml)) !== null) {
-    const rBlock = rMatch[0];
-    const cells = [];
-    const cellRegex = /<c\s+[^>]*r=["']([A-Z]+)(\d+)["']([^>]*)>([\s\S]*?)<\/c>/g;
-    let cMatch;
+    // 1. Build shared strings dictionary
+    const sharedStrings = [];
+    if (sharedXml) {
+      const siRegex = /<si[\s\S]*?<\/si>/g;
+      let sMatch;
+      while ((sMatch = siRegex.exec(sharedXml)) !== null) {
+        sharedStrings.push(extractTextFromXml(sMatch[0]));
+      }
+    }
 
-    while ((cMatch = cellRegex.exec(rBlock)) !== null) {
-      const colLetters = cMatch[1];
-      const attrs = cMatch[3];
-      const inner = cMatch[4];
+    // 2. Parse sheet rows
+    const parsedRows = [];
+    const rowRegex = /<row\s+[^>]*r=["'](\d+)["'][\s\S]*?<\/row>/g;
+    let rMatch;
 
-      let val = '';
-      if (attrs.includes('t="s"')) {
-        // Shared string index
-        const vMatch = inner.match(/<v>(\d+)<\/v>/);
-        if (vMatch) {
-          const idx = parseInt(vMatch[1], 10);
-          val = sharedStrings[idx] || '';
+    while ((rMatch = rowRegex.exec(sheetXml)) !== null) {
+      const rBlock = rMatch[0];
+      const cells = [];
+      const cellRegex = /<c\s+[^>]*r=["']([A-Z]+)(\d+)["']([^>]*)>([\s\S]*?)<\/c>/g;
+      let cMatch;
+
+      while ((cMatch = cellRegex.exec(rBlock)) !== null) {
+        const colLetters = cMatch[1];
+        const attrs = cMatch[3];
+        const inner = cMatch[4];
+
+        let val = '';
+        if (attrs.includes('t="s"')) {
+          // Shared string index
+          const vMatch = inner.match(/<v>(\d+)<\/v>/);
+          if (vMatch) {
+            const idx = parseInt(vMatch[1], 10);
+            val = sharedStrings[idx] || '';
+          }
+        } else if (attrs.includes('t="inlineStr"')) {
+          val = extractTextFromXml(inner);
+        } else {
+          const vMatch = inner.match(/<v>([^<]+)<\/v>/);
+          if (vMatch) val = vMatch[1];
         }
-      } else if (attrs.includes('t="inlineStr"')) {
-        val = extractTextFromXml(inner);
-      } else {
-        const vMatch = inner.match(/<v>([^<]+)<\/v>/);
-        if (vMatch) val = vMatch[1];
+
+        cells.push(val.replace(/\|/g, '\\|').trim());
       }
 
-      cells.push(val.replace(/\|/g, '\\|').trim());
+      if (cells.length > 0) parsedRows.push(cells);
     }
 
-    if (cells.length > 0) parsedRows.push(cells);
-  }
+    if (parsedRows.length === 0) {
+      return `[MARKITDOWN: Empty Excel Spreadsheet - ${path.basename(filePath)}]`;
+    }
 
-  if (parsedRows.length === 0) {
-    return `[MARKITDOWN: Empty Excel Spreadsheet - ${path.basename(filePath)}]`;
-  }
+    const totalRows = parsedRows.length;
+    const sampleRows = parsedRows.slice(0, maxRows);
+    const maxCols = Math.max(...sampleRows.map(r => r.length));
 
-  const totalRows = parsedRows.length;
-  const sampleRows = parsedRows.slice(0, maxRows);
-  const maxCols = Math.max(...sampleRows.map(r => r.length));
+    const mdTable = [];
+    const header = sampleRows[0];
+    while (header.length < maxCols) header.push('');
+    mdTable.push(`| ${header.join(' | ')} |`);
+    mdTable.push(`| ${header.map(() => '---').join(' | ')} |`);
 
-  const mdTable = [];
-  const header = sampleRows[0];
-  while (header.length < maxCols) header.push('');
-  mdTable.push(`| ${header.join(' | ')} |`);
-  mdTable.push(`| ${header.map(() => '---').join(' | ')} |`);
+    for (let i = 1; i < sampleRows.length; i++) {
+      const row = sampleRows[i];
+      while (row.length < maxCols) row.push('');
+      mdTable.push(`| ${row.join(' | ')} |`);
+    }
 
-  for (let i = 1; i < sampleRows.length; i++) {
-    const row = sampleRows[i];
-    while (row.length < maxCols) row.push('');
-    mdTable.push(`| ${row.join(' | ')} |`);
-  }
+    const footer = totalRows > maxRows
+      ? `\n\n*Note to AI: Sheet contains ${totalRows.toLocaleString()} rows. Top ${maxRows} rows displayed above by MarkItDown for token economy.*`
+      : '';
 
-  const footer = totalRows > maxRows
-    ? `\n\n*Note to AI: Sheet contains ${totalRows.toLocaleString()} rows. Top ${maxRows} rows displayed above by MarkItDown for token economy.*`
-    : '';
-
-  const baseName = path.basename(filePath);
-  return `
+    const baseName = path.basename(filePath);
+    return `
 [GRAVITON MARKITDOWN: EXCEL TRANSPILER]
 Spreadsheet: \`${baseName}\` (${totalRows.toLocaleString()} Rows)
 
 ${mdTable.join('\n')}${footer}
 `.trim();
+  } catch (err) {
+    const errorMsg = err && err.message ? err.message : String(err);
+    return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" could not be parsed (${errorMsg}). File may be corrupted or encrypted.]`;
+  }
 }
 
 /**
@@ -345,87 +362,95 @@ ${mdTable.join('\n')}${footer}
  * @returns {string}
  */
 export function transpilePptx(filePath, maxSlides = 30) {
-  const buf = fs.readFileSync(filePath);
-  const allEntries = listZipEntries(buf);
-  const slideEntries = allEntries
-    .filter(e => /ppt\/slides\/slide\d+\.xml/i.test(e))
-    .sort((a, b) => {
-      const numA = parseInt((a.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
-      const numB = parseInt((b.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
-      return numA - numB;
-    });
-
-  // If listZipEntries didn't catch, sequentially probe slide1.xml to slide100.xml
-  if (slideEntries.length === 0) {
-    for (let i = 1; i <= 100; i++) {
-      const probeName = `ppt/slides/slide${i}.xml`;
-      const xml = extractZipEntry(buf, probeName, filePath);
-      if (xml) {
-        slideEntries.push(probeName);
-      } else {
-        break;
-      }
+  try {
+    const buf = fs.readFileSync(filePath);
+    if (buf.length < 4 || buf[0] !== 0x50 || buf[1] !== 0x4b) {
+      return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" is not a valid ZIP/Office document (corrupted or unrecognized file header).]`;
     }
-  }
+    const allEntries = listZipEntries(buf);
+    const slideEntries = allEntries
+      .filter(e => /ppt\/slides\/slide\d+\.xml/i.test(e))
+      .sort((a, b) => {
+        const numA = parseInt((a.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
+        const numB = parseInt((b.match(/slide(\d+)\.xml/i) || [])[1] || '0', 10);
+        return numA - numB;
+      });
 
-  if (slideEntries.length === 0) {
-    return `[MARKITDOWN NOTICE: No slides detected in PowerPoint ${path.basename(filePath)}]`;
-  }
-
-  const totalSlides = slideEntries.length;
-  const processedSlides = slideEntries.slice(0, maxSlides);
-  const slideOutputs = [];
-
-  for (let idx = 0; idx < processedSlides.length; idx++) {
-    const slideName = processedSlides[idx];
-    const slideXml = extractZipEntry(buf, slideName, filePath);
-    if (!slideXml) continue;
-
-    const slideNum = idx + 1;
-    let slideTitle = '';
-    const bodyItems = [];
-
-    // Detect shapes: <p:sp>...</p:sp>
-    const shapeRegex = /<p:sp[\s\S]*?<\/p:sp>/g;
-    let spMatch;
-
-    while ((spMatch = shapeRegex.exec(slideXml)) !== null) {
-      const shape = spMatch[0];
-      const isTitleShape = /<p:ph[^>]*type=["'](?:title|ctrTitle)["']/i.test(shape);
-      const shapeText = extractDrawingMlText(shape);
-
-      if (isTitleShape && shapeText) {
-        slideTitle = shapeText.trim();
-      } else if (shapeText) {
-        const paragraphs = shapeText.split('\n').map(p => p.trim()).filter(Boolean);
-        for (const p of paragraphs) {
-          bodyItems.push(p);
+    // If listZipEntries didn't catch, sequentially probe slide1.xml to slide100.xml
+    if (slideEntries.length === 0) {
+      for (let i = 1; i <= 100; i++) {
+        const probeName = `ppt/slides/slide${i}.xml`;
+        const xml = extractZipEntry(buf, probeName, filePath);
+        if (xml) {
+          slideEntries.push(probeName);
+        } else {
+          break;
         }
       }
     }
 
-    // Fallback: If no explicit title shape found, take first paragraph as title
-    if (!slideTitle && bodyItems.length > 0) {
-      slideTitle = bodyItems.shift();
+    if (slideEntries.length === 0) {
+      return `[MARKITDOWN NOTICE: No slides detected in PowerPoint ${path.basename(filePath)}]`;
     }
 
-    const titleHeader = `## Slide ${slideNum}: ${slideTitle || `Slide ${slideNum}`}`;
-    const formattedBody = bodyItems.map(item => item.startsWith('-') ? item : `- ${item}`).join('\n');
+    const totalSlides = slideEntries.length;
+    const processedSlides = slideEntries.slice(0, maxSlides);
+    const slideOutputs = [];
 
-    slideOutputs.push(`${titleHeader}\n\n${formattedBody || '*(No text content)*'}`.trim());
-  }
+    for (let idx = 0; idx < processedSlides.length; idx++) {
+      const slideName = processedSlides[idx];
+      const slideXml = extractZipEntry(buf, slideName, filePath);
+      if (!slideXml) continue;
 
-  const footer = totalSlides > maxSlides
-    ? `\n\n*Note to AI: Presentation contains ${totalSlides} slides. Top ${maxSlides} slides displayed above by MarkItDown.*`
-    : '';
+      const slideNum = idx + 1;
+      let slideTitle = '';
+      const bodyItems = [];
 
-  const baseName = path.basename(filePath);
-  return `
+      // Detect shapes: <p:sp>...</p:sp>
+      const shapeRegex = /<p:sp[\s\S]*?<\/p:sp>/g;
+      let spMatch;
+
+      while ((spMatch = shapeRegex.exec(slideXml)) !== null) {
+        const shape = spMatch[0];
+        const isTitleShape = /<p:ph[^>]*type=["'](?:title|ctrTitle)["']/i.test(shape);
+        const shapeText = extractDrawingMlText(shape);
+
+        if (isTitleShape && shapeText) {
+          slideTitle = shapeText.trim();
+        } else if (shapeText) {
+          const paragraphs = shapeText.split('\n').map(p => p.trim()).filter(Boolean);
+          for (const p of paragraphs) {
+            bodyItems.push(p);
+          }
+        }
+      }
+
+      // Fallback: If no explicit title shape found, take first paragraph as title
+      if (!slideTitle && bodyItems.length > 0) {
+        slideTitle = bodyItems.shift();
+      }
+
+      const titleHeader = `## Slide ${slideNum}: ${slideTitle || `Slide ${slideNum}`}`;
+      const formattedBody = bodyItems.map(item => item.startsWith('-') ? item : `- ${item}`).join('\n');
+
+      slideOutputs.push(`${titleHeader}\n\n${formattedBody || '*(No text content)*'}`.trim());
+    }
+
+    const footer = totalSlides > maxSlides
+      ? `\n\n*Note to AI: Presentation contains ${totalSlides} slides. Top ${maxSlides} slides displayed above by MarkItDown.*`
+      : '';
+
+    const baseName = path.basename(filePath);
+    return `
 [GRAVITON MARKITDOWN: POWERPOINT TRANSPILER]
 Presentation: \`${baseName}\` (${totalSlides} Slides)
 
 ${slideOutputs.join('\n\n---\n\n')}${footer}
 `.trim();
+  } catch (err) {
+    const errorMsg = err && err.message ? err.message : String(err);
+    return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" could not be parsed (${errorMsg}). File may be corrupted or encrypted.]`;
+  }
 }
 
 /**
@@ -436,68 +461,76 @@ ${slideOutputs.join('\n\n---\n\n')}${footer}
  * @returns {string}
  */
 export function transpilePdf(filePath, maxPages = 40) {
-  const buf = fs.readFileSync(filePath);
-  const content = buf.toString('binary');
-  const pages = [];
-  let pageNum = 1;
+  try {
+    const buf = fs.readFileSync(filePath);
+    if (buf.length < 5 || buf.toString('utf8', 0, 5) !== '%PDF-') {
+      return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" is not a valid PDF file (missing %PDF- header).]`;
+    }
+    const content = buf.toString('binary');
+    const pages = [];
+    let pageNum = 1;
 
-  // Scan PDF streams
-  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
-  let match;
+    // Scan PDF streams
+    const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
+    let match;
 
-  while ((match = streamRegex.exec(content)) !== null) {
-    if (pages.length >= maxPages) break;
-    const rawStream = Buffer.from(match[1], 'binary');
-    let decompressed = '';
+    while ((match = streamRegex.exec(content)) !== null) {
+      if (pages.length >= maxPages) break;
+      const rawStream = Buffer.from(match[1], 'binary');
+      let decompressed = '';
 
-    try {
-      decompressed = zlib.inflateSync(rawStream).toString('utf8');
-    } catch {
       try {
-        decompressed = zlib.inflateRawSync(rawStream).toString('utf8');
+        decompressed = zlib.inflateSync(rawStream).toString('utf8');
       } catch {
-        decompressed = rawStream.toString('utf8');
+        try {
+          decompressed = zlib.inflateRawSync(rawStream).toString('utf8');
+        } catch {
+          decompressed = rawStream.toString('utf8');
+        }
+      }
+
+      if (decompressed && decompressed.includes('BT')) {
+        const pageLines = extractTextFromPdfStream(decompressed);
+        if (pageLines.length > 0) {
+          pages.push({
+            page: pageNum++,
+            text: pageLines.join('\n')
+          });
+        }
       }
     }
 
-    if (decompressed && decompressed.includes('BT')) {
-      const pageLines = extractTextFromPdfStream(decompressed);
-      if (pageLines.length > 0) {
-        pages.push({
-          page: pageNum++,
-          text: pageLines.join('\n')
-        });
+    // Fallback: uncompressed ASCII string extraction if no FlateDecode streams matched
+    if (pages.length === 0) {
+      const rawStrings = [];
+      const tjRegex = /\(([^)]{2,})\)\s*Tj/g;
+      let rMatch;
+      while ((rMatch = tjRegex.exec(content)) !== null) {
+        const cleaned = cleanPdfString(rMatch[1]);
+        if (cleaned.trim()) rawStrings.push(cleaned.trim());
+      }
+      if (rawStrings.length > 0) {
+        pages.push({ page: 1, text: rawStrings.join('\n') });
       }
     }
-  }
 
-  // Fallback: uncompressed ASCII string extraction if no FlateDecode streams matched
-  if (pages.length === 0) {
-    const rawStrings = [];
-    const tjRegex = /\(([^)]{2,})\)\s*Tj/g;
-    let rMatch;
-    while ((rMatch = tjRegex.exec(content)) !== null) {
-      const cleaned = cleanPdfString(rMatch[1]);
-      if (cleaned.trim()) rawStrings.push(cleaned.trim());
+    if (pages.length === 0) {
+      return `[MARKITDOWN NOTICE: No extractable text found in ${path.basename(filePath)} (Scanned/Image-only PDF)]`;
     }
-    if (rawStrings.length > 0) {
-      pages.push({ page: 1, text: rawStrings.join('\n') });
-    }
-  }
 
-  if (pages.length === 0) {
-    return `[MARKITDOWN NOTICE: No extractable text found in ${path.basename(filePath)} (Scanned/Image-only PDF)]`;
-  }
+    const baseName = path.basename(filePath);
+    const pagesMd = pages.map(p => `### Page ${p.page}\n\n${p.text}`).join('\n\n---\n\n');
 
-  const baseName = path.basename(filePath);
-  const pagesMd = pages.map(p => `### Page ${p.page}\n\n${p.text}`).join('\n\n---\n\n');
-
-  return `
+    return `
 [GRAVITON MARKITDOWN: PDF TRANSPILER]
 Document: \`${baseName}\` (${pages.length} Pages Extracted)
 
 ${pagesMd}
 `.trim();
+  } catch (err) {
+    const errorMsg = err && err.message ? err.message : String(err);
+    return `[GRAVITON DOCUMENT NOTICE: "${path.basename(filePath)}" could not be parsed (${errorMsg}). File may be corrupted or encrypted.]`;
+  }
 }
 
 /**
@@ -512,6 +545,14 @@ export function transpileFileToMarkdown(filePath, options = {}) {
     return `[MARKITDOWN ERROR: File not found -> ${filePath}]`;
   }
 
+  // Check file size safety limit
+  try {
+    const stat = fs.statSync(filePath);
+    if (stat.size > MAX_TRANSPILATION_SIZE) {
+      return `[GRAVITON DEFENSIVE GUARD: File exceeds 20MB safety limit (${(stat.size / (1024 * 1024)).toFixed(1)}MB). Transpilation skipped to preserve stability.]`;
+    }
+  } catch {}
+
   // Check cache first
   const cached = getCachedMarkdown(filePath, options.cwd || process.cwd());
   if (cached) {
@@ -521,27 +562,32 @@ export function transpileFileToMarkdown(filePath, options = {}) {
   const ext = path.extname(filePath).toLowerCase();
   let result = '';
 
-  if (ext === '.docx') {
-    result = transpileDocx(filePath);
-  } else if (ext === '.xlsx') {
-    result = transpileXlsx(filePath);
-  } else if (ext === '.pptx') {
-    result = transpilePptx(filePath);
-  } else if (ext === '.pdf') {
-    result = transpilePdf(filePath);
-  } else if (ext === '.csv' || ext === '.tsv') {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    result = sampleCsvData(raw);
-  } else if (ext === '.json') {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const sampled = sampleJsonData(raw);
-    if (!sampled.startsWith('[GRAVITON DATA SAMPLER')) {
-      result = `\`\`\`json\n// File: ${path.basename(filePath)}\n${sampled}\n\`\`\``;
+  try {
+    if (ext === '.docx') {
+      result = transpileDocx(filePath);
+    } else if (ext === '.xlsx') {
+      result = transpileXlsx(filePath);
+    } else if (ext === '.pptx') {
+      result = transpilePptx(filePath);
+    } else if (ext === '.pdf') {
+      result = transpilePdf(filePath);
+    } else if (ext === '.csv' || ext === '.tsv') {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      result = sampleCsvData(raw);
+    } else if (ext === '.json') {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const sampled = sampleJsonData(raw);
+      if (!sampled.startsWith('[GRAVITON DATA SAMPLER')) {
+        result = `\`\`\`json\n// File: ${path.basename(filePath)}\n${sampled}\n\`\`\``;
+      } else {
+        result = sampled;
+      }
     } else {
-      result = sampled;
+      result = fs.readFileSync(filePath, 'utf8');
     }
-  } else {
-    result = fs.readFileSync(filePath, 'utf8');
+  } catch (err) {
+    const errorMsg = err && err.message ? err.message : String(err);
+    return `[GRAVITON DEFENSIVE GUARD: Error reading "${path.basename(filePath)}" (${errorMsg}).]`;
   }
 
   // Save to cache
