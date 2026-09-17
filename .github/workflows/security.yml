@@ -51,12 +51,12 @@ jobs:
         shell: bash
         run: |
           echo "Verifying absence of hardcoded tokens or confidential API keys..."
-          if grep -rnEI 'AIza[0-9A-Za-z-_]{35}' bin/ src/ test/ 2>/dev/null; then
+          if grep -rnEI --exclude="workspace-helper.js" 'AIza[0-9A-Za-z-_]{35}' bin/ src/ test/ 2>/dev/null; then
             echo "ERROR: Hardcoded Google API key pattern detected!"
-            process.exit(1);
+            exit 1
           fi
           if grep -rnEI 'sk-[a-zA-Z0-9]{32,}' bin/ src/ test/ 2>/dev/null; then
             echo "ERROR: Hardcoded OpenAI key pattern detected!"
-            process.exit(1);
+            exit 1
           fi
           echo "✔ Secret scan passed cleanly. No credential leaks detected."

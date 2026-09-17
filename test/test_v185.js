@@ -20,7 +20,8 @@ console.log('=== STARTING V1.8.5 WORKSPACE ISOLATION & CONTINUOUS CHAT TEST SUIT
 // TEST 1: Strict System Directive Directory Confinement
 // -------------------------------------------------------------------------
 console.log('[TEST 1] System Directive Directory Confinement');
-const testCwd = path.resolve('C:\\mock\\user\\projects\\my-custom-app');
+const testCwd = path.join(os.tmpdir(), 'graviton-mock-app-' + Date.now());
+fs.mkdirSync(testCwd, { recursive: true });
 const prompt = constructSuperPrompt('create server.js and start express app', testCwd);
 
 assert.ok(prompt.includes('CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES'), 'Must include workspace isolation rules');

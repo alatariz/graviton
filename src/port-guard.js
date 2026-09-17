@@ -55,10 +55,30 @@ export function findProcessOnPort(port) {
         return { port: p, pid };
       }
     } catch {}
+
+    try {
+      // Fallback using fuser (common on Linux)
+      const output = execSync(`fuser ${p}/tcp 2>/dev/null`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+      const firstPid = output.split(/\s+/)[0];
+      const pid = parseInt(firstPid, 10);
+      if (!isNaN(pid) && pid > 0) {
+        return { port: p, pid };
+      }
+    } catch {}
+
+    try {
+      // Fallback using ss (iproute2 on Linux)
+      const output = execSync(`ss -lptn 'sport = :${p}' 2>/dev/null`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+      const m = output.match(/pid=(\d+)/);
+      if (m && m[1]) {
+        return { port: p, pid: parseInt(m[1], 10) };
+      }
+    } catch {}
   }
 
   return null;
 }
+
 
 /**
  * Forcefully terminates a process and all its children (Tree Kill).
