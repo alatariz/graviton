@@ -1,4 +1,4 @@
-import { spawnSync, execSync } from 'child_process';
+import { spawnSync, spawn, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pipeline.js';
@@ -280,12 +280,10 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args = [
       '--dangerously-skip-permissions',
       '--effort', options.effort || (options.isDeep ? 'high' : 'high'),
-      '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits')
+      '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits'),
+      '--print-timeout', options.printTimeout || '20m',
+      '--output-format', 'stream-json'
     ];
-
-    if (options.printTimeout) {
-      args.push('--print-timeout', options.printTimeout);
-    }
 
     if (options.addDir !== false) {
       args.push('--add-dir', executionCwd);
@@ -306,12 +304,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  const stdioMode = options.stdio || 'inherit';
-
   // Determine shell option:
-  // On Windows, if executable is .cmd or .bat or non-absolute, shell: true is needed.
-  // If executable is an .exe (like agy.exe) or Unix binary, shell: false executes directly
-  // avoiding cmd.exe argument corruption and escaping issues.
   let useShell = false;
   if (typeof options.shell === 'boolean') {
     useShell = options.shell;
@@ -322,56 +315,201 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Execute the relay using spawnSync with workspace directory confinement
-  const result = spawnSync(agyExecutable, args, {
-    cwd: executionCwd,
-    stdio: stdioMode,
-    shell: useShell,
-    maxBuffer: 64 * 1024 * 1024,
-    env
+  // 1. Synchronous Execution Path: when options.args or options.sync is specified
+  if (options.args || options.sync) {
+    const stdioMode = options.stdio || 'inherit';
+    const result = spawnSync(agyExecutable, args, {
+      cwd: executionCwd,
+      stdio: stdioMode,
+      shell: useShell,
+      maxBuffer: 64 * 1024 * 1024,
+      env
+    });
+
+    try {
+      const latestConvId = getLatestConversationId();
+      if (latestConvId) {
+        const promptToSave = options.userPrompt || promptText;
+        saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
+      }
+      const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
+      saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
+
+      const odo = readOdometer();
+      trackSessionTurn(executionCwd, odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
+      inspectSessionFiles(executionCwd);
+
+      const comp = checkCompactionStatus(executionCwd);
+      if (comp && comp.advise) {
+        console.log(comp.message);
+      }
+    } catch {}
+
+    if (result.error) {
+      console.error('Spawn Error:', result.error);
+      if (options.rejectOnError) throw result.error;
+      process.exit(1);
+    }
+
+    if (result.status !== 0 && result.status !== null) {
+      console.log(`\x1b[1;31m[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}\x1b[0m`);
+      if (options.rejectOnError) {
+        throw new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}`);
+      }
+      process.exit(result.status || 1);
+    }
+
+    return result;
+  }
+
+  // 2. Real-Time Streaming Path: parses NDJSON events to provide live tool execution feedback & streaming
+  return new Promise((resolve, reject) => {
+    const child = spawn(agyExecutable, args, {
+      cwd: executionCwd,
+      stdio: ['inherit', 'pipe', 'pipe'],
+      shell: useShell,
+      env
+    });
+
+    let stdoutBuffer = '';
+    let lastReportedTool = null;
+    let hasReceivedResponse = false;
+    let turnTokens = 0;
+    const startTime = Date.now();
+    let receivedFirstEvent = false;
+
+    const thinkTimer = setInterval(() => {
+      if (!receivedFirstEvent && process.stderr.isTTY) {
+        const sec = Math.floor((Date.now() - startTime) / 1000);
+        process.stderr.write(`\r\x1b[90m[GRAVITON] AI reasoning & analyzing context... (${sec}s)\x1b[0m`);
+      }
+    }, 1000);
+
+    const clearHeartbeat = () => {
+      if (!receivedFirstEvent) {
+        receivedFirstEvent = true;
+        clearInterval(thinkTimer);
+        if (process.stderr.isTTY) {
+          process.stderr.write('\r\x1b[K');
+        }
+      }
+    };
+
+    child.stdout.on('data', chunk => {
+      stdoutBuffer += chunk.toString();
+      const lines = stdoutBuffer.split(/\r?\n/);
+      stdoutBuffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line);
+          if (data.event === 'step_update' && data.step_update) {
+            const step = data.step_update;
+
+            // Real-time tool updates with clear icons and filenames
+            if (step.step_type === 'tool' && step.state === 'ACTIVE') {
+              clearHeartbeat();
+              const toolName = step.tool_name;
+              const params = step.tool_info?.parameters || {};
+              let toolDesc = '';
+
+              if (toolName === 'view_file') {
+                const file = params.AbsolutePath || params.TargetFile || '';
+                toolDesc = `\x1b[36m⚙  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+              } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
+                const file = params.TargetFile || params.AbsolutePath || '';
+                toolDesc = `\x1b[33m✍  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+              } else if (toolName === 'run_command') {
+                const cmd = (params.CommandLine || '').slice(0, 45);
+                toolDesc = `\x1b[35m▶  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
+              } else if (toolName === 'grep_search' || toolName === 'find_by_name') {
+                toolDesc = `\x1b[34m🔍 [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;
+              } else {
+                toolDesc = `\x1b[36m⚙  [AI Tool]\x1b[0m Executing \x1b[1m${toolName}\x1b[0m...`;
+              }
+
+              if (toolDesc && toolDesc !== lastReportedTool) {
+                lastReportedTool = toolDesc;
+                console.log(toolDesc);
+              }
+            }
+
+            // Stream agent response text live as it arrives
+            if (step.step_type === 'agent_response' && step.text_delta) {
+              clearHeartbeat();
+              hasReceivedResponse = true;
+              process.stdout.write(step.text_delta);
+            }
+
+            // Track tokens
+            if (step.usage && step.usage.total_tokens) {
+              turnTokens = step.usage.total_tokens;
+            }
+          } else if (data.event === 'result' && data.result) {
+            clearHeartbeat();
+            if (data.result.usage && data.result.usage.total_tokens) {
+              turnTokens = data.result.usage.total_tokens;
+            }
+            if (!hasReceivedResponse && data.result.response) {
+              process.stdout.write(data.result.response);
+            }
+          }
+        } catch {
+          // If non-JSON text line, output directly
+          clearHeartbeat();
+          process.stdout.write(line + '\n');
+        }
+      }
+    });
+
+    child.stderr.on('data', chunk => {
+      clearHeartbeat();
+      const text = chunk.toString();
+      if (text.includes('[agy] print timeout')) {
+        console.error(`\x1b[31m${text}\x1b[0m`);
+      } else {
+        process.stderr.write(text);
+      }
+    });
+
+    child.on('error', err => {
+      clearInterval(thinkTimer);
+      clearHeartbeat();
+      if (options.rejectOnError) return reject(err);
+      resolve({ status: 1, error: err });
+    });
+
+    child.on('close', code => {
+      clearInterval(thinkTimer);
+      clearHeartbeat();
+
+      try {
+        const latestConvId = getLatestConversationId();
+        if (latestConvId) {
+          const promptToSave = options.userPrompt || promptText;
+          saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
+        }
+        const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
+        saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
+
+        const odo = readOdometer();
+        trackSessionTurn(executionCwd, turnTokens || odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
+        inspectSessionFiles(executionCwd);
+
+        const comp = checkCompactionStatus(executionCwd);
+        if (comp && comp.advise) {
+          console.log(comp.message);
+        }
+      } catch {}
+
+      if (code !== 0 && code !== null) {
+        if (options.rejectOnError) {
+          return reject(new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
+        }
+      }
+
+      resolve({ status: code || 0, error: null });
+    });
   });
-
-  // Auto-detect and record conversation ID and session manifest for rollback guard
-  try {
-    const latestConvId = getLatestConversationId();
-    if (latestConvId) {
-      const promptToSave = options.userPrompt || promptText;
-      saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
-    }
-    const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
-    saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
-
-    // V2.0 Track turn metrics
-    const odo = readOdometer();
-    trackSessionTurn(executionCwd, odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
-
-    // V2.0 Post-execution Syntax Sanity Guard
-    inspectSessionFiles(executionCwd);
-
-    // V2.0 Session Compactor Advisory
-    const comp = checkCompactionStatus(executionCwd);
-    if (comp && comp.advise) {
-      console.log(comp.message);
-    }
-  } catch {}
-
-  // Handle spawn errors
-  if (result.error) {
-    console.error('Spawn Error:', result.error);
-    if (options.rejectOnError) {
-      throw result.error;
-    }
-    process.exit(1);
-  }
-
-  // Handle non-zero exit status
-  if (result.status !== 0 && result.status !== null) {
-    console.log(`\x1b[1;31m[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}\x1b[0m`);
-    if (options.rejectOnError) {
-      throw new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${result.status}`);
-    }
-    process.exit(result.status || 1);
-  }
-
-  return result;
 }

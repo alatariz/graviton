@@ -737,7 +737,7 @@ async function main() {
     }
   }
 
-  const result = runAntigravityWithAutoAllow(superPrompt, {
+  const result = await runAntigravityWithAutoAllow(superPrompt, {
     conversationId: targetConversationId,
     continueSession,
     cwd: currentCwd,

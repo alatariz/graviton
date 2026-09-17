@@ -384,7 +384,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
       }
 
-      runAntigravityWithAutoAllow(superPrompt, {
+      await runAntigravityWithAutoAllow(superPrompt, {
         conversationId: targetConvId,
         continueSession,
         cwd,
