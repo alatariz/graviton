@@ -40,7 +40,9 @@ for (const file of testFiles) {
     passed++;
   } else {
     console.log('\x1b[31m✖ FAIL\x1b[0m');
-    console.error(`::error title=${file}::Suite ${file} failed with exit code ${result.status}`);
+    const combinedOutput = ((result.stdout || '') + '\n' + (result.stderr || '')).trim();
+    const encoded = combinedOutput.replace(/\r?\n/g, '%0A');
+    console.error(`::error file=${file},title=TestFailed::${encoded}`);
     if (result.stdout) console.log(result.stdout);
     if (result.stderr) console.error(result.stderr);
     failed++;

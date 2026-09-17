@@ -30,7 +30,7 @@ export function checkFileSyntax(filePath) {
         // Always fallback to check as ES Module if CommonJS check fails
         try {
           const code = fs.readFileSync(normalizedPath, 'utf8');
-          const modRes = spawnSync(process.execPath, ['--input-type=module', '--check'], {
+          const modRes = spawnSync(process.execPath, ['--input-type=module', '--check', '-'], {
             input: code,
             encoding: 'utf8',
             stdio: ['pipe', 'pipe', 'pipe']
@@ -53,8 +53,9 @@ export function checkFileSyntax(filePath) {
           if (match[2]) col = parseInt(match[2], 10);
         }
 
-        // Clean up error message (take first 2 non-empty lines)
-        const firstLine = errorText.split(/\r?\n/).filter(Boolean)[0] || 'SyntaxError';
+        // Clean up error message (extract actual SyntaxError line)
+        const lines = errorText.split(/\r?\n/).filter(Boolean);
+        const firstLine = lines.find(l => l.includes('Error')) || lines[0] || 'SyntaxError';
         return {
           file: filePath,
           valid: false,

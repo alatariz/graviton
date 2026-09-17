@@ -17,6 +17,7 @@ async function runTests() {
 
   const testDir = path.join(os.tmpdir(), 'graviton_v200_sanity_test_' + Date.now());
   fs.mkdirSync(testDir, { recursive: true });
+  fs.writeFileSync(path.join(testDir, 'package.json'), JSON.stringify({ type: 'module' }), 'utf8');
 
   const validJs = path.join(testDir, 'valid.js');
   const brokenJs = path.join(testDir, 'broken.js');
