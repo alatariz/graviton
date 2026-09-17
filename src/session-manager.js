@@ -38,16 +38,26 @@ export function generateConversationTitle(prompt) {
   if (!prompt || typeof prompt !== 'string') return 'New Conversation';
   
   let cleaned = prompt
-    .replace(/\[SYSTEM DIRECTIVE[\s\S]*?\]/gi, '')
-    .replace(/\[USER INSTRUCTION.*?\]:/gi, '')
+    .replace(/\[SYSTEM DIRECTIVE[\s\S]*?\][:\s]*(?:"[\s\S]*?")?/gi, '')
+    .replace(/\[USER INSTRUCTION.*?\][:\s]*/gi, '')
+    .replace(/\[ACTIVE CONVERSATION TOPIC\]:.*?$/gim, '')
+    .replace(/^[:"\s\-*#]+/, '')
     .trim();
+
+  // Fallback to extraction from USER INSTRUCTION if present
+  if (!cleaned) {
+    const userMatch = prompt.match(/\[USER INSTRUCTION.*?\][:\s]*([\s\S]*?)$/i);
+    if (userMatch && userMatch[1]) {
+      cleaned = userMatch[1].trim();
+    }
+  }
 
   const lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return 'New Conversation';
 
   let title = lines[0];
-  // Remove markdown headers, bullets, or leading numbers
-  title = title.replace(/^#+\s*|^[-*•]\s*|^\d+\.\s*/, '');
+  // Remove markdown headers, bullets, leading colons/quotes, or numbers
+  title = title.replace(/^[:"\s#\-*•\d.]+\s*/, '');
   // Remove conversational filler preambles
   title = title.replace(/^(tolong|mohon|bantu saya|coba|please|pls|can you|could you|i want to|saya mau)\s+/i, '');
   // Capitalize first character

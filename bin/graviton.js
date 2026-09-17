@@ -578,6 +578,7 @@ async function main() {
     cwd: currentCwd,
     isDeep,
     isFast,
+    userPrompt: input,
     effort: isFast ? 'low' : (isDeep ? 'high' : 'high'),
     mode: isFast ? 'accept-edits' : (isDeep ? 'plan' : 'accept-edits')
   });

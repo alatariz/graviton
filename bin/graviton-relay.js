@@ -220,15 +220,26 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Ensure ~/.gemini/bin is in PATH for seamless executable resolution
   const homeDir = process.env.USERPROFILE || process.env.HOME || '';
   const geminiBin = homeDir ? path.join(homeDir, '.gemini', 'bin') : '';
-  let env = process.env;
+  let env = Object.assign({}, process.env);
   if (geminiBin && fs.existsSync(geminiBin)) {
-    const currentPath = process.env.PATH || process.env.Path || '';
+    const currentPath = env.PATH || env.Path || '';
     if (!currentPath.includes(geminiBin)) {
-      env = Object.assign({}, process.env, {
-        PATH: `${geminiBin}${path.delimiter}${currentPath}`
-      });
+      env.PATH = `${geminiBin}${path.delimiter}${currentPath}`;
     }
   }
+
+  // ISOLATION: Strip parent Antigravity IDE GUI environment variables.
+  // When a terminal is opened inside Antigravity IDE, these variables cause agy.exe
+  // to hook into the IDE GUI via language server RPC, which triggers interactive GUI
+  // confirmation modals and overrides autonomous CLI mode (--dangerously-skip-permissions).
+  delete env.ANTIGRAVITY_CONVERSATION_ID;
+  delete env.ANTIGRAVITY_LS_ADDRESS;
+  delete env.ANTIGRAVITY_AGENT;
+  delete env.ANTIGRAVITY_CSRF_TOKEN;
+  delete env.ANTIGRAVITY_TRAJECTORY_ID;
+  delete env.ANTIGRAVITY_SOURCE_METADATA;
+  delete env.ANTIGRAVITY_PROJECT_ID;
+  delete env.ANTIGRAVITY_AGENTAPI_EXE;
 
   // Dynamically resolve executable (checks agy and antigravity in ~/.gemini/bin, AppData, and PATH)
   const commandName = options.command || 'agy';
@@ -318,7 +329,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   try {
     const latestConvId = getLatestConversationId();
     if (latestConvId) {
-      saveWorkspaceSession(executionCwd, latestConvId, promptText);
+      const promptToSave = options.userPrompt || promptText;
+      saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
     }
     const shadowBackups = getLatestShadowBackups ? getLatestShadowBackups() : [];
     saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
