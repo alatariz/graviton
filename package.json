@@ -15,6 +15,6 @@
   "scripts": {
     "start": "node src/pipeline.js",
     "cli": "node bin/graviton.js",
-    "test": "node test/test_reprompt.js"
+    "test": "node test/run_all.js"
   }
 }

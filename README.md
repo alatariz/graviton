@@ -1,13 +1,13 @@
 <div align="center">
 
-  <img src="graviton-logo.png" width="140" alt="Graviton Logo" />
+  <img src="graviton-logo.png" width="160" alt="Graviton Logo" />
 
-  # GRAVITON
+  # GRAVITON V2.0.0
 
-  ### Autonomous AI Acceleration & Noise Pruning Layer for Google Antigravity
+  ### Autonomous AI Acceleration & Intelligent Context-Scoped Engine for Google Antigravity
 
   <p align="center">
-    <b>Zero-Auth &bull; Pure Node.js V8 stdlib &bull; Sub-millisecond Relay</b>
+    <b>Zero-Auth &bull; 100% Pure Node.js V8 stdlib &bull; Sub-millisecond Relay &bull; Zero External LLM Calls</b>
   </p>
 
   <p align="center">
@@ -18,15 +18,13 @@
   </p>
 
   <p align="center">
-    <a href="#quickstart--installation">Quickstart</a> &bull;
-    <a href="#overview">Overview</a> &bull;
-    <a href="#the-vision">Vision</a> &bull;
-    <a href="#core-architecture">Architecture</a> &bull;
-    <a href="#empirical-benchmarks">Benchmarks</a> &bull;
-    <a href="#skill-unlocker-matrix">Skill Matrix</a> &bull;
-    <a href="#cli-command-reference">CLI Reference</a> &bull;
-    <a href="#security--privacy">Security</a> &bull;
-    <a href="#license">License</a>
+    <a href="#kisah-evolusi">Kisah Evolusi</a> &bull;
+    <a href="#arsitektur-dan-cara-kerja">Cara Kerja</a> &bull;
+    <a href="#panduan-instalasi-lengkap">Instalasi</a> &bull;
+    <a href="#fitur-utama-dan-penggunaan">Fitur & Panduan</a> &bull;
+    <a href="#referensi-perintah-cli">Tabel CLI</a> &bull;
+    <a href="#benchmark-efisiensi-token">Benchmarks</a> &bull;
+    <a href="#troubleshooting--faq">FAQ & Troubleshooting</a>
   </p>
 
 </div>
@@ -34,246 +32,439 @@
 ---
 
 > [!IMPORTANT]
-> **What is Graviton?**
-> Graviton is a zero-auth autonomous CLI middleware wrapper built exclusively for the **Google Antigravity IDE (`agy`)**. It intercepts terminal spew, compresses giant logs, blocks minified context bombs, hydrates project dependency context, and launches non-blocking autonomous sessions in under **0.8ms**.
+> **Apa itu Graviton V2.0.0?**
+> Graviton adalah akselerator terminal dan *Intelligent Context Engine* lokal untuk **Google Antigravity CLI (`agy`)**. 
+> Berjalan **100% offline** di komputer Anda tanpa API key tambahan, Graviton memangkas sampah log terminal (-95% token), memblokir file minified berbahaya, mengarahkan fokus AI langsung ke file target (Smart Target Pinning), menyediakan riwayat chat ala Antigravity IDE (`grav --c`), dan mengeksekusi instruksi dalam **< 0.8 milidetik**.
 
 ---
 
-<h2 id="quickstart--installation">Quickstart & Installation</h2>
+<h2 id="kisah-evolusi">Evolusi & Kisah di Balik Graviton: Dari Token Saver Biasa ke Intelligent Engine</h2>
 
-### Prerequisites
-1. **Node.js**: Version `>= 18.0.0` (Native ES Modules runtime).
-2. **Google Antigravity CLI (`agy`)**: An authenticated installation of Antigravity is required. Ensure `agy` is in your `PATH` or at `~/.gemini/bin/agy`.
+Graviton lahir dari kebutuhan nyata pengembang saat menggunakan Google Antigravity di proyek sehari-hari:
 
-### Global Installation
+### 1. Masalah Awal: "Token Bleeding" pada Error Terminal & File Minified
+Setiap kali pengembang mem-paste log error terminal (seperti build Webpack, Docker, atau Jest) ke dalam prompt, ribuan baris log sampah (ANSI escape codes, progress bar, warning minor) ikut terkirim. Akibatnya:
+- **Konteks AI Cepat Penuh:** 5.000–10.000 token terbakar hanya untuk membaca log sampah.
+- **Bom Konteks (Minified File):** Jika file bundle `.min.js` atau `package-lock.json` tanpa sengaja tersedot, context window langsung habis hingga 35.000+ token dalam satu kali kirim.
+- **Solusi Awal Graviton:** Diciptakanlah *Noise Stripper*, *Terminal Pruner*, dan *The Minified Shield* untuk memangkas log menjadi ringkasan 10–15 baris esensial secara offline.
 
-Install globally via npm to register dual binaries (`graviton` and `grav`):
+### 2. Tantangan Direktori: Menjaga Repositori Tetap Bersih
+AI terkadang salah menaruh file baru di luar workspace (seperti di `~/.gemini` atau folder scratch) atau mengotori Git working tree dengan auto-stash.
+- **Solusi:** Graviton memperkenalkan **Strict Workspace Confinement** (`[CWD]`) dan **Detached Shadow Backups** (`~/.graviton/backups/`) sehingga kode terlindungi tanpa mengotori commit Git.
 
+### 3. Solusi Server: Background Daemons & Port Conflicts
+Saat AI diminta menjalankan dev server (misal `npm run dev`), terminal seringkali macet (*hanging*) atau mengalami port conflict (misal port 3000/5173 sudah dipakai) dan memunculkan pop-up jendela PowerShell di Windows.
+- **Solusi:** Diciptakanlah **Port Guard** dan **Silent Background Daemons** menggunakan Base64 `-EncodedCommand` dan `-WindowStyle Hidden` yang otomatis membebaskan port dan menjaga terminal tetap responsif tanpa pop-up mengganggu.
+
+### 4. Lompatan V2.0.0: Context Scope & Smart Target Pinning
+Kelemahan terbesar AI coding bukanlah saat menulis kode, melainkan saat **mencari file mana yang harus diedit**. 
+Sebelum V2.0.0, saat Anda meminta *"perbaiki bug login"*, AI harus memanggil tool `list_dir`, `grep_search`, `view_file` berulang kali (memakan waktu 30+ detik dan 5.000–12.000 token).
+- **Solusi V2.0.0:** Graviton kini memiliki **Smart Target Pinning**. Menggunakan fuzzy token matching lokal (< 5ms), Graviton langsung mencocokkan kata kunci prompt Anda dengan struktur folder aktif dan menyematkan:
+  ```text
+  [GRAVITON ACTIVE TARGET SCOPE]: src/api/auth.js
+  Directive: Langsung buka dan modifikasi file target ini tanpa melakukan pencarian redundant.
+  ```
+  AI langsung tepat sasaran di giliran pertama. Waktu eksekusi turun dari **30 detik menjadi 3–5 detik**!
+
+### 5. Penyempurnaan Alur: IDE-Style Conversation History (`--c` & `--n`)
+Pada percakapan multi-turn, pengguna membutuhkan alur yang jelas:
+- Default prompt biasa (`grav "..."`) otomatis memulai **chat baru** yang segar.
+- Flag `grav --c` menampilkan **daftar riwayat percakapan mirip Antigravity IDE** lengkap dengan judul topik, turn, token, dan waktu, serta opsi hapus atau lanjutkan.
+- Flag `grav -n` memulai chat baru secara eksplisit.
+- **Topic Anchoring** menjaga agar AI tetap fokus pada benang merah topik yang sedang dibahas.
+
+---
+
+<h2 id="arsitektur-dan-cara-kerja">Arsitektur & Cara Kerja: Apakah Ada "2x Prompt"?</h2>
+
+> [!TIP]
+> **Fakta Teknis: TIDAK ADA 2x Prompt ke AI.**
+> Graviton **BUKAN** wrapper yang memanggil LLM perantara untuk mereprompt. Seluruh pra-pemrosesan dilakukan **100% di CPU lokal Anda (Node.js)** menggunakan string parsing, regex, dan file system inspection. Panggilan ke AI tetap **HANYA 1 KALI** langsung ke Google Antigravity.
+
+```mermaid
+flowchart TD
+    A["Developer Prompt / Piped Terminal Input"] --> B["GRAVITON ENGINE (Lokal CPU, ~0.8ms)"]
+    
+    subgraph OfflineEngine ["Pra-Pemrosesan Offline (Zero Token / Zero Cost)"]
+        B --> C["1. Noise Stripper & Log Pruner<br/>(Pangkas sampah ANSI & progress noise)"]
+        C --> D["2. Smart Target Scoping & AST Scraper<br/>(Cocokkan kata kunci -> Pin target file)"]
+        D --> E["3. Minified Shield & Secret Redaction<br/>(Cegah bom token .min.js & sensor API keys)"]
+        E --> F["4. Delta Prompting & Topic Anchoring<br/>(Kunci topik obrolan & pangkas tree map duplikat)"]
+    end
+    
+    F --> G["Final SuperPrompt"]
+    G -->|HANYA 1X PANGGILAN API (Auto-Allow)| H["Google Antigravity Engine ('agy')"]
+    H --> I["Kode Ditulis / Diperbaiki"]
+    
+    subgraph PostExecution ["Pasca-Eksekusi (Lokal Safety Guard)"]
+        I --> J["5. Syntax Sanity Guard<br/>(node --check / python compile)"]
+        J --> K{"Syntax Rusak?"}
+        K -->|Ya| L["Peringatkan & Tawarkan 'grav undo'"]
+        K -->|Aman| M["Port Guard Auto-Heal & Odometer Sync"]
+    end
+```
+
+---
+
+<h2 id="panduan-instalasi-lengkap">Panduan Instalasi Lengkap (Step-by-Step Multi-OS)</h2>
+
+Ikuti panduan di bawah ini untuk memasang Graviton di laptop atau device baru Anda:
+
+### Langkah 1: Pasang Node.js (Versi >= 18.0.0)
+Graviton membutuhkan runtime Node.js modern dengan dukungan Native ES Modules.
+
+- **Windows:**
+  - Buka PowerShell dan jalankan:
+    ```powershell
+    winget install OpenJS.NodeJS.LTS
+    ```
+  - Atau unduh installer `.msi` dari situs resmi [nodejs.org](https://nodejs.org).
+- **macOS (via Homebrew):**
+  ```bash
+  brew install node
+  ```
+- **Linux (Ubuntu/Debian via NodeSource):**
+  ```bash
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+  ```
+- **Verifikasi Versi Node.js:**
+  ```bash
+  node -v
+  # Harus menampilkan v18.0.0 atau lebih baru (misal v20.x.x)
+  ```
+
+---
+
+### Langkah 2: Pasang Google Antigravity CLI (`agy`)
+
+> [!NOTE]
+> **Perbedaan Antigravity Desktop App vs Antigravity CLI:**
+> Antigravity Desktop App (`antigravity.exe`) adalah aplikasi GUI Electron. Graviton membutuhkan binary CLI resmi Google Antigravity bernama **`agy`**.
+
+- **Windows:**
+  Buka PowerShell (Run as Administrator jika perlu) dan jalankan:
+  ```powershell
+  irm https://antigravity.google/cli/install.ps1 | iex
+  ```
+  *Atau via Command Prompt (CMD):*
+  ```cmd
+  curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd
+  ```
+- **macOS & Linux:**
+  ```bash
+  curl -fsSL https://antigravity.google/cli/install.sh | bash
+  ```
+- **Verifikasi Instalasi Antigravity CLI:**
+  ```bash
+  agy --version
+  ```
+- *(Opsional)* Jika `agy` terpasang di direktori khusus yang belum masuk ke `PATH`, Anda bisa mengatur environment variable:
+  ```powershell
+  # Windows PowerShell
+  [System.Environment]::SetEnvironmentVariable('AGY_PATH', 'C:\Path\To\agy.exe', 'User')
+  ```
+
+---
+
+### Langkah 3: Pasang Git (Opsional namun Direkomendasikan)
+- **Windows:** `winget install Git.Git` atau unduh dari [git-scm.com](https://git-scm.com).
+- **macOS:** `xcode-select --install` atau `brew install git`.
+- **Linux:** `sudo apt install git`.
+
+---
+
+### Langkah 4: Pasang Graviton di Komputer Anda
+
+Pilih salah satu dari 2 metode di bawah ini:
+
+#### Metode A: Clone dari Repository GitHub (Direkomendasikan)
 ```bash
-# Install globally directly from GitHub
+# 1. Clone repository
+git clone https://github.com/alatariz/graviton.git
+
+# 2. Masuk ke folder proyek
+cd graviton
+
+# 3. Hubungkan binary secara global ke sistem
+npm link
+```
+
+#### Metode B: Install Global via npm
+```bash
 npm install -g github:alatariz/graviton
+```
 
-# Verify installation
+#### Verifikasi Pemasangan Binary Ganda:
+Kini Anda memiliki 2 perintah global yang siap dipakai:
+```bash
 graviton --version
-# or use the shorthand alias
+# atau shorthand cepat:
 grav --version
+# Output: GRAVITON v2.0.0 (Graviton V2.0.0 Intelligent Context Engine)
 ```
 
-### Dual-Command Usage
+---
 
-#### 1. Direct Execution with Quote-Free Syntax
-Graviton seamlessly aggregates unquoted arguments so you don't have to fiddle with terminal quotes:
-
+### Langkah 5: Jalankan Diagnosa Otomatis (`grav doctor`)
+Untuk memastikan komputer baru Anda 100% siap menjalankan Graviton, jalankan:
 ```bash
-# Standard command
-graviton Fix TypeError in src/auth.js
-
-# Ultra-fast alias
-grav Fix TypeError in src/auth.js
+grav doctor
 ```
-
-#### 2. Deep Architecture Mode (`--deep`)
-When tackling complex refactors, distributed locks, or state machine redesigns, use `--deep` to instruct Antigravity to operate in high-rigor planning mode:
-
+Jika ada komponen yang belum terkonfigurasi, jalankan:
 ```bash
-# High-rigor planning mode
-grav --deep Architect an idempotent webhook processor with HMAC
+grav doctor --fix
 ```
 
-#### 3. Piped Terminal Ingestion
-Pipe compiler noise, failing tests, or git status directly into Graviton. It strips progress lines and isolates tracebacks before handing off to Antigravity:
+Contoh output diagnosa:
+```text
+=== GRAVITON SYSTEM HEALTH DOCTOR ===
+  ✔ Node.js Runtime       : v20.14.0 (Supported)
+  ✔ Antigravity CLI (agy) : C:\Users\...\.gemini\bin\agy.exe
+  ✔ Brain Storage Path    : C:\Users\...\.gemini\antigravity\brain
+  ✔ Graviton Config Dir   : C:\Users\...\.graviton (Permissions OK)
+  ✔ Git Version Control   : git version 2.45.1
+  ✔ Python Runtime        : Python 3.12.3
 
+Status: ALL SYSTEMS HEALTHY. Ready to accelerate Antigravity!
+```
+
+---
+
+<h2 id="fitur-utama-dan-penggunaan">Fitur Utama & Panduan Penggunaan Lengkap</h2>
+
+### 1. Smart Target Scoping & Eksekusi Bebas Tanda Petik
+Anda tidak perlu lagi mengetik tanda petik luar yang merepotkan di terminal Windows:
 ```bash
-# Pipe failing tests directly into Antigravity
-pytest 2>&1 | grav Fix failing assertion in test_auth.py
+# Langsung ketik instruksi Anda
+grav Perbaiki validasi email dan status code di src/auth.js
 
-# Pipe Git status for instant commit analysis
-git status | grav Commit these changes with conventional commit format
+# Mode perencanaan arsitektur berdaya tinggi (effort: high, plan mode)
+grav --deep Rancang arsitektur microservices untuk payment gateway
+```
+Graviton akan:
+1. Memindai kata kunci file dalam prompt.
+2. Membaca dependensi lokal 1 level.
+3. Menyematkan *Target Scope* agar Antigravity langsung membuka file tersebut tanpa membuang waktu dan token untuk mencari file.
+
+---
+
+### 2. Antigravity IDE-Style Conversation History (`--c` & `--n`)
+Graviton V2.0.0 mengelola sesi obrolan persis seperti antarmuka Antigravity IDE:
+
+#### A. Melihat Riwayat & Memilih Obrolan Interaktif (`grav --c`)
+```bash
+grav --c
+```
+Tampilan terminal:
+```text
+=== GRAVITON CONVERSATIONS (Antigravity IDE History) ===
+Workspace: C:\my-project
+
+  [1] ● [Aktif] "Perbaiki validasi email di auth.js"
+      ID: dc290864... | 4 turns | ~12.5k tokens | 5m lalu
+  [2] ○ "Setup Express server di index.js"
+      ID: e82b109a... | 1 turn | ~3.2k tokens | 2j lalu
+
+PILIHAN AKSI:
+  <nomor>      Pilih & lanjutkan percakapan (contoh: 1)
+  d <nomor>    Hapus percakapan dari riwayat (contoh: d 2)
+  n            Mulai percakapan baru (fresh chat)
+  q            Batal / Keluar
 ```
 
-#### 4. Lifetime Telemetry Dashboard
-View lifetime intercepted sessions, shielded files, and estimated token savings:
+#### B. Shorthand Cepat Melanjutkan Percakapan:
+```bash
+# Lanjutkan percakapan #1 di mode interactive REPL
+grav --c 1
 
+# Langsung kirim instruksi ke percakapan #1
+grav --c 1 "tambahkan tes unit dengan jest"
+
+# Hapus percakapan #2 dari riwayat
+grav --c del 2
+```
+
+#### C. Mulai Chat Baru Secara Eksplisit (`--n`):
+```bash
+# Mulai chat baru tanpa membawa riwayat sesi sebelumnya
+grav -n "buatkan komponen navbar responsive"
+```
+
+---
+
+### 3. Interactive REPL Chat Shell (`grav chat`)
+Masuk ke sesi obrolan interaktif yang nyaman:
+```bash
+grav chat
+```
+Header prompt secara dinamis menampilkan topik yang sedang aktif:
+```text
+graviton [Perbaiki validasi email]> 
+```
+
+#### Perintah Khusus di Dalam REPL (Slash Commands):
+| Perintah | Deskripsi |
+| :--- | :--- |
+| `/c` | Menampilkan daftar riwayat percakapan di workspace |
+| `/c <no>` | Beralih topik percakapan secara instan (misal `/c 2`) |
+| `/n` atau `--n` | Mereset sesi untuk membuat obrolan baru |
+| `/del <no>` | Menghapus percakapan dari riwayat |
+| `/rename <judul>` | Mengubah judul topik percakapan aktif |
+| `/undo` | Membatalkan perubahan kode terakhir (Rollback) |
+| `/diff` | Melihat perbedaan baris kode berwarna yang baru saja diedit AI |
+| `/compact` | Meringkas konteks sesi panjang agar hemat token |
+| `/ports` | Cek port dev yang sedang aktif (3000, 5173, dll) |
+| `/stop [port]` | Matikan server background atau bebaskan port |
+| `/status` | Cek turns dan token aktif |
+| `/doctor` | Cek kesehatan sistem |
+| `/exit` | Keluar dari REPL |
+
+---
+
+### 4. Syntax Sanity Guard (Pengecekan Error Sintaksis Otomatis)
+Setelah Antigravity selesai menulis kode, Graviton secara otomatis menjalankan compiler check lokal:
+- File `.js`, `.mjs`, `.cjs` divalidasi dengan `node --check`.
+- File `.json` divalidasi strukturnya.
+- File `.py` divalidasi dengan `python -m py_compile`.
+
+Jika AI membuat typo syntax, Graviton langsung menampilkan peringatan merah sebelum kode tersebut sempat merusak aplikasi Anda:
+```text
+[🚨 GRAVITON SANITY ALERT] 1 broken syntax file(s) detected!
+  ✖ src/routes/user.js: Unexpected token '}' (line 42)
+💡 Rekomendasi: Jalankan 'grav undo' untuk membatalkan perubahan.
+```
+
+---
+
+### 5. Instant Safety Rollback Guard & Diff Viewer
+Graviton membuat shadow backup otomatis di `~/.graviton/backups/` sebelum file diedit.
+```bash
+# Tinjau perubahan kode baris demi baris:
+grav diff
+
+# Batalkan perubahan dan kembalikan ke kondisi sebelum sesi AI:
+grav undo
+```
+
+---
+
+### 6. Port Guard & Silent Background Daemons
+Jalankan dev server tanpa membuat terminal macet dan tanpa jendela CMD pop-up:
+```bash
+# Jalankan server sebagai background daemon:
+grav start "npm run dev"
+
+# Cek port dev yang aktif:
+grav ports
+
+# Bebaskan port tertentu yang macet:
+grav stop 3000
+# atau matikan semua daemon:
+grav stop all
+```
+
+---
+
+### 7. Terminal Log Pruner (Piped Ingestion)
+Pangkas log terminal raksasa sebelum dikirim ke AI:
+```bash
+# Pangkas error test Jest/Vitest:
+npm test 2>&1 | grav "perbaiki error test ini"
+
+# Pangkas error compiler Cargo / Go:
+cargo build 2>&1 | grav "perbaiki compile error ini"
+
+# Analisis Git status secara instan:
+git status | grav "buatkan commit message conventional"
+```
+
+---
+
+### 8. Lifetime Telemetry Dashboard
+Lihat statistik token yang berhasil Anda hemat:
 ```bash
 grav stats
-# or full command
-graviton stats
 ```
 
 ---
 
-<h2 id="overview">Overview: Quick Comparison</h2>
+<h2 id="referensi-perintah-cli">Tabel Referensi Lengkap Perintah CLI</h2>
 
-| Capability | Standard Antigravity CLI (`agy`) | With Graviton (`graviton` / `grav`) | Efficiency Gain |
-| :--- | :--- | :--- | :--- |
-| **Directory Exploration** | Loops through `list_dir` / `grep` scans (30s+ wait, thousands of tokens) | **Smart Target Pinning**: Direct file resolution in 5ms, 0 tokens | **10x faster execution (3s vs 30s)** |
-| **Continuous Chat** | Sends full redundant workspace trees and accumulates bloated context | **Delta Prompting & Compactor**: Prunes trees on follow-up turns | **-80% token waste per turn** |
-| **AI Code Integrity** | Broken syntax or typos remain unnoticed until runtime crashes | **Syntax Sanity Guard**: Instant `node --check` post-run validation | **100% immediate syntax alert** |
-| **Terminal Output** | Raw output dumped directly into context (1,000+ lines) | Deduplicated, ANSI-stripped, traceback-isolated | **-99.5% token noise** |
-| **Minified Files** | Ingests `.min.js` / `.min.css` (30k+ tokens incinerated) | The Minified Shield intercepts & replaces with token-safe descriptor | **100% token bomb protection** |
-| **Execution Speed** | Manual prompt typing with quotes and confirmation dialogs | Interactive REPL (`graviton chat`) + background Auto-Allow | **Zero quoting friction** |
-| **Local Safety** | Git working tree pollution from auto-stash | Safety Rollback Guard (`graviton undo`) + shadow backups | **One-click instant undo** |
-| **Runtime Cost** | Consumes external tokens for intermediate middleware | 100% pure offline Node.js V8 standard library (0 API keys) | **$0.00 external cost** |
-
----
-
-<h2 id="the-vision">The Vision: The Unix Philosophy</h2>
-
-Modern AI development tooling frequently suffers from **context bloat, latency overhead, and token waste**. Intermediate cloud models, verbose conversational wrappers, and unfiltered terminal spew drain LLM context windows before actionable engineering even begins.
-
-Graviton rejects this paradigm by embodying the classic **Unix Philosophy**:
-
-```
-  ┌────────────────────────────────────────────────────────┐
-  │                 Developer Raw Request                  │
-  │                 (Terminal Pipe / CLI)                  │
-  └───────────────────────────┬────────────────────────────┘
-                              │
-                              ▼
-  ┌────────────────────────────────────────────────────────┐
-  │                 Surgical Regex Pruner                  │
-  │                 & The Minified Shield                  │
-  │      • Strips ANSI & deduplicates progress noise       │
-  │      • Blocks .min.js / .min.css token bombs           │
-  └───────────────────────────┬────────────────────────────┘
-                              │
-                              ▼
-  ┌────────────────────────────────────────────────────────┐
-  │        Local Workspace & File Hydration Engine         │
-  │      • 500-line bounded AST dependency scraping        │
-  │      • Path Traversal Jail (process.cwd() bounds)      │
-  └─────────────┬────────────────────────────┬─────────────┘
-                │                            │
-                ▼ (Pre-run Mirror)           ▼ (Synthesized Task)
-  ┌──────────────────────────┐ ┌───────────────────────────┐
-  │  Detached Shadow Backup  │ │     Autonomous Launch     │
-  │  (~/.graviton/backups/)  │ │    (Antigravity 'agy')    │
-  └──────────────────────────┘ └───────────────────────────┘
-```
-
-1. **Write programs that do one thing and do it well**: Graviton does not generate code itself. It sanitizes, bounds, and structures context so Antigravity can code without distraction.
-2. **Silence is Golden**: No verbose greeting banners, no decorative progress bars, no intermediate AI chit-chat. Graviton executes in `< 0.8ms` and emits output strictly when execution concludes or exceptions require human attention.
-3. **Zero-Auth, 100% Offline**: Graviton requires no external API keys, accounts, subscriptions, or secondary LLM calls. Prompt transformation is 100% deterministic, offline, and native.
-
----
-
-<h2 id="core-architecture">Core Architecture: Technical Pillars</h2>
-
-Graviton's engine operates completely within local Node.js standard libraries (`fs`, `path`, `child_process`), executing multi-stage heuristic pipelines before passing sanitized payloads to the Antigravity CLI.
-
-### 1. Zero-Token File Hydration
-- **Local AST & Dependency Traversal**: Ingests prompts and detects mentioned files via zero-cost regex matcher without invoking an LLM.
-- **Shallow Dependency Scraping**: Detects local relative imports (`import` / `require`) up to 1 level deep, automatically resolving project path aliases (`@/` and `~/` parsed directly from `tsconfig.json` / `jsconfig.json`).
-- **Bounded Ingestion**: Injects detected source files and their immediate dependencies into the super prompt wrapped in bounded blocks, strictly enforcing a 500-line truncation ceiling to prevent context explosion without incurring a single external token cost.
-- **Path Traversal Jail**: Jails all import resolution strictly within `process.cwd()`, neutralizing potential path traversal vulnerabilities (`../`) at the boundary.
-
-### 2. Smart Priority Sorting (Code-Density Scoring)
-- **Language-Agnostic Code-Density Evaluation**: Unlike naive tools that rely on hardcoded directory lists, Graviton evaluates directories based on functional code density.
-- **Dynamic Context Hierarchy**: Folders containing primary code extensions (`.js`, `.ts`, `.py`, `.rs`, `.go`, `.cpp`) are dynamically weighted and pushed to the top of the workspace map. Static asset directories (`assets/`, `public/`, `dist/`, `docs/`) and binary blobs are deprioritized or suppressed, ensuring the LLM encounters core architecture first.
-
-### 3. The Minified Shield
-- **Token Bomb Neutralization**: Inadvertently hydrating a minified bundle or vendor bundle can instantly incinerate tens of thousands of context tokens.
-- **Automated Bundle Interception**: Files ending in `.min.js`, `.min.css`, or containing single lines exceeding 1,000 characters are intercepted immediately. Graviton substitutes their body with a lightweight token-safe descriptor:
-  ```javascript
-  // [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]
-  ```
-- **Bounded JSON Whitelist**: Whitelists structural JSON payloads while blocking multi-megabyte serialized JSON dumps, preserving stack traces and valid config objects while incinerating log spam.
-
-### 4. Custom `.gravignore` Rule Engine
-- **Workspace Security & Context Sanitation**: Automatically parses `.gravignore` in your project root (`process.cwd()`).
-- **Zero-Dependency Pattern Matching**: Strips comments (`#`), blank lines, and evaluates directory boundaries and glob wildcards (`*.key`, `secrets/`, `.env*`).
-- **Strict Hydration Bypass**: Any matching path is completely excluded from file hydration, shallow dependency scraping, and workspace mapping, preventing sensitive data or noisy files from entering LLM context.
-
-### 5. Detached Shadow Backups
-- **Zero-Collateral Git Safety**: Traditional auto-stash or auto-commit scripts frequently stage unintended sensitive files (`.env`, private keys, secrets) into Git working trees.
-- **Isolated File Mirroring**: Graviton bypasses Git working trees entirely. Before dispatching prompts to Antigravity, every file touched for modification is copied to `~/.graviton/backups/` using timestamped mirrors (`[filename]_[timestamp].bak`).
-- **Detached Garbage Collection**: Purging expired backups (> 7 days) is handed off to an independent OS child process spawned with `{ detached: true, stdio: 'ignore' }` and `child.unref()`. Graviton never blocks the terminal or delays prompt delivery for disk maintenance.
-
-### 6. Path Traversal Jail
-- Enforces strict boundary validation on all relative and absolute path references.
-- Any attempt to reference files outside `process.cwd()` or escape via `../../../etc/passwd` is caught by path canonicalization and rejected before context assembly.
-
-### 7. Auto-Allow Hook & Credential Redaction
-- Wraps execution with `--dangerously-skip-permissions` quietly in the background, transforming interactive sessions into an autonomous, non-blocking flow.
-- Automated regex interception identifies bearer tokens, JWTs, private keys, and cloud credentials in command output, substituting them with `[[REDACTED]]` before context ingestion.
-
----
-
-<h2 id="empirical-benchmarks">Empirical Benchmarks</h2>
-
-Real-world token savings measured across common terminal workflows:
-
-| Scenario / Command | Raw Terminal Output | With Graviton v1.6.0 | Token Reduction | Latency Overhead |
-| :--- | :--- | :--- | :--- | :--- |
-| `cargo build` (214 crates) | 1,042 lines (~15,200 tokens) | 4 lines (128 tokens) | **-99.2%** | `0.72ms` |
-| `pytest -v` (180 tests) | 2,100 lines (~28,400 tokens) | 12 lines (1,450 tokens) | **-94.9%** | `0.85ms` |
-| Large JSON API Response | 840 lines (~18,500 tokens) | 14 lines (340 tokens) | **-98.2%** | `0.64ms` |
-| Accidental `.min.js` Bundle | 1 line (35,000 tokens) | 1 stub line (12 tokens) | **-99.9%** | `0.41ms` |
-| Total Typical Dev Session | ~145,000 tokens consumed | ~16,100 tokens consumed | **88.9% Average Savings** | `< 0.8ms avg` |
-
----
-
-<h2 id="skill-unlocker-matrix">Skill Unlocker Matrix</h2>
-
-Graviton dynamically detects task intents in your prompts and automatically injects specialized directives to unlock your installed Antigravity capabilities:
-
-| Task Intent Trigger | Unlocked Antigravity Capability | Capability Description |
+| Perintah Lengkap | Alias Shorthand | Fungsi / Kegunaan |
 | :--- | :--- | :--- |
-| `"build responsive modal dialog"` | `modern-web-guidance` | Enforces native dialog element, CSS container queries, and backdrop filters |
-| `"optimize BigQuery transaction queries"` | `bigquery-sql` | Enforces slot optimization, clustering, and partition pruning |
-| `"audit color contrast and accessibility"` | `a11y-debugging` | Enforces WCAG 2.2 AA standards, ARIA roles, and keyboard focus states |
-| `"profile memory leaks in Node.js"` | `memory-leak-debugging` | Analyzes heap allocations, detached DOM trees, and closure retention |
-| `"setup Firebase authentication flow"` | `firebase-auth-basics` | Configures client SDK, security rules, and auth state observers |
-
----
-
-<h2 id="cli-command-reference">CLI Command Reference</h2>
-
-| Command | Shorthand | Purpose |
-| :--- | :--- | :--- |
-| `graviton "<prompt>"` | `grav "<prompt>"` | Primary entrypoint: Smart Target Scoping & execution with Auto-Allow |
-| `graviton chat` | `grav chat` | Interactive REPL chat session (quote-free, conversational workflow) |
-| `graviton compact` | `grav compact` | Compacts long continuous session to refresh context window & save tokens |
-| `graviton undo` | `grav undo` | Instant Safety Rollback: restores modified files & removes AI-created files |
-| `graviton start <cmd>` | `grav start <cmd>` | Detached background dev server launcher (non-hanging terminal) |
-| `graviton stop [port\|all]`| `grav stop [port\|all]`| Terminates background server or frees occupied dev port |
-| `graviton ports` | `grav ports` | Scans common dev ports (3000, 5173, 8000, 8080) for active processes |
-| `graviton --deep "<prompt>"`| `grav -d "<prompt>"` | High-rigor planning mode for complex technical architecture |
+| `graviton "<prompt>"` | `grav "<prompt>"` | [DEFAULT] Eksekusi instruksi AI dengan Smart Target Pinning & Auto-Allow (chat baru otomatis) |
 | `graviton --c` | `grav --c` | Buka riwayat percakapan (Antigravity IDE History), pilih topik, atau hapus |
-| `graviton --c <no> [prompt]` | `grav --c <no>` | Lanjutkan topik percakapan nomor tertentu di interactive chat / dengan prompt |
+| `graviton --c <no>` | `grav --c <no>` | Lanjutkan topik percakapan nomor tertentu di interactive chat |
+| `graviton --c <no> "<prompt>"` | `grav --c <no> "..."`| Jalankan instruksi langsung pada percakapan nomor tertentu |
 | `graviton --c del <no>` | `grav --c del <no>` | Hapus topik percakapan dari riwayat workspace |
 | `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Mulai obrolan baru secara eksplisit di workspace ini (reset konteks) |
-| `graviton stats` | `grav stats` | Displays lifetime telemetry dashboard, files shielded, and tokens saved |
-| `graviton map` | `grav map` | Renders prioritized workspace directory map with code-density weighting |
-| `graviton run <cmd>` | `grav run <cmd>` | Executes shell command with streamlined noise filtering |
-| `graviton init` | `grav init` | Initializes `~/.graviton` configuration and local Skill Vault |
-| `graviton version` | `grav -v` | Displays Graviton CLI version and engine metadata |
+| `graviton chat` | `grav chat` | Masuk ke mode interactive REPL chat shell |
+| `graviton doctor [--fix]` | `grav doctor [--fix]`| Diagnosa kesehatan runtime Node.js, binary `agy`, Git, Python, dan path sistem |
+| `graviton diff` | `grav diff` | Tinjau perbedaan kode (diff line-by-line) hasil modifikasi AI |
+| `graviton undo` | `grav undo` | Safety Rollback: pulihkan file yang diubah dan hapus file baru yang dibuat AI |
+| `graviton compact` | `grav compact` | Ringkas sesi panjang untuk me-refresh context window & menghemat token |
+| `graviton start <cmd>` | `grav start <cmd>` | Jalankan server dev sebagai daemon background tanpa macet |
+| `graviton stop [port]` | `grav stop [port]` | Hentikan daemon background atau bebaskan port (misal 3000, 5173) |
+| `graviton ports` | `grav ports` | Scan port dev yang sedang aktif |
+| `graviton stats` | `grav stats` | Tampilkan dashboard penghematan token kumulatif |
+| `graviton map` | `grav map` | Tampilkan struktur folder workspace terindeks |
+| `graviton clean "<prompt>"` | `grav clean "<prompt>"` | Hanya rapikan prompt dan salin ke clipboard (tanpa panggil AI) |
+| `graviton version` | `grav -v` | Tampilkan versi Graviton CLI |
 
 ---
 
-<h2 id="security--privacy">Security & Privacy</h2>
+<h2 id="benchmark-efisiensi-token">Empirical Benchmarks: Uji Efisiensi Token Nyata</h2>
 
-- **100% Offline Local Execution**: Graviton does not make network requests, phone home, or transmit your code to third-party endpoints.
-- **Zero API Keys**: Operates strictly via standard Node.js stdlib without external dependencies.
-- **Automatic Secret Redaction**: Intercepts and masks JWTs, API keys, private keys, and bearer tokens before Antigravity ingestion.
-- **Isolated Backups**: Staged in `~/.graviton/backups/` outside your repository, keeping Git trees completely clean.
+Pengukuran riil penghematan token di berbagai skenario kerja harian:
 
----
-
-<h2 id="contributing">Contributing</h2>
-
-Contributions are welcome! If you'd like to improve noise pruners, add new skill triggers, or optimize AST traversal:
-
-1. Fork the repository: `git clone https://github.com/alatariz/graviton.git`
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'feat: add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request.
+| Skenario Penggunaan | Tanpa Graviton (Raw Output) | Dengan Graviton V2.0.0 | Efisiensi Token | Efisiensi Waktu (Latensi) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Error Log Terminal** (`pytest` / `jest` 2.000 baris) | ~28.000 tokens | ~1.400 tokens | **Hemat -95.0%** | `< 1 ms lokal` |
+| **Mencari File Target** (*"Fix login bug"*) | 5.000–12.000 tokens (3-4x tool calls `list_dir`/`grep`) | 0 tokens (Smart Target Pinning instan) | **Hemat 100% search calls** | **Turun dari 30s ke 3s** |
+| **Konteks Obrolan Berulang** (Multi-turn chat) | 3.000–5.000 tokens (tree map dikirim ulang) | ~500 tokens (Delta Prompting aktif) | **Hemat -80% per turn** | Instant |
+| **File Minified Terpapar** (`bundle.min.js`) | 35.000 tokens (bom konteks) | 12 tokens (The Minified Shield) | **Hemat -99.9%** | Instant |
+| **Total Sesi Development Rata-rata** | **~150.000 tokens** | **~18.000 tokens** | **Hemat Rata-rata 88%** | **Performa 10x lebih gesit** |
 
 ---
 
-<h2 id="license">License</h2>
+<h2 id="troubleshooting--faq">Troubleshooting & FAQ (Solusi Masalah di Device Lain)</h2>
 
-Released under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
+### Q1: Muncul error `Google Antigravity CLI (agy) belum terpasang di laptop ini!`
+**Penyebab:** Anda baru memasang Antigravity Desktop App (GUI), tetapi binary CLI resmi `agy` belum terpasang di sistem PATH.
+**Solusi:**
+Buka PowerShell dan jalankan perintah instalasi resmi:
+```powershell
+irm https://antigravity.google/cli/install.ps1 | iex
+```
+Tutup dan buka kembali PowerShell, lalu ketik `agy --version`. Jika sudah muncul versinya, jalankan kembali `grav doctor`.
 
-&copy; 2026 **[@alatariz](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
+---
+
+### Q2: Perintah `grav` atau `graviton` tidak dikenali setelah `npm link`
+**Penyebab:** Direktori global npm belum masuk ke variable `PATH` lingkungan Windows.
+**Solusi:**
+1. Pastikan folder npm prefix terdaftar di PATH:
+   ```powershell
+   npm config get prefix
+   # Biasanya: C:\Users\<NamaUser>\AppData\Roaming\npm
+   ```
+2. Pastikan path tersebut sudah ada di System/User Environment Variables `PATH`.
+3. Buka terminal baru setelah memperbarui PATH.
+
+---
+
+### Q3: Apakah Graviton aman digunakan pada proyek privat / rahasia?
+**Sangat Aman.**
+1. **100% Offline Lokal:** Graviton tidak memiliki server backend, tidak mengirim data analitik ke luar, dan tidak memanggil API pihak ketiga.
+2. **Zero Dependencies:** Berjalan murni di atas runtime standar Node.js V8 stdlib.
+3. **Secret Redaction:** Token otentikasi (JWT, Bearer, AWS keys) secara otomatis disensor menjadi `[[REDACTED]]`.
+4. **Git Safe:** Shadow backup disimpan di direktori `~/.graviton/backups/`, tidak akan pernah mengotori branch Git Anda.
+
+---
+
+<h2 id="license">Lisensi</h2>
+
+Didistribusikan di bawah lisensi resmi **Apache-2.0 License**. Lihat file [LICENSE](LICENSE) untuk informasi lebih lanjut.
+
+&copy; 2026 **[@alatariz](https://github.com/alatariz)** &bull; Dibuat dengan presisi tinggi untuk ekosistem pengembang Google Antigravity.
