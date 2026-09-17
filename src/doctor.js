@@ -206,7 +206,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     category: 'Graviton',
     name: 'Office & Data Transpiler (MarkItDown)',
     status: 'ok',
-    details: 'Active (Zero-dep parser for .docx, .xlsx, .pptx, .pdf, .csv, .tsv, .json + Caching)'
+    details: 'Active (Zero-dep parser for .docx, .xlsx, .pptx, .pdf, .csv, .tsv, .json)'
   });
 
   // 10. Code Outliner & Skeletonizer

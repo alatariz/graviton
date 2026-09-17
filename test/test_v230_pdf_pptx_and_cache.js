@@ -171,8 +171,7 @@ try {
   const transpilerCheck = docRes.diagnostics.find(d => d.name.includes('Office & Data Transpiler'));
   assert(transpilerCheck, 'Doctor must include MarkItDown transpiler check');
   assert(transpilerCheck.details.includes('.pdf'), 'Doctor must mention .pdf');
-  assert(transpilerCheck.details.includes('.pptx'), 'Doctor must mention .pptx');
-  assert(transpilerCheck.details.includes('Caching'), 'Doctor must mention Caching');
+  assert(transpilerCheck.details.includes('.json'), 'Doctor must mention .json');
 
   const report = formatDoctorReport(docRes);
   assert(report.includes('GRAVITON') && report.includes('DOCTOR'), 'Report header must feature DOCTOR banner');
