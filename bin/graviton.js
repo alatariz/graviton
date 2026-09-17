@@ -94,7 +94,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V2.9.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V3.0.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -321,7 +321,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.9.0 Out-of-Band Sync & Memory Coherence)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.0.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 
