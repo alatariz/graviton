@@ -773,7 +773,7 @@ async function main() {
   const sessionTag = activeSession && activeSession.id
     ? `Topic: "${activeSession.title}" (${activeSession.id.slice(0, 8)}...) | `
     : '';
-  console.log(`\x1b[32m✔ Execution complete. (${sessionTag}Session Est: ${odo.lastSessionTokens} tokens | Total: ${odo.totalTokens} tokens)\x1b[0m`);
+  console.log(`\x1b[32m✔  Execution complete. (${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
   process.exit(0);
 }
 

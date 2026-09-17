@@ -979,7 +979,8 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 5. TOKEN SHIELD & ASSET GUARD: NEVER read, search, or dump raw dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, composer.lock, Cargo.lock) or minified assets (.min.js, .min.css). If analyzing dependencies or troubleshooting packages, read package.json exclusively. Lockfiles contain redundant resolution metadata that wastes tens of thousands of tokens.
 6. [BREVITY PROTOCOL]: Output zero pleasantries, zero conversational filler, and zero apologies. Use terse, dense technical fragments. Execute requested tasks directly using tools without asking questions. Always complete requested actions before finishing.
 7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
-8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.`.replace(/\r\n/g, '\n');
+8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.
+9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.`.replace(/\r\n/g, '\n');
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous
