@@ -193,46 +193,6 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     });
   }
 
-  // 8. Token Shield (Lockfile & Minified Asset Guard)
-  diagnostics.push({
-    category: 'Graviton',
-    name: 'Token Shield (Lockfile & Asset Guard)',
-    status: 'ok',
-    details: 'Active (Guarding package-lock.json, yarn.lock, .min.js/css)'
-  });
-
-  // 9. Office & Data Transpiler (MarkItDown)
-  diagnostics.push({
-    category: 'Graviton',
-    name: 'Office & Data Transpiler (MarkItDown)',
-    status: 'ok',
-    details: 'Active (Zero-dep parser for .docx, .xlsx, .pptx, .pdf, .csv, .tsv, .json)'
-  });
-
-  // 10. Code Outliner & Skeletonizer
-  diagnostics.push({
-    category: 'Graviton',
-    name: 'Code Outliner & Skeletonizer (Zero-Waste Hydration)',
-    status: 'ok',
-    details: 'Active (Auto-collapsing large source files & vector SVGs)'
-  });
-
-  // 11. Delta Compression & Turn Diff Caching
-  diagnostics.push({
-    category: 'Graviton',
-    name: 'Delta Compression & Turn Diff Caching',
-    status: 'ok',
-    details: 'Active (Conversational line-level deduplication & diff hunks)'
-  });
-
-  // 12. Stack Trace Squeezer & Output Economizer
-  diagnostics.push({
-    category: 'Graviton',
-    name: 'Stack Trace Squeezer & Output Economizer',
-    status: 'ok',
-    details: 'Active (Filtering runtime stack frames & guiding response diffs)'
-  });
-
   return {
     allHealthy,
     diagnostics,
@@ -257,7 +217,7 @@ export function formatDoctorReport(result) {
     if (item.status === 'warn') icon = '\x1b[33m⚠\x1b[0m';
     if (item.status === 'error') icon = '\x1b[31m✖\x1b[0m';
 
-    lines.push(`  ${icon} \x1b[1m${item.name}\x1b[0m: ${item.details}`);
+    lines.push(`  ${icon}  \x1b[1m${item.name}\x1b[0m: ${item.details}`);
     if (item.fix) {
       lines.push(`     \x1b[36m👉 Fix:\x1b[0m ${item.fix}`);
     }
@@ -265,9 +225,9 @@ export function formatDoctorReport(result) {
 
   lines.push('');
   if (result.allHealthy) {
-    lines.push(`\x1b[1m\x1b[32m✔ Your environment is 100% ready to run Graviton & Google Antigravity!\x1b[0m\n`);
+    lines.push(`\x1b[1m\x1b[32m✔  Your environment is 100% ready to run Graviton & Google Antigravity!\x1b[0m\n`);
   } else {
-    lines.push(`\x1b[1m\x1b[31m✖ Configuration issues detected. Please follow the recommendations above.\x1b[0m\n`);
+    lines.push(`\x1b[1m\x1b[31m✖  Configuration issues detected. Please follow the recommendations above.\x1b[0m\n`);
   }
 
   return lines.join('\n');
