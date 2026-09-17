@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "Graviton V3.0.0 - Production-Grade Autonomous AI Acceleration & Intelligent Context Engine for Google Antigravity",
   "license": "AGPL-3.0-or-later",
-  "author": "Akmal Fauzan (@alatariz)",
+  "author": "alatariz <alatarizx@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/alatariz/graviton.git"

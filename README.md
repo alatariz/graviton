@@ -610,5 +610,5 @@ For full threat models, security practices, and responsible disclosure instructi
 
 Distributed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE) for details.
 
-&copy; 2026 **[Akmal Fauzan (@alatariz)](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
+&copy; 2026 **[@alatariz](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
 
