@@ -94,7 +94,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton V2.3.0 Active]\x1b[0m');
+  console.log('\x1b[1;36m[Graviton V2.4.0 Active]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -105,6 +105,7 @@ async function main() {
   let isPaste = false;
   let isMarkdown = false;
   let markdownFile = null;
+  let isFull = false;
   let isNew = false;
   let isConversationMode = false;
   let conversationAction = null;
@@ -126,6 +127,8 @@ async function main() {
         markdownFile = next;
         i++;
       }
+    } else if (arg === '--full') {
+      isFull = true;
     } else if (arg === '-n' || arg === '--n' || arg === '--new' || arg === '--fresh') {
       isNew = true;
     } else if (arg === '-c' || arg === '--c' || arg === '--conversation' || arg === 'conversation') {
@@ -201,6 +204,7 @@ async function main() {
   -d, --deep                     Activate deep precision synthesis for complex architecture
   -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
+  --full                         Disable code skeletonizing (force raw full file hydration)
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
@@ -287,7 +291,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.3.0 MarkItDown Full & Document Cache)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V2.4.0 Smart Skeleton & Code Outliner)`);
     process.exit(0);
   }
 
@@ -609,7 +613,8 @@ async function main() {
 
   const superPrompt = constructSuperPrompt(input, currentCwd, {
     isContinuous: continueSession,
-    conversationTitle: activeTitle
+    conversationTitle: activeTitle,
+    full: isFull
   });
 
   const targetScope = resolveTargetScope(input, currentCwd);

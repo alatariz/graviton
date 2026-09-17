@@ -1,4 +1,4 @@
-// src/doctor.js - Graviton V2.3.0 System Health & Environment Doctor
+// src/doctor.js - Graviton V2.4.0 System Health & Environment Doctor
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -209,6 +209,14 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     details: 'Active (Zero-dep parser for .docx, .xlsx, .pptx, .pdf, .csv, .tsv, .json + Caching)'
   });
 
+  // 10. Code Outliner & Skeletonizer
+  diagnostics.push({
+    category: 'Graviton',
+    name: 'Code Outliner & Skeletonizer (Zero-Waste Hydration)',
+    status: 'ok',
+    details: 'Active (Auto-collapsing large source files & vector SVGs)'
+  });
+
   return {
     allHealthy,
     diagnostics,
@@ -224,7 +232,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V2.3.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON V2.4.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

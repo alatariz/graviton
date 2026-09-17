@@ -326,9 +326,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON V2.3]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON V2.4]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
       } else {
-        console.log(`\x1b[36m[GRAVITON V2.3]\x1b[0m Starting new conversation in workspace...`);
+        console.log(`\x1b[36m[GRAVITON V2.4]\x1b[0m Starting new conversation in workspace...`);
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {

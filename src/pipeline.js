@@ -5,6 +5,7 @@ import { resolveTargetScope } from './context-scoper.js';
 import { getCompactMemoryDirective } from './session-compactor.js';
 import { isProtectedFile, generateDependencySummary } from './shield.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
+import { isSkeletonCandidate, skeletonizeCode, shrinkSvg } from './code-outliner.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -834,45 +835,62 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
           continue;
         }
 
+        const rawFileContent = fs.readFileSync(resolved, 'utf8');
+        const lineCount = rawFileContent.split('\n').length;
+        const ext = path.extname(resolved).slice(1) || '';
+        const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
         const cappedContent = readAndTruncateFile(resolved, 500);
-        if (cappedContent !== null) {
-          const ext = path.extname(resolved).slice(1) || '';
-          const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
 
-          injectedFiles.push(
-            `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedContent}\n\`\`\``
-          );
-
-          // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1; skip for minified)
-          if (cappedContent !== '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]') {
-            const rawFileContent = fs.readFileSync(resolved, 'utf8');
-            const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/|@\/|~\/)[^'"\s]+)/g;
-            const detectedDeps = [];
-            let match;
-            while ((match = depRegex.exec(rawFileContent)) !== null) {
-              const depImport = match[1] ? match[1].replace(/['";]+$/, '').trim() : null;
-              if (depImport && !detectedDeps.includes(depImport)) {
-                detectedDeps.push(depImport);
-              }
+        if (!options.full && isSkeletonCandidate(resolved, lineCount)) {
+          let focusName = null;
+          const candidateWords = (userInput || '').match(/[a-zA-Z_$][a-zA-Z0-9_$]{2,}/g) || [];
+          for (const word of candidateWords) {
+            if (new RegExp(`\\b(?:function|def|class|const|let|var)\\s+${word}\\b`, 'i').test(rawFileContent)) {
+              focusName = word;
+              break;
             }
+          }
 
-            const fileDir = path.dirname(resolved);
-            for (const depImport of detectedDeps) {
-              const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
-              if (resolvedDep && gravitonFilter.isIgnored(resolvedDep)) {
-                sessionFilesIgnored++;
-                continue;
-              }
-              if (resolvedDep && !handledPaths.has(resolvedDep)) {
-                handledPaths.add(resolvedDep);
-                const depContent = readAndTruncateFile(resolvedDep, 500);
-                if (depContent !== null) {
-                  const depExt = path.extname(resolvedDep).slice(1) || '';
-                  const relDepPath = path.relative(currentCwd, resolvedDep).replace(/\\/g, '/');
-                  injectedDependencies.push(
-                    `[AUTO-INJECTED DEPENDENCY: ${relDepPath}]\n\`\`\`${depExt}\n${depContent}\n\`\`\``
-                  );
-                }
+          const skeleton = skeletonizeCode(rawFileContent, ext, { focusName });
+          injectedFiles.push(
+            `[GRAVITON CODE SKELETON: ${relPath || filename} - Implementation Collapsed for Token Economy]\n\`\`\`${ext}\n${skeleton}\n\`\`\``
+          );
+        } else {
+          if (cappedContent !== null) {
+            injectedFiles.push(
+              `[AUTO-INJECTED FILE: ${relPath || filename}]\n\`\`\`${ext}\n${cappedContent}\n\`\`\``
+            );
+          }
+        }
+
+        // 2. Shallow Dependency Scraping (Universal across JS/TS, Python, Go, Rust, depth = 1; skip for minified)
+        if (cappedContent !== '// [MINIFIED FILE DETECTED: CONTENT OMITTED FOR TOKEN SAFETY]') {
+          const depRegex = /(?:import\s+.*?from\s+['"]|require\(['"]|import\s+['"]|from\s+.*?import\s+|from\s+['"]?)((?:\.\/|\.\.\/|@\/|~\/)[^'"\s]+)/g;
+          const detectedDeps = [];
+          let match;
+          while ((match = depRegex.exec(rawFileContent)) !== null) {
+            const depImport = match[1] ? match[1].replace(/['";]+$/, '').trim() : null;
+            if (depImport && !detectedDeps.includes(depImport)) {
+              detectedDeps.push(depImport);
+            }
+          }
+
+          const fileDir = path.dirname(resolved);
+          for (const depImport of detectedDeps) {
+            const resolvedDep = resolveLocalDependency(fileDir, depImport, currentCwd);
+            if (resolvedDep && gravitonFilter.isIgnored(resolvedDep)) {
+              sessionFilesIgnored++;
+              continue;
+            }
+            if (resolvedDep && !handledPaths.has(resolvedDep)) {
+              handledPaths.add(resolvedDep);
+              const depContent = readAndTruncateFile(resolvedDep, 500);
+              if (depContent !== null) {
+                const depExt = path.extname(resolvedDep).slice(1) || '';
+                const relDepPath = path.relative(currentCwd, resolvedDep).replace(/\\/g, '/');
+                injectedDependencies.push(
+                  `[AUTO-INJECTED DEPENDENCY: ${relDepPath}]\n\`\`\`${depExt}\n${depContent}\n\`\`\``
+                );
               }
             }
           }
