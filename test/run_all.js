@@ -46,12 +46,12 @@ for (const file of testFiles) {
 }
 
 console.log('\n\x1b[1m---------------------------------------------------------------\x1b[0m');
-console.log(`Hasil Akhir: \x1b[32m${passed} passed\x1b[0m, \x1b[${failed > 0 ? '31' : '32'}m${failed} failed\x1b[0m (${testFiles.length} total suites)`);
+console.log(`Final Result: \x1b[32m${passed} passed\x1b[0m, \x1b[${failed > 0 ? '31' : '32'}m${failed} failed\x1b[0m (${testFiles.length} total suites)`);
 console.log('\x1b[1m---------------------------------------------------------------\x1b[0m\n');
 
 if (failed > 0) {
   process.exit(1);
 } else {
-  console.log('\x1b[1;32m✔ SEMUA TEST SUITE GRAVITON V2.0.0 BERHASIL 100%!\x1b[0m\n');
+  console.log('\x1b[1;32m✔ ALL GRAVITON V2.0.0 TEST SUITES PASSED 100%!\x1b[0m\n');
   process.exit(0);
 }

@@ -237,15 +237,15 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Validate executable existence
   if (!agyExecutable || !fs.existsSync(agyExecutable)) {
     console.error(
-      `\n\x1b[1;31m[🚨 GRAVITON FATAL ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) belum terpasang di laptop ini!\n\n` +
-      `Graviton adalah akselerator CLI untuk Google Antigravity. Binary \x1b[33magy\x1b[0m atau \x1b[33magy.exe\x1b[0m tidak ditemukan di sistem ini.\n` +
-      `\x1b[90m(Catatan: Antigravity Desktop App tidak menjalankan perintah CLI secara otomatis).\x1b[0m\n\n` +
-      `\x1b[1mCara Memasang Google Antigravity CLI di Windows:\x1b[0m\n` +
-      `Buka PowerShell baru dan jalankan:\n` +
+      `\n\x1b[1;31m[🚨 GRAVITON FATAL ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) is not installed on this machine!\n\n` +
+      `Graviton is an autonomous acceleration layer for Google Antigravity. Binary \x1b[33magy\x1b[0m or \x1b[33magy.exe\x1b[0m was not found on your system.\n` +
+      `\x1b[90m(Note: Antigravity Desktop App alone does not automatically link CLI commands without agy).\x1b[0m\n\n` +
+      `\x1b[1mHow to Install Google Antigravity CLI on Windows:\x1b[0m\n` +
+      `Open a new PowerShell terminal and execute:\n` +
       `  \x1b[36mirm https://antigravity.google/cli/install.ps1 | iex\x1b[0m\n\n` +
-      `Atau di Command Prompt (CMD):\n` +
+      `Or in Command Prompt (CMD):\n` +
       `  \x1b[36mcurl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd\x1b[0m\n\n` +
-      `Jika Antigravity CLI sudah terpasang di lokasi khusus, atur path-nya:\n` +
+      `If Antigravity CLI is installed in a custom location, configure its path:\n` +
       `  \x1b[33msetx AGY_PATH "C:\\path\\to\\agy.exe"\x1b[0m\n`
     );
     if (options.rejectOnError) {

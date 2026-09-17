@@ -38,7 +38,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
   // Auto-Fix if requested
   let agyPath = resolveAgyExecutable('agy');
   if (options && options.fix && (!agyPath || !fs.existsSync(agyPath))) {
-    console.log('\x1b[36m[GRAVITON DOCTOR FIX]\x1b[0m Memulai instalasi otomatis Google Antigravity CLI...');
+    console.log('\x1b[36m[GRAVITON DOCTOR FIX]\x1b[0m Starting automatic installation of Google Antigravity CLI...');
     try {
       if (process.platform === 'win32') {
         spawnSync('powershell.exe', [
@@ -75,10 +75,10 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Antigravity',
       name: 'Google Antigravity CLI (agy)',
       status: 'error',
-      details: 'Binary agy atau agy.exe tidak ditemukan di PATH atau ~/.gemini/bin',
+      details: 'Binary agy or agy.exe was not found in PATH or ~/.gemini/bin',
       fix: process.platform === 'win32'
-        ? 'Jalankan di PowerShell: irm https://antigravity.google/cli/install.ps1 | iex'
-        : 'Jalankan di Terminal: curl -fsSL https://antigravity.google/cli/install.sh | bash'
+        ? 'Run in PowerShell: irm https://antigravity.google/cli/install.ps1 | iex'
+        : 'Run in Terminal: curl -fsSL https://antigravity.google/cli/install.sh | bash'
     });
   }
 
@@ -90,15 +90,15 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Antigravity',
       name: 'Brain Storage',
       status: 'ok',
-      details: `Ditemukan di ${brainDir}`
+      details: `Found at ${brainDir}`
     });
   } else {
     diagnostics.push({
       category: 'Antigravity',
       name: 'Brain Storage',
       status: 'warn',
-      details: 'Direktori brain belum terdeteksi. Akan otomatis dibuat saat sesi pertama dijalankan.',
-      fix: 'Jalankan perintah graviton sekali untuk menginisialisasi brain.'
+      details: 'Brain directory not detected yet. It will be created automatically on your first session.',
+      fix: 'Run any graviton command once to initialize brain storage.'
     });
   }
 
@@ -146,8 +146,8 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Tools',
       name: 'Git Version Control',
       status: 'warn',
-      details: 'Git tidak ditemukan di sistem ini.',
-      fix: 'Opsional tapi direkomendasikan untuk pelacakan versi kode.'
+      details: 'Git was not found on this system.',
+      fix: 'Optional but recommended for repository version control.'
     });
   }
 
@@ -169,7 +169,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
       category: 'Tools',
       name: 'Python Runtime',
       status: 'ok',
-      details: 'Tidak terpasang (Opsional jika Anda tidak mengerjakan project Python).'
+      details: 'Not installed (Optional if you are not working on Python projects).'
     });
   }
 

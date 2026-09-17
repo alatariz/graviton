@@ -15,7 +15,9 @@ import {
   formatConversationList,
   getWorkspaceSession,
   saveWorkspaceSession,
-  clearWorkspaceSession
+  clearWorkspaceSession,
+  getConversationHistory,
+  formatConversationHistory
 } from '../src/session-manager.js';
 import { constructSuperPrompt } from '../src/pipeline.js';
 
@@ -32,7 +34,7 @@ const title2 = generateConversationTitle('Fix TypeError: Cannot read property da
 assert.ok(title2.startsWith('Fix TypeError: Cannot read property'), 'Title must capture core error');
 
 const title3 = generateConversationTitle('   ');
-assert.strictEqual(title3, 'Percakapan Baru');
+assert.strictEqual(title3, 'New Conversation');
 
 console.log('  ✔ generateConversationTitle correctly extracts clean, concise topic titles');
 
@@ -146,6 +148,35 @@ try {
 } finally {
   try {
     fs.rmSync(tempCompat, { recursive: true, force: true });
+  } catch {}
+}
+
+// -------------------------------------------------------------------------
+// TEST 5: Conversation History Retrieval & Formatting
+// -------------------------------------------------------------------------
+console.log('\n[TEST 5] Conversation History Retrieval & Formatting');
+const tempHist = path.join(os.tmpdir(), 'graviton-hist-test-' + Date.now());
+fs.mkdirSync(tempHist, { recursive: true });
+
+try {
+  saveWorkspaceConversation(tempHist, 'hist-uuid-1', 'create authentication middleware', { tokens: 1500 });
+  saveWorkspaceConversation(tempHist, 'hist-uuid-1', 'add jwt verification', { tokens: 800 });
+
+  const history = getConversationHistory(tempHist, 'hist-uuid-1', 5);
+  assert.ok(history);
+  assert.strictEqual(history.id, 'hist-uuid-1');
+  assert.strictEqual(history.turns.length, 2);
+  assert.strictEqual(history.turns[0].text, 'create authentication middleware');
+  assert.strictEqual(history.turns[1].text, 'add jwt verification');
+
+  const formatted = formatConversationHistory(history);
+  assert.ok(formatted.includes('CONVERSATION TOPIC'));
+  assert.ok(formatted.includes('create authentication middleware'));
+  assert.ok(formatted.includes('add jwt verification'));
+  console.log('  ✔ getConversationHistory & formatConversationHistory display turns accurately');
+} finally {
+  try {
+    fs.rmSync(tempHist, { recursive: true, force: true });
   } catch {}
 }
 

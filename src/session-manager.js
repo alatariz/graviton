@@ -35,7 +35,7 @@ export function getWorkspaceConversationsPath(cwd = process.cwd()) {
  * @returns {string}
  */
 export function generateConversationTitle(prompt) {
-  if (!prompt || typeof prompt !== 'string') return 'Percakapan Baru';
+  if (!prompt || typeof prompt !== 'string') return 'New Conversation';
   
   let cleaned = prompt
     .replace(/\[SYSTEM DIRECTIVE[\s\S]*?\]/gi, '')
@@ -43,7 +43,7 @@ export function generateConversationTitle(prompt) {
     .trim();
 
   const lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return 'Percakapan Baru';
+  if (lines.length === 0) return 'New Conversation';
 
   let title = lines[0];
   // Remove markdown headers, bullets, or leading numbers
@@ -56,26 +56,26 @@ export function generateConversationTitle(prompt) {
   if (title.length > 50) {
     title = title.slice(0, 46).replace(/\s+\S*$/, '') + '...';
   }
-  return title || 'Percakapan Baru';
+  return title || 'New Conversation';
 }
 
 /**
- * Formats relative timestamp for UI display (e.g. "Baru saja", "5m lalu", "2j lalu", "Kemarin").
+ * Formats relative timestamp for UI display (e.g. "Just now", "5m ago", "2h ago", "Yesterday").
  * @param {number} timestamp
  * @returns {string}
  */
 export function formatRelativeTime(timestamp) {
-  if (!timestamp) return 'Baru saja';
+  if (!timestamp) return 'Just now';
   const diffMs = Math.max(0, Date.now() - timestamp);
   const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 60) return 'Baru saja';
+  if (diffSec < 60) return 'Just now';
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m lalu`;
+  if (diffMin < 60) return `${diffMin}m ago`;
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}j lalu`;
+  if (diffHour < 24) return `${diffHour}h ago`;
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay === 1) return 'Kemarin';
-  if (diffDay < 7) return `${diffDay}h lalu`;
+  if (diffDay === 1) return 'Yesterday';
+  if (diffDay < 7) return `${diffDay}d ago`;
   return new Date(timestamp).toLocaleDateString();
 }
 
@@ -274,6 +274,136 @@ export function setActiveConversation(cwd = process.cwd(), indexOrId) {
 }
 
 /**
+ * Retrieves conversation turn history from Antigravity transcript logs or workspace registry.
+ * Dual-layer recovery:
+ * 1. Native Antigravity transcript: parses ~/.gemini/antigravity/brain/<id>/.system_generated/logs/transcript.jsonl
+ * 2. Graviton workspace registry: reads conversation.history and lastPrompt from .graviton-conversations.json
+ * @param {string} cwd
+ * @param {string|number} indexOrId
+ * @param {number} maxTurns
+ * @returns {{ id: string|null, title: string, turns: Array<{ role: string, text: string, timestamp?: number|string }>, totalTurns: number, activeFiles: string[] }}
+ */
+export function getConversationHistory(cwd = process.cwd(), indexOrId = null, maxTurns = 5) {
+  const normalizedCwd = path.resolve(cwd);
+  const state = getWorkspaceConversations(normalizedCwd);
+
+  let targetConv = null;
+  if (!indexOrId || indexOrId === 'active') {
+    targetConv = state.activeId ? state.conversations.find(c => c.id === state.activeId) : state.conversations[0];
+  } else if (typeof indexOrId === 'number' || /^\d+$/.test(String(indexOrId).trim())) {
+    const idx = parseInt(indexOrId, 10) - 1;
+    targetConv = (idx >= 0 && idx < state.conversations.length) ? state.conversations[idx] : null;
+  } else if (typeof indexOrId === 'string') {
+    targetConv = state.conversations.find(c => c.id.toLowerCase().startsWith(indexOrId.toLowerCase().trim()));
+  }
+
+  const convId = targetConv ? targetConv.id : (typeof indexOrId === 'string' && indexOrId.length > 10 ? indexOrId : null);
+  if (!convId) {
+    return { id: null, title: 'No Conversation', turns: [], totalTurns: 0, activeFiles: [] };
+  }
+
+  const title = targetConv ? targetConv.title : 'Conversation';
+  const brainDir = getBrainDir();
+  const transcriptFile = path.join(brainDir, convId, '.system_generated', 'logs', 'transcript.jsonl');
+
+  const parsedTurns = [];
+
+  if (fs.existsSync(transcriptFile)) {
+    try {
+      const content = fs.readFileSync(transcriptFile, 'utf8');
+      const lines = content.trim().split(/\r?\n/);
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const entry = JSON.parse(line);
+          if (entry.type === 'USER_INPUT' && entry.content) {
+            let text = entry.content;
+            const reqMatch = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
+            if (reqMatch) text = reqMatch[1].trim();
+            text = text.replace(/<[^>]+>/g, '').trim();
+            if (text) {
+              parsedTurns.push({
+                role: 'user',
+                text,
+                timestamp: entry.created_at || null
+              });
+            }
+          }
+        } catch {}
+      }
+    } catch {}
+  }
+
+  // Fallback to internal registry history or lastPrompt if transcript wasn't found or empty
+  if (parsedTurns.length === 0) {
+    if (targetConv && Array.isArray(targetConv.history) && targetConv.history.length > 0) {
+      targetConv.history.forEach(h => parsedTurns.push(h));
+    } else if (targetConv && targetConv.lastPrompt) {
+      parsedTurns.push({
+        role: 'user',
+        text: targetConv.lastPrompt,
+        timestamp: targetConv.updatedAt
+      });
+    }
+  }
+
+  const totalTurns = parsedTurns.length || (targetConv ? targetConv.turns || 1 : 1);
+  const recentTurns = parsedTurns.slice(-maxTurns);
+
+  return {
+    id: convId,
+    title,
+    turns: recentTurns,
+    totalTurns,
+    activeFiles: targetConv ? targetConv.activeFiles || [] : []
+  };
+}
+
+/**
+ * Formats conversation history into a clear terminal summary so the user knows where they left off.
+ * @param {object} historyData
+ * @returns {string}
+ */
+export function formatConversationHistory(historyData) {
+  if (!historyData || !historyData.id) {
+    return '\x1b[90mNo conversation history found.\x1b[0m\n';
+  }
+
+  const shortId = historyData.id.slice(0, 8);
+  const total = historyData.totalTurns || historyData.turns.length;
+
+  let out = `\n\x1b[1m\x1b[36m===============================================================\n`;
+  out += `  CONVERSATION TOPIC: "${historyData.title}" (${shortId}...)\n`;
+  out += `  Total Turns: ${total} | Context: Active\n`;
+  out += `===============================================================\x1b[0m\n\n`;
+
+  if (historyData.turns.length === 0) {
+    out += `  \x1b[90m(No previous messages recorded yet in this topic)\x1b[0m\n\n`;
+  } else {
+    out += `\x1b[1mRecent Discussion Summary:\x1b[0m\n`;
+    historyData.turns.forEach((turn, idx) => {
+      const turnNum = total - historyData.turns.length + idx + 1;
+      let cleanText = turn.text;
+      if (cleanText.length > 200) {
+        cleanText = cleanText.slice(0, 197).replace(/\s+\S*$/, '') + '...';
+      }
+      out += `  \x1b[1m\x1b[33m[Turn ${turnNum}]\x1b[0m \x1b[37m${cleanText.replace(/\r?\n/g, ' ')}\x1b[0m\n`;
+    });
+    out += '\n';
+  }
+
+  if (historyData.activeFiles && historyData.activeFiles.length > 0) {
+    out += `  \x1b[90mModified Files: ${historyData.activeFiles.slice(0, 5).join(', ')}${historyData.activeFiles.length > 5 ? '...' : ''}\x1b[0m\n`;
+  }
+
+  out += `\x1b[32m✔ Active topic switched: "${historyData.title}"\x1b[0m\n`;
+  out += `\x1b[90mYou can now continue this conversation below.\x1b[0m\n`;
+  out += `\x1b[36m===============================================================\x1b[0m\n`;
+
+  return out;
+}
+
+/**
  * Saves or updates a conversation in the workspace registry.
  * Auto-generates title if new, increments turns, and updates token metrics.
  * @param {string} cwd
@@ -300,6 +430,15 @@ export function saveWorkspaceConversation(cwd = process.cwd(), conversationId, p
     }
     if (prompt) {
       existing.lastPrompt = prompt.slice(0, 200);
+      existing.history = existing.history || [];
+      existing.history.push({
+        role: 'user',
+        text: prompt.slice(0, 300),
+        timestamp: Date.now()
+      });
+      if (existing.history.length > 20) {
+        existing.history = existing.history.slice(-20);
+      }
     }
     if (metadata.title) {
       existing.title = metadata.title;
@@ -319,7 +458,8 @@ export function saveWorkspaceConversation(cwd = process.cwd(), conversationId, p
       turns: 1,
       cumulativeTokens: metadata.tokens || 0,
       lastPrompt: (prompt || '').slice(0, 200),
-      activeFiles: metadata.activeFiles || []
+      activeFiles: metadata.activeFiles || [],
+      history: prompt ? [{ role: 'user', text: prompt.slice(0, 300), timestamp: Date.now() }] : []
     };
     state.conversations.unshift(existing);
   }
@@ -351,7 +491,7 @@ export function deleteWorkspaceConversation(cwd = process.cwd(), indexOrId) {
   }
 
   if (targetIndex === -1) {
-    return { success: false, deleted: null, message: `Percakapan '${indexOrId}' tidak ditemukan.` };
+    return { success: false, deleted: null, message: `Conversation '${indexOrId}' not found.` };
   }
 
   const deleted = state.conversations.splice(targetIndex, 1)[0];
@@ -364,7 +504,7 @@ export function deleteWorkspaceConversation(cwd = process.cwd(), indexOrId) {
   return {
     success: true,
     deleted,
-    message: `Percakapan "${deleted.title}" (${deleted.id.slice(0, 8)}...) berhasil dihapus.`
+    message: `Conversation "${deleted.title}" (${deleted.id.slice(0, 8)}...) was deleted.`
   };
 }
 
@@ -390,7 +530,7 @@ export function renameWorkspaceConversation(cwd = process.cwd(), indexOrId, newT
   }
 
   if (!target) {
-    return { success: false, conversation: null, message: 'Percakapan tidak ditemukan.' };
+    return { success: false, conversation: null, message: 'Conversation not found.' };
   }
 
   target.title = (newTitle || '').trim() || target.title;
@@ -398,7 +538,7 @@ export function renameWorkspaceConversation(cwd = process.cwd(), indexOrId, newT
   return {
     success: true,
     conversation: target,
-    message: `Judul percakapan berhasil diubah menjadi: "${target.title}"`
+    message: `Conversation title updated to: "${target.title}"`
   };
 }
 
@@ -412,7 +552,7 @@ export function formatConversationList(cwd = process.cwd()) {
   const { activeId, conversations } = getWorkspaceConversations(normalizedCwd);
 
   if (!conversations || conversations.length === 0) {
-    return `\n\x1b[90m[GRAVITON]\x1b[0m Belum ada riwayat percakapan di workspace ini.\n\x1b[90m(Gunakan prompt biasa untuk membuat obrolan baru).\x1b[0m\n`;
+    return `\n\x1b[90m[GRAVITON]\x1b[0m No conversation history found in this workspace.\n\x1b[90m(Type any regular prompt to start a new conversation).\x1b[0m\n`;
   }
 
   let out = `\n\x1b[1m\x1b[36m=== GRAVITON CONVERSATIONS (Antigravity IDE History) ===\x1b[0m\n`;
@@ -421,7 +561,7 @@ export function formatConversationList(cwd = process.cwd()) {
   conversations.forEach((conv, index) => {
     const num = index + 1;
     const isActive = conv.id === activeId;
-    const statusBullet = isActive ? `\x1b[32m● [Aktif]\x1b[0m` : `\x1b[90m○\x1b[0m`;
+    const statusBullet = isActive ? `\x1b[32m● [Active]\x1b[0m` : `\x1b[90m○\x1b[0m`;
     const titleFormatted = isActive ? `\x1b[1m\x1b[37m"${conv.title}"\x1b[0m` : `\x1b[37m"${conv.title}"\x1b[0m`;
     const tokensK = conv.cumulativeTokens ? `~${Math.round(conv.cumulativeTokens / 100) / 10}k` : '0';
     const relativeTime = formatRelativeTime(conv.updatedAt);
@@ -430,11 +570,11 @@ export function formatConversationList(cwd = process.cwd()) {
     out += `      \x1b[90mID: ${conv.id.slice(0, 8)}... | ${conv.turns || 1} turns | ${tokensK} tokens | ${relativeTime}\x1b[0m\n`;
   });
 
-  out += `\n\x1b[1mPILIHAN AKSI:\x1b[0m\n`;
-  out += `  \x1b[36m<nomor>\x1b[0m      Pilih & lanjutkan percakapan (contoh: \x1b[1m1\x1b[0m)\n`;
-  out += `  \x1b[31md <nomor>\x1b[0m    Hapus percakapan dari riwayat (contoh: \x1b[1md 2\x1b[0m)\n`;
-  out += `  \x1b[32mn\x1b[0m            Mulai percakapan baru (fresh chat)\n`;
-  out += `  \x1b[90mq\x1b[0m            Batal / Keluar\n`;
+  out += `\n\x1b[1mACTIONS:\x1b[0m\n`;
+  out += `  \x1b[36m<number>\x1b[0m    Select & resume conversation (e.g. \x1b[1m1\x1b[0m)\n`;
+  out += `  \x1b[31md <number>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)\n`;
+  out += `  \x1b[32mn\x1b[0m           Start fresh conversation\n`;
+  out += `  \x1b[90mq\x1b[0m           Cancel / Exit\n`;
 
   return out;
 }
@@ -483,7 +623,6 @@ export function clearWorkspaceSession(cwd = process.cwd()) {
   } catch {}
 }
 
-
 /**
  * Runs interactive conversation picker in the terminal (Antigravity IDE style).
  * @param {string} cwd
@@ -506,19 +645,19 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
   });
 
   return new Promise((resolve) => {
-    rl.question('\x1b[1;36mPilih aksi (1-' + conversations.length + ', d <no>, n, q): \x1b[0m', async (answer) => {
+    rl.question('\x1b[1;36mSelect action (1-' + conversations.length + ', d <no>, n, q): \x1b[0m', async (answer) => {
       rl.close();
       const trimmed = (answer || '').trim();
 
       if (!trimmed || trimmed.toLowerCase() === 'q') {
-        console.log('\x1b[90mDibatalkan.\x1b[0m\n');
+        console.log('\x1b[90mCancelled.\x1b[0m\n');
         resolve(null);
         return;
       }
 
       if (trimmed.toLowerCase() === 'n' || trimmed.toLowerCase() === 'new') {
         clearWorkspaceSession(normalizedCwd);
-        console.log('\x1b[32m✔ Percakapan baru siap. Sesi sebelumnya di-reset.\x1b[0m\n');
+        console.log('\x1b[32m✔ Fresh conversation ready. Previous session reset.\x1b[0m\n');
         resolve({ isNew: true });
         return;
       }
@@ -539,20 +678,21 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
       if (/^\d+$/.test(trimmed)) {
         const selected = setActiveConversation(normalizedCwd, trimmed);
         if (selected) {
-          console.log(`\x1b[32m✔ Percakapan [${trimmed}] aktif: "${selected.title}" (${selected.id.slice(0, 8)}...)\x1b[0m\n`);
+          const hist = getConversationHistory(normalizedCwd, selected.id, 5);
+          console.log(formatConversationHistory(hist));
           if (typeof onSelectCallback === 'function') {
             await onSelectCallback(selected);
           }
           resolve(selected);
           return;
         } else {
-          console.log(`\x1b[31m✖ Nomor percakapan '${trimmed}' tidak valid.\x1b[0m\n`);
+          console.log(`\x1b[31m✖ Invalid conversation number '${trimmed}'.\x1b[0m\n`);
           resolve(null);
           return;
         }
       }
 
-      console.log('\x1b[33mPilihan tidak dikenali.\x1b[0m\n');
+      console.log('\x1b[33mUnrecognized choice.\x1b[0m\n');
       resolve(null);
     });
   });

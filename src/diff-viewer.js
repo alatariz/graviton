@@ -102,7 +102,7 @@ export function getSessionDiff(cwd = process.cwd()) {
   const manifestPath = path.join(normalizedCwd, '.graviton-manifest.json');
 
   if (!fs.existsSync(manifestPath)) {
-    return '\x1b[33m[!] Tidak ditemukan riwayat perubahan sesi Graviton di workspace ini.\x1b[0m';
+    return '\x1b[33m[!] No Graviton session change history found in this workspace.\x1b[0m';
   }
 
   try {
@@ -140,12 +140,12 @@ export function getSessionDiff(cwd = process.cwd()) {
     }
 
     if (changeCount === 0) {
-      return '\x1b[90mTidak ada perubahan file pada sesi terakhir.\x1b[0m';
+      return '\x1b[90mNo file changes detected in the latest session.\x1b[0m';
     }
 
-    reports.push(`\n\x1b[36m👉 Tip:\x1b[0m Untuk membatalkan semua perubahan di atas, ketik '\x1b[1mgraviton undo\x1b[0m'.\n`);
+    reports.push(`\n\x1b[36m👉 Tip:\x1b[0m To revert all changes above, run '\x1b[1mgraviton undo\x1b[0m'.\n`);
     return reports.join('\n');
   } catch (err) {
-    return `\x1b[31mGagal membaca session diff: ${err.message}\x1b[0m`;
+    return `\x1b[31mFailed to read session diff: ${err.message}\x1b[0m`;
   }
 }

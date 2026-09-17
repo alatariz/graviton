@@ -70,9 +70,9 @@ export function checkCompactionStatus(cwd = process.cwd()) {
     const advise = turns >= MAX_RECOMMENDED_TURNS || tokens >= MAX_RECOMMENDED_TOKENS;
     let message = '';
     if (advise) {
-      message = `\n\x1b[33m[GRAVITON ADVISORY] Sesi continuous chat telah berjalan ${turns} turns (~ ${tokens} tokens).\x1b[0m\n` +
-        `\x1b[90mKonteks yang terlalu panjang dapat memperlambat respon dan memboroskan token.\x1b[0m\n` +
-        `\x1b[36m👉 Saran:\x1b[0m Jalankan '\x1b[1mgraviton compact\x1b[0m' untuk mereset context window sambil menyimpan memori inti project.\n`;
+      message = `\n\x1b[33m[GRAVITON ADVISORY] Continuous session has reached ${turns} turns (~ ${tokens} tokens).\x1b[0m\n` +
+        `\x1b[90mExcessively long context windows may slow down response times and consume extra tokens.\x1b[0m\n` +
+        `\x1b[36m👉 Recommendation:\x1b[0m Run '\x1b[1mgraviton compact\x1b[0m' to refresh the context window while preserving core working memory.\n`;
     }
 
     return { advise, turns, cumulativeTokens: tokens, message };
@@ -120,13 +120,13 @@ export function compactWorkspaceSession(cwd = process.cwd()) {
     return {
       success: true,
       summary: summary.memo,
-      message: `Sesi berhasil dikompaksi! Memori aktif disimpan (${touched.length} file terlacak). Context window di-refresh.`
+      message: `Session successfully compacted! Active memory saved (${touched.length} files tracked). Context window refreshed.`
     };
   } catch (err) {
     return {
       success: false,
       summary: '',
-      message: `Gagal mengompaksi sesi: ${err.message}`
+      message: `Failed to compact session: ${err.message}`
     };
   }
 }

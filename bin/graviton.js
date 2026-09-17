@@ -26,7 +26,9 @@ import {
   deleteWorkspaceConversation,
   formatConversationList,
   generateConversationTitle,
-  runInteractiveConversationPicker
+  runInteractiveConversationPicker,
+  getConversationHistory,
+  formatConversationHistory
 } from '../src/session-manager.js';
 import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort } from '../src/port-guard.js';
@@ -162,43 +164,43 @@ async function main() {
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  \x1b[33m--fast, -f[0m                  Direct ultra-fast execution without planning (effort: low)
-  \x1b[33m--deep[0m                      Activate deep precision synthesis for complex architecture
-  \x1b[33m-c, --c, --conversation[0m     Buka riwayat percakapan (Antigravity IDE History), pilih, atau hapus
-  \x1b[33m-n, --n, --new[0m              Mulai percakapan/obrolan baru secara eksplisit di workspace ini
+  --fast, -f                     Direct ultra-fast execution without planning (effort: low)
+  --deep                         Activate deep precision synthesis for complex architecture
+  -c, --c, --conversation        Open conversation history (Antigravity IDE History), select, or delete
+  -n, --n, --new                 Start a fresh conversation explicitly in this workspace
 
 \x1b[1mCOMMANDS\x1b[0m
-  \x1b[32m"<raw_text>"[0m                [DEFAULT] Synthesize prompt via Graviton Core & execute (chat baru otomatis)
-  \x1b[32mchat[0m, \x1b[32mrepl[0m                   Launch interactive REPL chat session (Antigravity IDE History support)
-  \x1b[32mdiff[0m                        Review colorized line-by-line diff of recent modifications made by AI
-  \x1b[32mdoctor[0m                      Diagnose system health, Node.js runtime, & Antigravity (agy) installation
-  \x1b[32mcompact[0m                     Compact long continuous session to refresh context window & save tokens
-  \x1b[32mundo[0m, \x1b[32mrollback[0m             Revert files modified or created during the most recent AI session
-  \x1b[32mstart[0m <cmd...>               Launch long-running dev server cleanly as background daemon (non-hanging)
-  \x1b[32mstop[0m [port|all]             Terminate background daemon or free blocked development port
-  \x1b[32mports[0m                       Scan and display active listening development ports (3000, 5173, etc.)
-  \x1b[32minit[0m [--global]             Initialize ~/.graviton directory and local Skill Vault
-  \x1b[32mstats[0m, \x1b[32mgain[0m                 Display lifetime telemetry dashboard & token savings
-  \x1b[32mmap[0m                         Display workspace directory tree and detected dependencies
-  \x1b[32mclean[0m "<raw_text>"           Only synthesize prompt & copy to clipboard (do not launch Antigravity)
-  \x1b[32mrun[0m <cmd...>                 Execute CLI command with streamlined terminal output filtering
-  \x1b[32mversion[0m, \x1b[32m-v[0m                 Display Graviton CLI version
+  "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
+  chat, repl                     Launch interactive REPL chat session (Antigravity IDE History support)
+  diff                           Review colorized line-by-line diff of recent modifications made by AI
+  doctor                         Diagnose system health, Node.js runtime, & Antigravity (agy) installation
+  compact                        Compact long continuous session to refresh context window & save tokens
+  undo, rollback                 Revert files modified or created during the most recent AI session
+  start <cmd...>                 Launch long-running dev server cleanly as background daemon (non-hanging)
+  stop [port|all]                Terminate background daemon or free blocked development port
+  ports                          Scan and display active listening development ports (3000, 5173, etc.)
+  init [--global]                Initialize ~/.graviton directory and local Skill Vault
+  stats, gain                    Display lifetime telemetry dashboard & token savings
+  map                            Display workspace directory tree and detected dependencies
+  clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
+  run <cmd...>                   Execute CLI command with streamlined terminal output filtering
+  version, -v                    Display Graviton CLI version
 
 \x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
-  # Buka daftar percakapan interaktif (pilih / hapus / buat baru):
+  # Open interactive conversation history picker:
   graviton --c
 
-  # Lanjutkan percakapan nomor 1 di interactive chat:
+  # Resume conversation #1 in interactive chat:
   graviton --c 1
 
-  # Jalankan instruksi langsung pada percakapan nomor 1:
-  graviton --c 1 "tambahkan validasi email di auth.js"
+  # Execute instruction directly within conversation #1:
+  graviton --c 1 "add email validation in auth.js"
 
-  # Hapus percakapan nomor 2 dari riwayat:
+  # Delete conversation #2 from history:
   graviton --c del 2
 
-  # Mulai percakapan baru secara paksa:
-  graviton -n "buatkan REST API endpoint baru"
+  # Explicitly start a fresh conversation:
+  graviton -n "create a new REST API endpoint"
 `);
     process.exit(0);
   }
@@ -207,7 +209,7 @@ async function main() {
   if (isConversationMode && filteredArgs.length === 0) {
     if (conversationAction === 'delete') {
       if (!conversationTarget) {
-        console.error('\x1b[31mError: Tentukan nomor percakapan yang ingin dihapus (contoh: graviton --c del 2).\x1b[0m');
+        console.error('\x1b[31mError: Specify the conversation number to delete (e.g. graviton --c del 2).\x1b[0m');
         process.exit(1);
       }
       const res = deleteWorkspaceConversation(process.cwd(), conversationTarget);
@@ -222,11 +224,12 @@ async function main() {
     if (conversationTarget) {
       const selected = setActiveConversation(process.cwd(), conversationTarget);
       if (selected) {
-        console.log(`\x1b[32m✔ Percakapan [${conversationTarget}] aktif: "${selected.title}" (${selected.id.slice(0, 8)}...)\x1b[0m`);
-        console.log(`\x1b[90mMelanjutkan obrolan dalam mode interaktif REPL...\x1b[0m`);
+        const hist = getConversationHistory(process.cwd(), selected.id, 5);
+        console.log(formatConversationHistory(hist));
+        console.log(`\x1b[90mEntering interactive chat with active conversation...\x1b[0m`);
         await startChatRepl({ cwd: process.cwd(), isDeep });
       } else {
-        console.log(`\x1b[31m✖ Nomor percakapan '${conversationTarget}' tidak ditemukan.\x1b[0m`);
+        console.log(`\x1b[31m✖ Conversation '${conversationTarget}' not found.\x1b[0m`);
       }
       process.exit(0);
     }
@@ -518,7 +521,7 @@ async function main() {
         console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing conversation: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
       } else {
         continueSession = false;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Belum ada percakapan aktif. Memulai percakapan baru...`);
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m No active conversation found. Starting new conversation...`);
       }
     }
   } else {

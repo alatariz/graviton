@@ -147,15 +147,15 @@ export function formatSanityReport(issues = []) {
 
   const lines = [
     `\n\x1b[1;33m⚠️  [GRAVITON SANITY GUARD WARNING]\x1b[0m`,
-    `\x1b[33mTerdeteksi potensi syntax error pada file yang baru diubah oleh AI:\x1b[0m`
+    `\x1b[33mDetected potential syntax issues in files recently modified by AI:\x1b[0m`
   ];
 
   for (const issue of issues) {
-    const loc = issue.line ? ` (Baris ${issue.line}${issue.col ? ':' + issue.col : ''})` : '';
-    lines.push(`  \x1b[31m●\x1b[0m \x1b[1m${issue.file}[0m${loc}: \x1b[90m${issue.error}\x1b[0m`);
+    const loc = issue.line ? ` (Line ${issue.line}${issue.col ? ':' + issue.col : ''})` : '';
+    lines.push(`  \x1b[31m●\x1b[0m \x1b[1m${issue.file}\x1b[0m${loc}: \x1b[90m${issue.error}\x1b[0m`);
   }
 
-  lines.push(`\x1b[36m👉 Rekomendasi:\x1b[0m Ketik '\x1b[1mgraviton undo\x1b[0m' untuk membatalkan perubahan, atau minta Graviton memperbaiki: '\x1b[1mgraviton "perbaiki syntax error barusan"\x1b[0m'\n`);
+  lines.push(`\x1b[36m👉 Recommendation:\x1b[0m Type '\x1b[1mgraviton undo\x1b[0m' to revert changes, or instruct: '\x1b[1mgraviton "fix the recent syntax error"\x1b[0m'\n`);
 
   return lines.join('\n');
 }
