@@ -115,11 +115,22 @@ export function killProcessOnPort(port) {
     return { port: p, freed: true, message: `Port ${p} is already free.` };
   }
 
-  const killed = killProcessTree(found.pid);
-  // Short pause to verify release
-  const stillFound = findProcessOnPort(p);
+  killProcessTree(found.pid);
 
-  if (!stillFound) {
+  // Synchronous verification loop (handles Windows socket teardown delay)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const stillFound = findProcessOnPort(p);
+    if (!stillFound) {
+      return { port: p, freed: true, pid: found.pid, message: `Freed port ${p} (terminated PID ${found.pid}).` };
+    }
+    killProcessTree(stillFound.pid);
+    try {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+    } catch {}
+  }
+
+  const finalFound = findProcessOnPort(p);
+  if (!finalFound) {
     return { port: p, freed: true, pid: found.pid, message: `Freed port ${p} (terminated PID ${found.pid}).` };
   }
 

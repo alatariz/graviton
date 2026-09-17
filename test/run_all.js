@@ -24,11 +24,12 @@ const testFiles = [
   'test_v240_code_skeletonizer.js',
   'test_v250_delta_compression.js',
   'test_v260_squeezer_and_economizer.js',
-  'test_v270_defensive_io.js'
+  'test_v270_defensive_io.js',
+  'test_v280_syntax_and_daemon.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');
-console.log('   GRAVITON V2.7.0 MASTER TEST SUITE RUNNER');
+console.log('   GRAVITON V2.8.0 MASTER TEST SUITE RUNNER');
 console.log('===============================================================\x1b[0m\n');
 
 let passed = 0;
@@ -65,6 +66,6 @@ console.log('\x1b[1m------------------------------------------------------------
 if (failed > 0) {
   process.exit(1);
 } else {
-  console.log('\x1b[1;32m✔ ALL GRAVITON V2.7.0 TEST SUITES PASSED 100%!\x1b[0m\n');
+  console.log('\x1b[1;32m✔ ALL GRAVITON V2.8.0 TEST SUITES PASSED 100%!\x1b[0m\n');
   process.exit(0);
 }

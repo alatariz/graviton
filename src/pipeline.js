@@ -979,7 +979,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 5. TOKEN SHIELD & ASSET GUARD: NEVER read, search, or dump raw dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, composer.lock, Cargo.lock) or minified assets (.min.js, .min.css). If analyzing dependencies or troubleshooting packages, read package.json exclusively. Lockfiles contain redundant resolution metadata that wastes tens of thousands of tokens.
 6. [BREVITY PROTOCOL]: Output zero pleasantries, zero conversational filler, and zero apologies. Use terse, dense technical fragments. Execute requested tasks directly using tools without asking questions. Always complete requested actions before finishing.
 7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
-8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.`;
+8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.`.replace(/\r\n/g, '\n');
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous
@@ -1002,7 +1002,7 @@ ${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}${economizerBl
 ${workspaceBlock}${injectedFilesBlock}
 
 [USER INSTRUCTION & ERROR LOG]:
-${cleanedInput}`.trim();
+${cleanedInput}`.replace(/\r\n/g, '\n').trim();
 
   // Local Trip Odometer: Silently track tokens
   const promptTokens = estimateTokens(finalPrompt);
@@ -1024,6 +1024,21 @@ ${cleanedInput}`.trim();
   });
 
   return finalPrompt;
+}
+
+/**
+ * Extracts the static cache prefix of a prompt to verify LLM KV Context Caching alignment.
+ * @param {string} promptText
+ * @returns {string}
+ */
+export function getPromptCachePrefix(promptText) {
+  if (!promptText || typeof promptText !== 'string') return '';
+  const marker = '[USER INSTRUCTION & ERROR LOG]:';
+  const idx = promptText.indexOf(marker);
+  if (idx !== -1) {
+    return promptText.slice(0, idx).trim();
+  }
+  return promptText;
 }
 
 /**
