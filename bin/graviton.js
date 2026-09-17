@@ -201,22 +201,26 @@ async function main() {
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
 \x1b[1mUSAGE\x1b[0m
-  graviton [options] "<prompt>"
-  graviton <command> [args...]
+  graviton "<prompt>"
+  graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
   graviton -c [number] [prompt]
+  graviton <command> [args...]
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  -f, --fast                     Direct ultra-fast execution without planning (effort: low)
-  -p, --paste                    Attach image/files/text from system clipboard to prompt
-  -m, --markdown <file>          Transpile Office/PDF/CSV/JSON file to clean Markdown before sending
-  -d, --deep                     Activate deep precision synthesis for complex architecture
-  -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
-  -n, --new                      Start a fresh conversation explicitly in this workspace
-  --full                         Disable code skeletonizing (force raw full file hydration)
-  --no-delta                     Disable conversational delta compression (force full re-hydration)
-  --no-squeeze                   Disable stack trace compaction (send full raw runtime traces)
-  --raw-output                   Disable output economizer (allow full-file rewritten responses)
+  -f, --fast                     Fast execution mode without planning (effort: low)
+  -d, --deep                     Deep architecture mode with full planning
+  -p, --paste                    Attach clipboard content (images, files, text)
+  -c, --conversation [number]    Open conversation history, select topic, or resume
+  -n, --new                      Start a fresh conversation topic explicitly
+
+\x1b[1mAUTONOMOUS ENGINES\x1b[0m \x1b[90m(100% Automatic — Zero Configuration Required)\x1b[0m
+  \x1b[32m✔\x1b[0m \x1b[1mSmart Transpiler\x1b[0m     Converts Office (.docx, .pptx, .xlsx) & PDF/CSV to clean Markdown
+  \x1b[32m✔\x1b[0m \x1b[1mCode Skeletonizer\x1b[0m    Outlines large source files (>120 lines) & shrinks vector SVGs
+  \x1b[32m✔\x1b[0m \x1b[1mDelta Compressor\x1b[0m     Sends only changed diff hunks across continuous turns
+  \x1b[32m✔\x1b[0m \x1b[1mStack Squeezer\x1b[0m       Prunes internal vendor/runtime frames from error logs
+  \x1b[32m✔\x1b[0m \x1b[1mOutput Economizer\x1b[0m    Guides AI to output concise diffs/patches instead of full files
+  \x1b[32m✔\x1b[0m \x1b[1mToken Shield\x1b[0m         Blocks wasteful lockfiles and minified bundles
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
@@ -569,12 +573,23 @@ async function main() {
   if (isMarkdown && markdownFile) {
     const fullDocPath = path.resolve(currentCwd, markdownFile);
     if (fs.existsSync(fullDocPath)) {
-      console.log(`\x1b[36m[GRAVITON MARKITDOWN]\x1b[0m Transpiling \x1b[1m${path.basename(fullDocPath)}\x1b[0m to clean Markdown...`);
+      console.log(`\x1b[36m[GRAVITON AUTONOMOUS TRANSPILER]\x1b[0m Transpiling \x1b[1m${path.basename(fullDocPath)}\x1b[0m to clean Markdown...`);
       const transpiled = transpileFileToMarkdown(fullDocPath);
       input = `${transpiled}\n\nUser Request:\n${input || 'Please inspect and analyze this document, then assist with any necessary code changes.'}`;
       markdownTargetFile = path.relative(currentCwd, fullDocPath).replace(/\\/g, '/');
     } else {
       console.log(`\x1b[33m[!] Document file '${markdownFile}' was not found in workspace.\x1b[0m`);
+    }
+  } else if (filteredArgs.length > 0) {
+    // Autonomous Document Detection: auto-executes when user passes docx, pdf, xlsx, pptx, csv without flags
+    const firstArg = filteredArgs[0];
+    const potentialDocPath = path.resolve(currentCwd, firstArg);
+    if (fs.existsSync(potentialDocPath) && fs.statSync(potentialDocPath).isFile() && isTranspilableDocument(potentialDocPath)) {
+      console.log(`\x1b[36m[GRAVITON AUTONOMOUS TRANSPILER]\x1b[0m Auto-detected document: \x1b[1m${path.basename(potentialDocPath)}\x1b[0m -> Transpiling to clean Markdown...`);
+      const transpiled = transpileFileToMarkdown(potentialDocPath);
+      const remainingPrompt = filteredArgs.slice(1).join(' ').trim();
+      input = `${transpiled}\n\nUser Request:\n${remainingPrompt || 'Please inspect, analyze, and assist with this document.'}`;
+      markdownTargetFile = path.relative(currentCwd, potentialDocPath).replace(/\\/g, '/');
     }
   }
 
