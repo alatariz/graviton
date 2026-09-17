@@ -22,6 +22,7 @@ import { inspectSessionFiles } from './sanity-guard.js';
 import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
 import { resolveTargetScope } from './context-scoper.js';
+import { captureClipboard, formatClipboardAttachment } from './clipboard.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
@@ -45,7 +46,7 @@ export async function startChatRepl(options = {}) {
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}
 \x1b[90mType your prompt directly without outer quotes.\x1b[0m
-Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/undo\x1b[90m, \x1b[33m/diff\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/ports\x1b[90m, \x1b[33m/doctor\x1b[90m, \x1b[33m/exit\x1b[0m
+Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/p\x1b[90m (paste clipboard), \x1b[33m/undo\x1b[90m, \x1b[33m/diff\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/ports\x1b[90m, \x1b[33m/doctor\x1b[90m, \x1b[33m/exit\x1b[0m
 `);
 
   const rl = readline.createInterface({
@@ -90,6 +91,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
   \x1b[33m/c\x1b[0m, \x1b[33m--c\x1b[0m, \x1b[33m/chats\x1b[0m      View conversation history list (Antigravity CLI History)
   \x1b[33m/c <number>\x1b[0m       Switch to and view conversation history (e.g. \x1b[1m/c 2\x1b[0m)
   \x1b[33m/n\x1b[0m, \x1b[33m--n\x1b[0m, \x1b[33m/new\x1b[0m, \x1b[33mn\x1b[0m    Start a fresh conversation in this workspace
+  \x1b[33m/p\x1b[0m, \x1b[33m/paste [prompt]\x1b[0m    Attach image/files/text from clipboard to prompt
   \x1b[33m/del <number>\x1b[0m, \x1b[33md <n>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)
   \x1b[33m/rename <title>\x1b[0m    Rename active conversation topic
   \x1b[33m/undo\x1b[0m            Undo last AI changes (Rollback)
@@ -268,6 +270,27 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
 
     // 2. REGULAR PROMPT EXECUTION (Conversational continuity preserved)
     try {
+      let executionPrompt = input;
+      let clipboardFiles = [];
+
+      if (input === '/p' || input.startsWith('/p ') || input === '/paste' || input.startsWith('/paste ')) {
+        const promptText = input.replace(/^(\/paste|\/p)\s*/i, '').trim();
+        console.log(`\x1b[36m[GRAVITON CLIPBOARD]\x1b[0m Checking system clipboard...`);
+        const clipResult = captureClipboard(cwd);
+        if (clipResult.type === 'empty' && !promptText) {
+          console.log(`\x1b[33m[!] Clipboard is empty. Please copy an image, file, or text first.\x1b[0m`);
+          updatePrompt();
+          rl.prompt();
+          return;
+        }
+        const formatted = formatClipboardAttachment(clipResult, promptText);
+        executionPrompt = formatted.enhancedPrompt;
+        clipboardFiles = formatted.targetFiles || [];
+        if (formatted.summary) {
+          console.log(`\x1b[35m[GRAVITON CLIPBOARD]\x1b[0m ${formatted.summary}`);
+        }
+      }
+
       const existingSession = getActiveConversation(cwd);
       let targetConvId = null;
       let continueSession = false;
@@ -282,12 +305,19 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log(`\x1b[36m[GRAVITON V2.0]\x1b[0m Starting new conversation in workspace...`);
       }
 
-      const superPrompt = constructSuperPrompt(input, cwd, {
+      const superPrompt = constructSuperPrompt(executionPrompt, cwd, {
         isContinuous: continueSession,
         conversationTitle: activeTitle
       });
 
-      const targetScope = resolveTargetScope(input, cwd);
+      const targetScope = resolveTargetScope(executionPrompt, cwd);
+      if (clipboardFiles.length > 0) {
+        for (const cf of clipboardFiles) {
+          if (!targetScope.targets.includes(cf)) {
+            targetScope.targets.unshift(cf);
+          }
+        }
+      }
       if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
         const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
         console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);

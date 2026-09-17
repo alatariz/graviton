@@ -37,6 +37,7 @@ import { compactWorkspaceSession } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
+import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,6 +101,7 @@ async function main() {
   // Parse boolean flags and conversation arguments
   let isDeep = false;
   let isFast = false;
+  let isPaste = false;
   let isNew = false;
   let isConversationMode = false;
   let conversationAction = null;
@@ -112,6 +114,8 @@ async function main() {
       isDeep = true;
     } else if (arg === '--fast' || arg === '-f') {
       isFast = true;
+    } else if (arg === '--paste' || arg === '-p') {
+      isPaste = true;
     } else if (arg === '-n' || arg === '--n' || arg === '--new' || arg === '--fresh') {
       isNew = true;
     } else if (arg === '-c' || arg === '--c' || arg === '--conversation' || arg === 'conversation') {
@@ -170,7 +174,7 @@ async function main() {
   // =========================================================================
 
   // 1. HELP / USAGE
-  if ((!command && !isConversationMode) || command === 'help' || command === '--help' || command === '-h') {
+  if ((!command && !isConversationMode && !isPaste) || command === 'help' || command === '--help' || command === '-h') {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
@@ -182,6 +186,7 @@ async function main() {
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Direct ultra-fast execution without planning (effort: low)
+  -p, --paste                    Attach image/files/text from system clipboard to prompt
   -d, --deep                     Activate deep precision synthesis for complex architecture
   -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
@@ -508,14 +513,31 @@ async function main() {
   if (!input && !process.stdin.isTTY) {
     input = fs.readFileSync(0, 'utf-8');
   }
+
+  const currentCwd = process.cwd();
+  let clipboardAttachment = null;
+
+  if (isPaste) {
+    console.log(`\x1b[36m[GRAVITON CLIPBOARD]\x1b[0m Checking system clipboard...`);
+    const clipResult = captureClipboard(currentCwd);
+    if (clipResult.type === 'empty' && !input) {
+      console.log(`\x1b[33m[!] Clipboard is empty. Please copy an image, file, or text first.\x1b[0m`);
+      process.exit(0);
+    }
+    const formatted = formatClipboardAttachment(clipResult, input);
+    input = formatted.enhancedPrompt;
+    clipboardAttachment = formatted;
+    if (formatted.summary) {
+      console.log(`\x1b[35m[GRAVITON CLIPBOARD]\x1b[0m ${formatted.summary}`);
+    }
+  }
+
   if (!input) {
-    console.error('\x1b[31mError: Please provide prompt text or pipe into graviton.\x1b[0m');
+    console.error('\x1b[31mError: Please provide prompt text, use -p with clipboard, or pipe into graviton.\x1b[0m');
     process.exit(1);
   }
 
   console.log(`\x1b[36m[GRAVITON]\x1b[0m Assembling SuperPrompt...`);
-
-  const currentCwd = process.cwd();
   let targetConversationId = null;
   let continueSession = false;
   let activeTitle = null;
@@ -561,6 +583,13 @@ async function main() {
   });
 
   const targetScope = resolveTargetScope(input, currentCwd);
+  if (clipboardAttachment && clipboardAttachment.targetFiles && clipboardAttachment.targetFiles.length > 0) {
+    for (const tf of clipboardAttachment.targetFiles) {
+      if (!targetScope.targets.includes(tf)) {
+        targetScope.targets.unshift(tf);
+      }
+    }
+  }
   if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
     const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
     console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
