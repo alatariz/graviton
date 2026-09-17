@@ -34,7 +34,7 @@
 > [!IMPORTANT]
 > **What is Graviton V2.0.0?**
 > Graviton is a zero-auth, high-performance terminal accelerator and **Intelligent Context Engine** built specifically for the **Google Antigravity CLI (`agy`)**. 
-> Executing **100% offline** on your local machine with zero external API keys, Graviton prunes terminal noise (-95% tokens), intercepts catastrophic minified file context bombs, pins target files directly into the AI prompt (Smart Target Pinning), provides Antigravity IDE-style conversation history management (`grav --c`), and launches autonomous sessions in **< 0.8 milliseconds**.
+> Executing **100% offline** on your local machine with zero external API keys, Graviton prunes terminal noise (-95% tokens), intercepts catastrophic minified file context bombs, pins target files directly into the AI prompt (Smart Target Pinning), provides Antigravity IDE-style conversation history management (`grav -c`), and launches autonomous sessions in **< 0.8 milliseconds**.
 
 ---
 
@@ -186,11 +186,11 @@ AI-generated code occasionally introduced minor syntax errors (unclosed brackets
   - `.py` via `python -m py_compile`
   If broken syntax is caught, Graviton alerts the developer immediately and offers one-click rollback (`grav undo`).
 
-### 7. Phase 7: Antigravity IDE-Style Conversation History (`--c` & `--n`)
+### 7. Phase 7: Antigravity IDE-Style Conversation History (`-c` & `-n`)
 Multi-turn conversations needed an intuitive, IDE-grade interaction model:
 - Regular prompts (`grav "<prompt>"`) default to starting **clean, independent chats**.
-- `grav --c` displays an **Antigravity IDE-style interactive conversation history** (topics, turns, tokens, relative time) with selection and deletion options.
-- `grav -n` forces a fresh chat session.
+- `grav -c` (or `--conversation`) displays an **Antigravity IDE-style interactive conversation history** (topics, turns, tokens, relative time) with selection, history review, and deletion options.
+- `grav -n` (or `--new`) forces a fresh chat session.
 - **Topic Anchoring** guarantees that continued conversations stay strictly aligned to the active subject without AI hallucination or drift.
 
 ---
@@ -240,13 +240,13 @@ grav --deep Architect an event-driven payment processor with idempotent webhooks
 
 ---
 
-### 2. Antigravity IDE-Style Conversation History (`--c` & `--n`)
+### 2. Antigravity IDE-Style Conversation History (`-c` & `-n`)
 
 Manage multi-turn conversations with the elegance of an IDE sidebar:
 
-#### A. Interactive Conversation History Picker (`grav --c`):
+#### A. Interactive Conversation History Picker (`grav -c`):
 ```bash
-grav --c
+grav -c
 ```
 Terminal display:
 ```text
@@ -268,13 +268,13 @@ ACTIONS:
 #### B. Direct Shorthands:
 ```bash
 # Resume conversation #1 in interactive REPL:
-grav --c 1
+grav -c 1
 
 # Send prompt directly to conversation #1:
-grav --c 1 "add unit tests with jest"
+grav -c 1 "add unit tests with jest"
 
 # Delete conversation #2:
-grav --c del 2
+grav -c del 2
 ```
 
 #### C. Start Fresh Conversations Explicitly (`-n`):
@@ -391,10 +391,10 @@ grav stats
 | Full Command | Short Alias | Description |
 | :--- | :--- | :--- |
 | `graviton "<prompt>"` | `grav "<prompt>"` | [DEFAULT] Synthesize & execute with Smart Target Pinning (defaults to fresh chat) |
-| `graviton --c` | `grav --c` | Open Antigravity IDE-style conversation history picker |
-| `graviton --c <no>` | `grav --c <no>` | Resume specific conversation in interactive REPL |
-| `graviton --c <no> "<prompt>"` | `grav --c <no> "..."` | Execute prompt directly on specific conversation topic |
-| `graviton --c del <no>` | `grav --c del <no>` | Delete conversation from workspace history |
+| `graviton -c` / `--conversation` | `grav -c` | Open Antigravity IDE-style conversation history picker |
+| `graviton -c <no>` | `grav -c <no>` | Resume specific conversation in interactive REPL |
+| `graviton -c <no> "<prompt>"` | `grav -c <no> "..."` | Execute prompt directly on specific conversation topic |
+| `graviton -c del <no>` | `grav -c del <no>` | Delete conversation from workspace history |
 | `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Explicitly start a fresh conversation (reset session context) |
 | `graviton chat` | `grav chat` | Launch interactive REPL chat shell with dynamic topic indicator |
 | `graviton doctor [--fix]` | `grav doctor [--fix]` | Inspect system health, runtime versions, and CLI binaries |

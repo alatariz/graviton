@@ -164,10 +164,10 @@ async function main() {
   <command> | graviton
 
 \x1b[1mOPTIONS\x1b[0m
-  --fast, -f                     Direct ultra-fast execution without planning (effort: low)
+  -f, --fast                     Direct ultra-fast execution without planning (effort: low)
   --deep                         Activate deep precision synthesis for complex architecture
-  -c, --c, --conversation        Open conversation history (Antigravity IDE History), select, or delete
-  -n, --n, --new                 Start a fresh conversation explicitly in this workspace
+  -c, --conversation             Open conversation history (Antigravity IDE History), select, or delete
+  -n, --new                      Start a fresh conversation explicitly in this workspace
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
@@ -188,16 +188,16 @@ async function main() {
 
 \x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
   # Open interactive conversation history picker:
-  graviton --c
+  graviton -c
 
   # Resume conversation #1 in interactive chat:
-  graviton --c 1
+  graviton -c 1
 
   # Execute instruction directly within conversation #1:
-  graviton --c 1 "add email validation in auth.js"
+  graviton -c 1 "add email validation in auth.js"
 
   # Delete conversation #2 from history:
-  graviton --c del 2
+  graviton -c del 2
 
   # Explicitly start a fresh conversation:
   graviton -n "create a new REST API endpoint"
@@ -209,7 +209,7 @@ async function main() {
   if (isConversationMode && filteredArgs.length === 0) {
     if (conversationAction === 'delete') {
       if (!conversationTarget) {
-        console.error('\x1b[31mError: Specify the conversation number to delete (e.g. graviton --c del 2).\x1b[0m');
+        console.error('\x1b[31mError: Specify the conversation number to delete (e.g. graviton -c del 2).\x1b[0m');
         process.exit(1);
       }
       const res = deleteWorkspaceConversation(process.cwd(), conversationTarget);
@@ -529,7 +529,7 @@ async function main() {
     continueSession = false;
     targetConversationId = null;
     activeTitle = null;
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting new conversation (use \x1b[33m--c\x1b[0m to resume existing topic)...`);
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting new conversation (use \x1b[33m-c\x1b[0m to resume existing topic)...`);
   }
 
   const superPrompt = constructSuperPrompt(input, currentCwd, {
