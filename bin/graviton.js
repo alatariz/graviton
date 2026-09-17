@@ -214,14 +214,6 @@ async function main() {
   -c, --conversation [number]    Open conversation history, select topic, or resume
   -n, --new                      Start a fresh conversation topic explicitly
 
-\x1b[1mAUTONOMOUS ENGINES\x1b[0m \x1b[90m(100% Automatic — Zero Configuration Required)\x1b[0m
-  \x1b[32m✔\x1b[0m \x1b[1mSmart Transpiler\x1b[0m     Converts Office (.docx, .pptx, .xlsx) & PDF/CSV to clean Markdown
-  \x1b[32m✔\x1b[0m \x1b[1mCode Skeletonizer\x1b[0m    Outlines large source files (>120 lines) & shrinks vector SVGs
-  \x1b[32m✔\x1b[0m \x1b[1mDelta Compressor\x1b[0m     Sends only changed diff hunks across continuous turns
-  \x1b[32m✔\x1b[0m \x1b[1mStack Squeezer\x1b[0m       Prunes internal vendor/runtime frames from error logs
-  \x1b[32m✔\x1b[0m \x1b[1mOutput Economizer\x1b[0m    Guides AI to output concise diffs/patches instead of full files
-  \x1b[32m✔\x1b[0m \x1b[1mToken Shield\x1b[0m         Blocks wasteful lockfiles and minified bundles
-
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
   chat, repl                     Launch interactive REPL chat session (Antigravity CLI History support)
@@ -238,6 +230,21 @@ async function main() {
   clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
+
+\x1b[1mAUTONOMOUS ENGINES (Active in Background — Zero Configuration Required)\x1b[0m
+  Context Scoper                 Selective workspace mapping & target file extraction
+  Dependency Resolver            Shallow local import tracing across JS, TS, Python, Go, Rust
+  Token Shield                   Blocks bulky dependency lockfiles and minified bundles
+  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
+  Data Sampler                   Smart tabular compaction for CSV, TSV, and oversized JSON
+  Image Auto-Downscaler          Downscales high-res images to prevent vision token blowup
+  Code Skeletonizer              Outlines large code (>120 lines) & shrinks vector SVG paths
+  Delta Compressor               Sends only line-level diff hunks across conversational turns
+  Stack Trace Squeezer           Prunes vendor & runtime internal frames from error logs
+  Output Economizer              Enforces Search/Replace patch responses instead of full rewrites
+  Noise & Secret Guard           Prunes prompt filler noise and automatically redacts exposed keys
+  Port Conflict Guard            Automated background dev server management & conflict resolution
+  Syntax Sanity Guard            Pre/post-flight syntax validation with automated shadow rollback
 
 \x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
   # Open interactive conversation history picker:
