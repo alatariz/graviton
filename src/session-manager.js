@@ -349,7 +349,21 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
             let text = entry.content;
             const reqMatch = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
             if (reqMatch) text = reqMatch[1].trim();
-            text = text.replace(/<[^>]+>/g, '').trim();
+
+            // Extract genuine user instruction if wrapped inside Graviton SuperPrompt
+            const userInstMatch = text.match(/\[USER INSTRUCTION.*?\][:\s]*([\s\S]*?)$/i);
+            if (userInstMatch && userInstMatch[1].trim()) {
+              text = userInstMatch[1].trim();
+            } else {
+              text = text
+                .replace(/\[SYSTEM DIRECTIVE[\s\S]*?\][:\s]*(?:"[\s\S]*?")?/gi, '')
+                .replace(/\[CWD\]:.*?$/gim, '')
+                .replace(/\[WORKSPACE MAP\]:[\s\S]*?(?=\[USER INSTRUCTION|$)/gi, '')
+                .replace(/<[^>]+>/g, '')
+                .trim();
+            }
+
+            text = text.replace(/^[:"\s\-*#]+/, '').trim();
             if (text) {
               parsedTurns.push({
                 role: 'user',
@@ -584,7 +598,7 @@ export function formatConversationList(cwd = process.cwd()) {
     return `\n\x1b[90m[GRAVITON]\x1b[0m No conversation history found in this workspace.\n\x1b[90m(Type any regular prompt to start a new conversation).\x1b[0m\n`;
   }
 
-  let out = `\n\x1b[1m\x1b[36m=== GRAVITON CONVERSATIONS (Antigravity IDE History) ===\x1b[0m\n`;
+  let out = `\n\x1b[1m\x1b[36m=== GRAVITON CONVERSATIONS (Antigravity CLI History) ===\x1b[0m\n`;
   out += `\x1b[90mWorkspace: ${normalizedCwd}\x1b[0m\n\n`;
 
   conversations.forEach((conv, index) => {
@@ -709,9 +723,6 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
         if (selected) {
           const hist = getConversationHistory(normalizedCwd, selected.id, 5);
           console.log(formatConversationHistory(hist));
-          if (typeof onSelectCallback === 'function') {
-            await onSelectCallback(selected);
-          }
           resolve(selected);
           return;
         } else {

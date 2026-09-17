@@ -258,7 +258,7 @@ grav -c
 ```
 Terminal display:
 ```text
-=== GRAVITON CONVERSATIONS (Antigravity IDE History) ===
+=== GRAVITON CONVERSATIONS (Antigravity CLI History) ===
 Workspace: C:\project
 
   [1] ● [Active] "Fix email validation in auth.js"

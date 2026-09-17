@@ -182,12 +182,12 @@ async function main() {
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Direct ultra-fast execution without planning (effort: low)
   -d, --deep                     Activate deep precision synthesis for complex architecture
-  -c, --conversation             Open conversation history (Antigravity IDE History), select, or delete
+  -c, --conversation             Open conversation history (Antigravity CLI History), select, or delete
   -n, --new                      Start a fresh conversation explicitly in this workspace
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
-  chat, repl                     Launch interactive REPL chat session (Antigravity IDE History support)
+  chat, repl                     Launch interactive REPL chat session (Antigravity CLI History support)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity (agy) installation
   compact, cmp                   Compact long continuous session to refresh context window & save tokens
@@ -243,7 +243,9 @@ async function main() {
         const hist = getConversationHistory(process.cwd(), selected.id, 5);
         console.log(formatConversationHistory(hist));
         console.log(`\x1b[90mEntering interactive chat with active conversation...\x1b[0m`);
+        process.stdin.resume();
         await startChatRepl({ cwd: process.cwd(), isDeep });
+        return;
       } else {
         console.log(`\x1b[31m✖ Conversation '${conversationTarget}' not found.\x1b[0m`);
       }
@@ -251,9 +253,13 @@ async function main() {
     }
 
     // Launch interactive conversation picker
-    await runInteractiveConversationPicker(process.cwd(), async (selected) => {
+    const selected = await runInteractiveConversationPicker(process.cwd());
+    if (selected && selected.id && !selected.deleted && !selected.isNew) {
+      console.log(`\x1b[90mEntering interactive chat with active conversation...\x1b[0m`);
+      process.stdin.resume();
       await startChatRepl({ cwd: process.cwd(), isDeep });
-    });
+      return;
+    }
     process.exit(0);
   }
 

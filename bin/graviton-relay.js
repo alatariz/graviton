@@ -279,9 +279,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     args = [
       '--dangerously-skip-permissions',
       '--effort', options.effort || (options.isDeep ? 'high' : 'high'),
-      '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits'),
-      '--print-timeout', options.printTimeout || '25s'
+      '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits')
     ];
+
+    if (options.printTimeout) {
+      args.push('--print-timeout', options.printTimeout);
+    }
 
     if (options.addDir !== false) {
       args.push('--add-dir', executionCwd);

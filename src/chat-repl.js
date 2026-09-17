@@ -39,7 +39,7 @@ export async function startChatRepl(options = {}) {
 
   console.log(`
 \x1b[1m\x1b[36m===============================================================
-  GRAVITON V2.0.0 INTERACTIVE REPL CHAT (IDE HISTORY)
+  GRAVITON V2.0.0 INTERACTIVE REPL CHAT (CLI HISTORY)
 ===============================================================\x1b[0m
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}
@@ -86,7 +86,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
     if (input === '/help') {
       console.log(`
 \x1b[1mREPL COMMANDS:\x1b[0m
-  \x1b[33m/c\x1b[0m, \x1b[33m--c\x1b[0m, \x1b[33m/chats\x1b[0m      View conversation history list (Antigravity IDE History)
+  \x1b[33m/c\x1b[0m, \x1b[33m--c\x1b[0m, \x1b[33m/chats\x1b[0m      View conversation history list (Antigravity CLI History)
   \x1b[33m/c <number>\x1b[0m       Switch to and view conversation history (e.g. \x1b[1m/c 2\x1b[0m)
   \x1b[33m/n\x1b[0m, \x1b[33m--n\x1b[0m, \x1b[33m/new\x1b[0m, \x1b[33mn\x1b[0m    Start a fresh conversation in this workspace
   \x1b[33m/del <number>\x1b[0m, \x1b[33md <n>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)
