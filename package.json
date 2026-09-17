@@ -21,6 +21,18 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "files": [
+    "bin",
+    "src",
+    "web/public",
+    "web/server.js",
+    "web/package.json",
+    "web/README.md",
+    "graviton-logo.png",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md"
+  ],
   "bin": {
     "graviton": "./bin/graviton.js",
     "grav": "./bin/graviton.js"
