@@ -267,6 +267,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
   console.log(`\x1b[90m[GRAVITON] Relay target: ${agyExecutable}\x1b[0m`);
   console.log(`\x1b[36m[GRAVITON]\x1b[0m Relaying prompt to Antigravity CLI (Auto-Allow active)...`);
+  console.log(`\x1b[90m[GRAVITON] AI reasoning in progress... (Tip: use -f / --fast for quick edits)\x1b[0m`);
 
   const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
   const initialSnapshot = captureWorkspaceSnapshot(executionCwd);

@@ -21,6 +21,7 @@ import { compactWorkspaceSession, checkCompactionStatus } from './session-compac
 import { inspectSessionFiles } from './sanity-guard.js';
 import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
+import { resolveTargetScope } from './context-scoper.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
@@ -285,6 +286,14 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         isContinuous: continueSession,
         conversationTitle: activeTitle
       });
+
+      const targetScope = resolveTargetScope(input, cwd);
+      if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
+        const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
+        console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
+      } else {
+        console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Workspace Mapping Active \x1b[90m(General Exploration)\x1b[0m`);
+      }
 
       runAntigravityWithAutoAllow(superPrompt, {
         conversationId: targetConvId,

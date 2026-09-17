@@ -36,6 +36,7 @@ import { startChatRepl } from '../src/chat-repl.js';
 import { compactWorkspaceSession } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
+import { resolveTargetScope } from '../src/context-scoper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -558,6 +559,14 @@ async function main() {
     isContinuous: continueSession,
     conversationTitle: activeTitle
   });
+
+  const targetScope = resolveTargetScope(input, currentCwd);
+  if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
+    const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
+    console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
+  } else {
+    console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Workspace Mapping Active \x1b[90m(General Exploration)\x1b[0m`);
+  }
 
   const stats = loadStats();
   stats.promptsOptimized++;
