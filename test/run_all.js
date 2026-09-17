@@ -15,7 +15,8 @@ const testFiles = [
   'test_v200_sanity_guard.js',
   'test_v200_session_compactor.js',
   'test_v200_doctor_diff.js',
-  'test_v200_conversation_manager.js'
+  'test_v200_conversation_manager.js',
+  'test_v201_dev_server_guard.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

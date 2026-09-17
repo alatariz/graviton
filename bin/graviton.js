@@ -31,7 +31,7 @@ import {
   formatConversationHistory
 } from '../src/session-manager.js';
 import { executeRollback } from '../src/rollback-manager.js';
-import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort } from '../src/port-guard.js';
+import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort, detectWorkspaceDevServer } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
 import { compactWorkspaceSession } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
@@ -559,8 +559,8 @@ async function main() {
 
   copyToClipboard(superPrompt);
 
-  // Port Conflict Auto-Healer
-  const isDevServerPrompt = /\b(jalankan|start|nyalakan|run|serve|host)\b/i.test(input) && /\b(dev|server|web|vite|next|app|localhost|port)\b/i.test(input);
+  // Port Conflict Auto-Healer & Dev Server Pre-Interceptor
+  const isDevServerPrompt = /\b(jalankan|start|nyalakan|run|serve|host)\b/i.test(input) && /\b(dev|server|web|vite|next|app|localhost|port)(?:nya)?\b/i.test(input);
   if (isDevServerPrompt) {
     const commonPorts = [3000, 5173, 8080];
     for (const port of commonPorts) {
@@ -568,6 +568,22 @@ async function main() {
       if (occupied) {
         console.log(`\x1b[33m[GRAVITON PORT HEALER]\x1b[0m Port ${port} occupied by PID ${occupied.pid}. Auto-freeing...`);
         killProcessOnPort(port);
+      }
+    }
+
+    // Pure Run Interceptor: If user simply wants to run existing web/server and didn't ask to create/edit/inspect files
+    const isPureRunPrompt = /^(?:coba\s+)?(?:tolong\s+)?(?:jalankan|start|nyalakan|run|serve|host)\s+(?:web(?:nya)?|server(?:nya)?|dev|app(?:nya)?|localhost)$/i.test(input.trim())
+      || /^(?:jalankan|start|nyalakan|run)\s+(?:web(?:nya)?|server(?:nya)?)$/i.test(input.trim());
+    const isNotInspectOrCreate = !/\b(cek|lihat|buat|bikin|create|edit|ubah|ganti|tambah|fix|perbaiki)\b/i.test(input);
+
+    if (isPureRunPrompt && isNotInspectOrCreate) {
+      const existingDev = detectWorkspaceDevServer(currentCwd);
+      if (existingDev && existingDev.exists && existingDev.command) {
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Detected existing dev server (\x1b[1m${existingDev.command}\x1b[0m). Launching background daemon...`);
+        const daemon = startBackgroundDaemon(existingDev.command, currentCwd);
+        console.log(`\x1b[1m\x1b[32m✔ Web server active at \x1b[1;36mhttp://localhost:${existingDev.port}/\x1b[0m (PID: ${daemon.pid})`);
+        console.log(`\x1b[90mTip: Run 'grav stop' to terminate, or 'grav ports' to view listening ports.\x1b[0m\n`);
+        process.exit(0);
       }
     }
   }
@@ -590,6 +606,22 @@ async function main() {
 
   if (result && result.status !== 0 && result.status !== null) {
     process.exit(result.status);
+  }
+
+  // Post-Execution Dev Server Daemonizer:
+  // If the prompt requested running or serving a web server, ensure background daemon is active!
+  if (isDevServerPrompt) {
+    const devServer = detectWorkspaceDevServer(currentCwd);
+    if (devServer && devServer.exists && devServer.command) {
+      const active = findProcessOnPort(devServer.port);
+      if (!active) {
+        const daemon = startBackgroundDaemon(devServer.command, currentCwd);
+        console.log(`\n\x1b[1m\x1b[32m[GRAVITON DEV DAEMON]\x1b[0m Web server running at \x1b[1;36mhttp://localhost:${devServer.port}/\x1b[0m (PID: ${daemon.pid})`);
+        console.log(`\x1b[90mTip: Run 'grav stop' to terminate, or 'grav ports' to view listening ports.\x1b[0m\n`);
+      } else {
+        console.log(`\n\x1b[1m\x1b[32m[GRAVITON DEV DAEMON]\x1b[0m Web server is actively listening at \x1b[1;36mhttp://localhost:${devServer.port}/\x1b[0m (PID: ${active.pid})\n`);
+      }
+    }
   }
 
   const odo = readOdometer();

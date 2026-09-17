@@ -280,3 +280,85 @@ export function stopDaemonOrPort(target, cwd = process.cwd()) {
 
   return results;
 }
+
+/**
+ * Analyzes workspace files to auto-detect dev server run commands and listening ports.
+ * @param {string} cwd
+ * @returns {{ command: string|null, port: number, type: string, exists: boolean, hasIndexHtml?: boolean }}
+ */
+export function detectWorkspaceDevServer(cwd = process.cwd()) {
+  const normalizedCwd = path.resolve(cwd);
+
+  // 1. Check package.json
+  const pkgPath = path.join(normalizedCwd, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      const scripts = pkg.scripts || {};
+      const allDeps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+
+      if (scripts.dev) {
+        let port = 3000;
+        let type = 'npm-dev';
+        if (allDeps.vite || scripts.dev.includes('vite')) {
+          port = 5173;
+          type = 'vite';
+        } else if (allDeps.next || scripts.dev.includes('next')) {
+          port = 3000;
+          type = 'next';
+        } else if (allDeps.astro || scripts.dev.includes('astro')) {
+          port = 4321;
+          type = 'astro';
+        }
+        return { command: 'npm run dev', port, type, exists: true };
+      }
+
+      if (scripts.start) {
+        return { command: 'npm start', port: 3000, type: 'npm-start', exists: true };
+      }
+    } catch {}
+  }
+
+  // 2. Check server.js / app.js
+  for (const serverFileName of ['server.js', 'app.js']) {
+    const sPath = path.join(normalizedCwd, serverFileName);
+    if (fs.existsSync(sPath)) {
+      try {
+        const content = fs.readFileSync(sPath, 'utf8');
+        if (/http\.createServer|express\(|koa\(|fastify\(/i.test(content) || /\.listen\(/i.test(content)) {
+          let port = 3000;
+          const portMatch = content.match(/PORT\s*=\s*(?:process\.env\.PORT\s*\|\|\s*)?(\d{4,5})/i)
+            || content.match(/\.listen\(\s*(?:PORT\s*,\s*|process\.env\.PORT\s*\|\|\s*)?(\d{4,5})/i);
+          if (portMatch && portMatch[1]) {
+            const parsed = parseInt(portMatch[1], 10);
+            if (!isNaN(parsed) && parsed > 0) port = parsed;
+          }
+          return { command: `node ${serverFileName}`, port, type: 'node-server', exists: true };
+        }
+      } catch {}
+    }
+  }
+
+  // 3. Check Python app.py / main.py
+  for (const pyFile of ['app.py', 'main.py']) {
+    const pyPath = path.join(normalizedCwd, pyFile);
+    if (fs.existsSync(pyPath)) {
+      try {
+        const content = fs.readFileSync(pyPath, 'utf8');
+        if (/Flask|FastAPI|uvicorn|django/i.test(content)) {
+          const port = /uvicorn/i.test(content) ? 8000 : 5000;
+          return { command: `python ${pyFile}`, port, type: 'python-server', exists: true };
+        }
+      } catch {}
+    }
+  }
+
+  // 4. Check index.html (Static Web)
+  const indexPath = path.join(normalizedCwd, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return { command: 'node server.js', port: 3000, type: 'static-html', exists: false, hasIndexHtml: true };
+  }
+
+  return { command: null, port: 3000, type: 'none', exists: false };
+}
+

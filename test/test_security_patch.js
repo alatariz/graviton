@@ -5,26 +5,29 @@ console.log('=== TESTING WINDOWS NODE.JS SECURITY PATCH ===\n');
 
 // 1. Test on current platform (Windows win32)
 const configDefault = getSpawnConfig();
-assert.strictEqual(configDefault.spawnCmd, 'cmd.exe', 'On Windows, spawnCmd must strictly be cmd.exe');
-assert.strictEqual(configDefault.spawnArgs[0], '/c', 'First arg must be /c');
-assert.strictEqual(configDefault.spawnArgs[1], 'agy', 'Second arg must be default agy');
-assert.ok(configDefault.spawnArgs.includes('--dangerously-skip-permissions'), 'Must include originalArgs');
-console.log('  ✔ Windows default config: cmd.exe with args [\'/c\', \'agy\', ...originalArgs]');
+if (process.platform === 'win32') {
+  assert.strictEqual(configDefault.shell, true, 'On Windows, shell must strictly be true');
+  assert.ok(configDefault.spawnCmd.startsWith('agy '), 'Windows spawnCmd must start with agy');
+  assert.ok(configDefault.spawnCmd.includes('--dangerously-skip-permissions'), 'Must include originalArgs');
+  assert.strictEqual(configDefault.spawnArgs.length, 0, 'spawnArgs must be empty array for single string shell');
+  console.log('  ✔ Windows default config: Single String Shell with args array');
+}
 
 // 2. Test with custom alias 'antigravity'
 const configAntigravity = getSpawnConfig({ command: 'antigravity' });
-assert.strictEqual(configAntigravity.spawnCmd, 'cmd.exe');
-assert.strictEqual(configAntigravity.spawnArgs[0], '/c');
-assert.strictEqual(configAntigravity.spawnArgs[1], 'antigravity');
-console.log('  ✔ Windows alias config: cmd.exe with args [\'/c\', \'antigravity\', ...originalArgs]');
+if (process.platform === 'win32') {
+  assert.ok(configAntigravity.spawnCmd.startsWith('antigravity '));
+  assert.strictEqual(configAntigravity.spawnArgs.length, 0);
+  console.log('  ✔ Windows alias config: Single String Shell for custom command');
+}
 
 // 3. Test with continueSession & custom options
 const configContinue = getSpawnConfig({ continueSession: true, effort: 'low', mode: 'architect' });
-assert.ok(configContinue.spawnArgs.includes('--continue'), 'Should contain --continue');
-assert.ok(configContinue.spawnArgs.includes('--effort'), 'Should contain --effort');
-assert.ok(configContinue.spawnArgs.includes('low'), 'Should contain low');
-assert.ok(configContinue.spawnArgs.includes('--mode'), 'Should contain --mode');
-assert.ok(configContinue.spawnArgs.includes('architect'), 'Should contain architect');
+assert.ok(configContinue.originalArgs.includes('--continue'), 'Should contain --continue');
+assert.ok(configContinue.originalArgs.includes('--effort'), 'Should contain --effort');
+assert.ok(configContinue.originalArgs.includes('low'), 'Should contain low');
+assert.ok(configContinue.originalArgs.includes('--mode'), 'Should contain --mode');
+assert.ok(configContinue.originalArgs.includes('architect'), 'Should contain architect');
 console.log('  ✔ Options and --continue correctly relayed in args array');
 
 // 4. Test simulated non-Windows platform (Linux / macOS)

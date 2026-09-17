@@ -895,7 +895,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 1. The active workspace and project root is strictly located at [CWD]: "${currentCwd}".
 2. You MUST create all new files, project structures, code, dependencies, and folders strictly INSIDE this [CWD] directory (or relative to it).
 3. NEVER create files or projects in ~/.gemini, in scratch directories, or in any parent/root directory outside [CWD].
-4. When executing terminal commands or running scripts, always execute them in [CWD]. If instructed to run or start a web server/dev process, launch it cleanly in background mode or report the local localhost URL clearly to user.
+4. DEV & WEB SERVER LIFECYCLE: When asked to run, start, or serve a web project: Antigravity CLI terminates background child processes on session exit. Therefore, NEVER run persistent continuous web servers (e.g. 'node server.js', 'npm run dev', 'vite', 'python -m http.server') directly with run_command in an infinite wait. Instead, inspect/prepare the web files (e.g. server.js, index.html), report the local URL (e.g. http://localhost:3000/), and finish immediately — Graviton's daemon engine will automatically launch and manage the persistent background daemon.
 5. Execute requested tasks directly using tools. If an instruction to create files does not specify an exact name, pick sensible names and create them immediately without asking questions. Always complete requested actions before finishing. Output minimal conversational text.
 6. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.`;
 
