@@ -198,7 +198,7 @@ async function main() {
   // 1. HELP / USAGE
   if ((!command && !isConversationMode && !isPaste) || command === 'help' || command === '--help' || command === '-h') {
     console.log(`
-\x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
+\x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity \x1b[90m(CLI: \x1b[33mgraviton\x1b[90m or \x1b[33mgrav\x1b[90m)\x1b[0m
 
 \x1b[1mAUTONOMOUS ENGINES\x1b[0m
   Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
@@ -220,14 +220,14 @@ async function main() {
   Syntax Sanity Validator        Pre/post-flight syntax checks with automated shadow rollback
   Noise & Secret Redactor        Prunes prompt filler noise and automatically redacts exposed keys
   Daemon & Port Guard            Automated background dev server management & conflict resolution
-  Hierarchical Ignore Engine     Enforces recursive .gitignore and .gravitonignore exclusions
+  Hierarchical Ignore Engine     Enforces recursive .gitignore and .gravignore exclusions
 
-\x1b[1mUSAGE\x1b[0m
-  graviton "<prompt>"
+\x1b[1mUSAGE\x1b[0m \x1b[90m(Run with 'graviton' or shorthand 'grav')\x1b[0m
+  graviton "<prompt>"            (or: grav "<prompt>")
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
-  graviton -c [number] [prompt]
-  graviton <command> [args...]
-  <command> | graviton
+  graviton -c [number] [prompt]  (or: grav -c [number])
+  graviton <command> [args...]   (or: grav <command>)
+  <command> | graviton           (or: <command> | grav)
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Fast execution mode without planning (effort: low)
@@ -253,21 +253,21 @@ async function main() {
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
 
-\x1b[1mCONVERSATION MANAGEMENT EXAMPLES\x1b[0m
+\x1b[1mCONVERSATION MANAGEMENT EXAMPLES (Using 'grav' shorthand)\x1b[0m
   # Open interactive conversation history picker:
-  graviton -c
+  grav -c
 
   # Resume conversation #1 in interactive chat:
-  graviton -c 1
+  grav -c 1
 
   # Execute instruction directly within conversation #1:
-  graviton -c 1 "add email validation in auth.js"
+  grav -c 1 "add email validation in auth.js"
 
   # Delete conversation #2 from history:
-  graviton -c del 2
+  grav -c del 2
 
   # Explicitly start a fresh conversation:
-  graviton -n "create a new REST API endpoint"
+  grav -n "create a new REST API endpoint"
 `);
     process.exit(0);
   }
