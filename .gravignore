@@ -1,4 +1,4 @@
-# Graviton Ignore Rules (.gravignore)
+# Graviton V2.0.0 Ignore Rules (.gravignore)
 # Patterns matched here are strictly bypassed during file hydration and dependency scraping.
 
 # Sensitive credentials

@@ -1,4 +1,4 @@
-﻿// src/auth-helper.js - Reuses Antigravity / Google Ecosystem Account Credentials
+// src/auth-helper.js - Graviton V2.0.0 Ecosystem & Google Account Credentials Helper
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

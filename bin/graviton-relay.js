@@ -205,7 +205,7 @@ export function getSpawnConfig(options = {}) {
 /**
  * Executes Antigravity synchronously with full terminal I/O streaming.
  *
- * Graviton V1.8.4 Rock-Solid Synchronous Relay:
+ * Graviton V2.0.0 Rock-Solid Synchronous Relay:
  * 1. Resolves binary path searching both 'agy' and 'antigravity' in ~/.gemini/bin, AppData, and PATH.
  * 2. Injects superPrompt via -p (or -i if interactive) with --dangerously-skip-permissions.
  * 3. Uses shell: false for native binaries (.exe on Windows, ELF on Linux, Mach-O on macOS)

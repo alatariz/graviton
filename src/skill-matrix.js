@@ -1,4 +1,4 @@
-﻿// src/skill-matrix.js - Maps user coding intents to deep Antigravity built-in skills & plugins
+// src/skill-matrix.js - Graviton V2.0.0 Antigravity Built-in Skills & Trigger Matrix
 
 export const SKILL_TRIGGERS = [
   {

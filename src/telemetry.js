@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 
 /**
- * Graviton V1.7.0 Local Analytics Telemetry & Gamification Engine
+ * Graviton V2.0.0 Local Analytics Telemetry & Gamification Engine
  * Safely tracks metrics at: os.homedir() + '/.graviton/stats.json'
  * Tracks:
  *  - intercepted_calls: increments on every execution

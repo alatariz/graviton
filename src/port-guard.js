@@ -1,11 +1,11 @@
-// src/port-guard.js - Graviton V1.9.0 Background Daemon & Port Guard
+// src/port-guard.js - Graviton V2.0.0 Background Daemon & Port Guard
 import { execSync, spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
 /**
- * Graviton V1.9.0 Port Guard & Daemon Manager
+ * Graviton V2.0.0 Port Guard & Daemon Manager
  * Detects and frees blocked ports, manages background dev server processes,
  * and ensures no orphan zombie servers leak on Windows or Unix.
  */

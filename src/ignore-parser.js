@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Graviton V1.7.0 Custom .gravignore Parser
+ * Graviton V2.0.0 Custom .gravignore Parser
  * Pure Node.js implementation: zero external dependencies.
  * Bypasses sensitive files, secret keys, and noise directories during
  * file hydration, dependency scraping, and workspace mapping.

@@ -759,7 +759,7 @@ export function recordOdometer(sessionTokens) {
 }
 
 /**
- * Graviton V1.2 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
+ * Graviton V2.0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
  * Zero token cost, zero external API calls.
  */
 export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {}) {
@@ -924,7 +924,7 @@ ${cleanedInput}`.trim();
   const promptTokens = estimateTokens(finalPrompt);
   recordOdometer(promptTokens);
 
-  // Local Analytics Telemetry (V1.7.0)
+  // Local Analytics Telemetry (V2.0.0)
   const rawInputTokens = estimateTokens(userInput);
   const cleanedInputTokens = estimateTokens(cleanedInput);
   const inputTokensSaved = Math.max(0, rawInputTokens - cleanedInputTokens);

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V2.0.0 Interceptor Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V2.0.0 Autonomous Execution Layer
 
 process.on('uncaughtException', (err) => {
   const message = err && err.message ? err.message : String(err);

@@ -1,14 +1,17 @@
+# Graviton V2.0.0 Git Ignore Rules
 node_modules/
-.env
+.env*
 .DS_Store
 *.log
 
 # Web Dashboard & Studio (Excluded from GitHub repository)
 web/
 
-# Local Graviton session state
-.graviton-session
-.graviton-manifest.json
+# Local Graviton session state & manifests
 .graviton/
 .graviton*
+.graviton-session
+.graviton-conversations.json
+.graviton-manifest.json
+.graviton-compact-memory.json
 

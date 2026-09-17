@@ -3,6 +3,19 @@
   "version": "2.0.0",
   "description": "Graviton V2.0.0 - Intelligent Context-Scoped AI Acceleration Layer for Antigravity",
   "license": "Apache-2.0",
+  "author": "Al Atariz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alatariz/graviton.git"
+  },
+  "keywords": [
+    "antigravity",
+    "ai",
+    "token-saver",
+    "context-scoper",
+    "developer-tools",
+    "cli"
+  ],
   "main": "./src/pipeline.js",
   "type": "module",
   "engines": {
