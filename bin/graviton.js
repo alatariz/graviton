@@ -201,11 +201,16 @@ async function main() {
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity
 
 \x1b[1mAUTONOMOUS ENGINES\x1b[0m
+  RTK Terminal Filter            Strips terminal build noise, progress bars, & isolates errors
+  Headroom Compactor             Squashes oversized JSON & data arrays into schema summaries
+  Caveman Brevity Guard          Enforces zero-fluff technical fragments & eliminates AI boilerplate
+  Ponytail Minimal Surgery       7-staircase targeted diffs with minimal surgical blast radius
+  Auto-Allow Execution Pipe      Bypasses manual CLI confirmation prompts for autonomous execution
   Context Scoper                 Selective workspace mapping & target file extraction
   Dependency Resolver            Shallow local import tracing across JS, TS, Python, Go, Rust
   Token Shield                   Blocks bulky dependency lockfiles and minified bundles
   Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
-  Data Sampler                   Smart tabular compaction for CSV, TSV, and oversized JSON
+  Data Sampler                   Smart tabular compaction for CSV, TSV, and large datasets
   Code Skeletonizer              Outlines large code (>120 lines) & shrinks vector SVG paths
   Delta Compressor               Sends only line-level diff hunks across conversational turns
   Stack Trace Squeezer           Prunes vendor & runtime internal frames from error logs
