@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "2.4.0",
-  "description": "Graviton V2.4.0 - Smart Skeleton Outliner, MarkItDown & Context Engine for Antigravity",
+  "version": "2.5.0",
+  "description": "Graviton V2.5.0 - Delta Compression, Smart Skeleton Outliner & Context Engine for Antigravity",
   "license": "Apache-2.0",
   "author": "Al Atariz",
   "repository": {

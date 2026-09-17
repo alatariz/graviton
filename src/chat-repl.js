@@ -24,6 +24,7 @@ import { runDoctor, formatDoctorReport } from './doctor.js';
 import { resolveTargetScope } from './context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from './clipboard.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
+import { listSessionSnapshots, clearSessionSnapshots } from './delta-compressor.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
@@ -42,12 +43,12 @@ export async function startChatRepl(options = {}) {
 
   console.log(`
 \x1b[1m\x1b[36m===============================================================
-  GRAVITON V2.1.0 INTERACTIVE REPL CHAT (CLI HISTORY)
+  GRAVITON V2.5.0 INTERACTIVE REPL CHAT (DELTA COMPRESSION ACTIVE)
 ===============================================================\x1b[0m
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}
 \x1b[90mType your prompt directly without outer quotes.\x1b[0m
-Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/p\x1b[90m (paste clipboard), \x1b[33m/undo\x1b[90m, \x1b[33m/diff\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/ports\x1b[90m, \x1b[33m/doctor\x1b[90m, \x1b[33m/exit\x1b[0m
+Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/p\x1b[90m (paste), \x1b[33m/delta\x1b[90m, \x1b[33m/undo\x1b[90m, \x1b[33m/diff\x1b[90m, \x1b[33m/compact\x1b[90m, \x1b[33m/doctor\x1b[90m, \x1b[33m/exit\x1b[0m
 `);
 
   const rl = readline.createInterface({
@@ -94,6 +95,8 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
   \x1b[33m/n\x1b[0m, \x1b[33m--n\x1b[0m, \x1b[33m/new\x1b[0m, \x1b[33mn\x1b[0m    Start a fresh conversation in this workspace
   \x1b[33m/p\x1b[0m, \x1b[33m/paste [prompt]\x1b[0m    Attach image/files/text from clipboard to prompt
   \x1b[33m/m <file>\x1b[0m, \x1b[33m/markdown\x1b[0m     Transpile Office/PDF/data document to Markdown
+  \x1b[33m/delta\x1b[0m               View cached file snapshots for active topic
+  \x1b[33m/reset-delta\x1b[0m         Clear delta snapshots for active topic
   \x1b[33m/del <number>\x1b[0m, \x1b[33md <n>\x1b[0m  Delete conversation from history (e.g. \x1b[1md 2\x1b[0m)
   \x1b[33m/rename <title>\x1b[0m    Rename active conversation topic
   \x1b[33m/undo\x1b[0m            Undo last AI changes (Rollback)
@@ -194,6 +197,32 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
     if (input === '/diff') {
       const diffOutput = getSessionDiff(cwd);
       console.log(diffOutput);
+      updatePrompt();
+      rl.prompt();
+      return;
+    }
+
+    if (input === '/delta' || input === '/snapshots') {
+      const active = getActiveConversation(cwd);
+      const convId = active ? active.id : 'default';
+      const snaps = listSessionSnapshots(cwd, convId);
+      if (snaps.length === 0) {
+        console.log('  \x1b[90mNo file snapshots currently cached for this session.\x1b[0m');
+      } else {
+        console.log(`\n\x1b[1m\x1b[36m=== ACTIVE CONVERSATION DELTA SNAPSHOTS (${snaps.length} files) ===\x1b[0m`);
+        snaps.forEach(s => console.log(`  \x1b[32m✔\x1b[0m \x1b[1m${s.file}\x1b[0m (${s.lineCount} lines) - updated ${new Date(s.updatedAt).toLocaleTimeString()}`));
+        console.log(`\x1b[90mSubsequent turns will only send diff hunks for these files.\x1b[0m\n`);
+      }
+      updatePrompt();
+      rl.prompt();
+      return;
+    }
+
+    if (input === '/reset-delta' || input === '/cleardelta') {
+      const active = getActiveConversation(cwd);
+      const convId = active ? active.id : 'default';
+      clearSessionSnapshots(cwd, convId);
+      console.log('  \x1b[32m✔ Delta snapshots cleared for this session. Next turn will establish fresh baselines.\x1b[0m');
       updatePrompt();
       rl.prompt();
       return;
@@ -326,14 +355,15 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON V2.4]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON V2.5]\x1b[0m Continuing conversation: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
       } else {
-        console.log(`\x1b[36m[GRAVITON V2.4]\x1b[0m Starting new conversation in workspace...`);
+        console.log(`\x1b[36m[GRAVITON V2.5]\x1b[0m Starting new conversation in workspace...`);
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {
         isContinuous: continueSession,
-        conversationTitle: activeTitle
+        conversationTitle: activeTitle,
+        conversationId: targetConvId || 'repl_session'
       });
 
       const targetScope = resolveTargetScope(executionPrompt, cwd);

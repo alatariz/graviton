@@ -217,6 +217,14 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
     details: 'Active (Auto-collapsing large source files & vector SVGs)'
   });
 
+  // 11. Delta Compression & Turn Diff Caching
+  diagnostics.push({
+    category: 'Graviton',
+    name: 'Delta Compression & Turn Diff Caching',
+    status: 'ok',
+    details: 'Active (Conversational line-level deduplication & diff hunks)'
+  });
+
   return {
     allHealthy,
     diagnostics,
@@ -232,7 +240,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 export function formatDoctorReport(result) {
   const lines = [
     `\n\x1b[1m\x1b[36m===============================================================`,
-    `  GRAVITON V2.4.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
+    `  GRAVITON V2.5.0 DOCTOR: SYSTEM HEALTH DIAGNOSTICS`,
     `===============================================================\x1b[0m\n`
   ];
 

@@ -6,6 +6,7 @@ import { getCompactMemoryDirective } from './session-compactor.js';
 import { isProtectedFile, generateDependencySummary } from './shield.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
 import { isSkeletonCandidate, skeletonizeCode, shrinkSvg } from './code-outliner.js';
+import { resolveDeltaHydration } from './delta-compressor.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -840,6 +841,20 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
         const ext = path.extname(resolved).slice(1) || '';
         const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
         const cappedContent = readAndTruncateFile(resolved, 500);
+
+        // DELTA COMPRESSION HOOK (V2.5.0)
+        // If continuous conversation session is active and delta is not disabled:
+        if (options.isContinuous && !options.noDelta) {
+          const deltaResult = resolveDeltaHydration(resolved, rawFileContent, currentCwd, {
+            conversationId: options.conversationId,
+            threshold: options.deltaThreshold || 0.4
+          });
+
+          if (deltaResult.mode === 'unchanged' || deltaResult.mode === 'delta') {
+            injectedFiles.push(deltaResult.text);
+            continue;
+          }
+        }
 
         if (!options.full && isSkeletonCandidate(resolved, lineCount)) {
           let focusName = null;
