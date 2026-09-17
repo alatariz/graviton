@@ -39,6 +39,7 @@ import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdown.js';
+import { sanitizeArgsWithTypoGuard } from '../src/typo-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,6 +100,16 @@ async function main() {
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
 
+  // 1a. Smart Typo & Keyboard Slip Guard (Zero-token local interception)
+  const typoResult = sanitizeArgsWithTypoGuard(rawArgs);
+  if (typoResult.notice) {
+    console.log(typoResult.notice);
+  }
+  if (typoResult.interceptedAction === 'stray_symbol') {
+    process.exit(0);
+  }
+  const effectiveArgs = typoResult.args;
+
   // Parse boolean flags and conversation arguments
   let isDeep = false;
   let isFast = false;
@@ -115,8 +126,8 @@ async function main() {
   let conversationTarget = null;
   const filteredArgs = [];
 
-  for (let i = 0; i < rawArgs.length; i++) {
-    const arg = rawArgs[i];
+  for (let i = 0; i < effectiveArgs.length; i++) {
+    const arg = effectiveArgs[i];
     if (arg === '--deep' || arg === '-d') {
       isDeep = true;
     } else if (arg === '--fast' || arg === '-f') {
@@ -125,7 +136,7 @@ async function main() {
       isPaste = true;
     } else if (arg === '--markdown' || arg === '-m') {
       isMarkdown = true;
-      const next = rawArgs[i + 1];
+      const next = effectiveArgs[i + 1];
       if (next && !next.startsWith('-')) {
         markdownFile = next;
         i++;
@@ -142,10 +153,10 @@ async function main() {
       isNew = true;
     } else if (arg === '-c' || arg === '--c' || arg === '--conversation' || arg === 'conversation') {
       isConversationMode = true;
-      const next = rawArgs[i + 1];
+      const next = effectiveArgs[i + 1];
       if (next && (next === 'del' || next === 'delete' || next === 'd' || next === 'rm')) {
         conversationAction = 'delete';
-        conversationTarget = rawArgs[i + 2] || null;
+        conversationTarget = effectiveArgs[i + 2] || null;
         i += 2;
       } else if (next && /^\d+$/.test(next)) {
         conversationTarget = next;
@@ -629,14 +640,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\x1b[36m[GRAVITON]\x1b[0m Assembling SuperPrompt...`);
   let targetConversationId = null;
   let continueSession = false;
   let activeTitle = null;
 
   if (isNew) {
     clearWorkspaceSession(currentCwd);
-    console.log(`\x1b[33m[GRAVITON]\x1b[0m Starting fresh conversation for workspace: \x1b[1m${currentCwd}\x1b[0m`);
   } else if (isConversationMode) {
     if (conversationTarget) {
       const selected = setActiveConversation(currentCwd, conversationTarget);
@@ -658,15 +667,13 @@ async function main() {
         console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing conversation: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
       } else {
         continueSession = false;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m No active conversation found. Starting new conversation...`);
       }
     }
   } else {
-    // DEFAULT FLOW: Each new command without -c automatically starts a fresh conversation!
+    // DEFAULT FLOW: Each new command without -c automatically starts a fresh conversation
     continueSession = false;
     targetConversationId = null;
     activeTitle = null;
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting new conversation (use \x1b[33m-c\x1b[0m to resume existing topic)...`);
   }
 
   const superPrompt = constructSuperPrompt(input, currentCwd, {
@@ -693,8 +700,6 @@ async function main() {
   if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
     const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
     console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
-  } else {
-    console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Workspace Mapping Active \x1b[90m(General Exploration)\x1b[0m`);
   }
 
   const stats = loadStats();

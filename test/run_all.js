@@ -26,7 +26,8 @@ const testFiles = [
   'test_v260_squeezer_and_economizer.js',
   'test_v270_defensive_io.js',
   'test_v280_syntax_and_daemon.js',
-  'test_v290_e2e_stress.js'
+  'test_v290_e2e_stress.js',
+  'test_v300_typo_and_progress.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

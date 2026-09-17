@@ -6,6 +6,7 @@ import { getLatestConversationId, saveWorkspaceSession } from '../src/session-ma
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 import { inspectSessionFiles } from '../src/sanity-guard.js';
 import { trackSessionTurn, checkCompactionStatus } from '../src/session-compactor.js';
+import { startAiProgressIndicator } from '../src/progress-indicator.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -265,9 +266,9 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     process.exit(1);
   }
 
-  console.log(`\x1b[90m[GRAVITON] Relay target: ${agyExecutable}\x1b[0m`);
-  console.log(`\x1b[36m[GRAVITON]\x1b[0m Relaying prompt to Antigravity CLI (Auto-Allow active)...`);
-  console.log(`\x1b[90m[GRAVITON] AI reasoning in progress... (Tip: use -f / --fast for quick edits)\x1b[0m`);
+  if (!options.args && !options.silent) {
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m AI reasoning in progress... \x1b[90m(Tip: run 'grav -h' for help & options)\x1b[0m`);
+  }
 
   const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
   const initialSnapshot = captureWorkspaceSnapshot(executionCwd);
@@ -306,7 +307,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  const stdioMode = options.stdio || 'inherit';
+  const isDefaultPromptMode = !options.stdio && !options.interactive && !options.args;
+  const stdioMode = options.stdio ? options.stdio : (isDefaultPromptMode ? ['inherit', 'pipe', 'pipe'] : 'inherit');
 
   // Determine shell option:
   // On Windows, if executable is .cmd or .bat or non-absolute, shell: true is needed.
@@ -322,13 +324,34 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     }
   }
 
-  // Execute the relay using spawnSync with workspace directory confinement
-  const result = spawnSync(agyExecutable, args, {
-    cwd: executionCwd,
-    stdio: stdioMode,
-    shell: useShell,
-    env
-  });
+  // Start Live AI Progress Indicator if interactive prompt mode
+  const progress = isDefaultPromptMode
+    ? startAiProgressIndicator({ stdio: options.stdio })
+    : { stop: () => {} };
+
+  let result;
+  try {
+    // Execute the relay using spawnSync with workspace directory confinement
+    result = spawnSync(agyExecutable, args, {
+      cwd: executionCwd,
+      stdio: stdioMode,
+      shell: useShell,
+      maxBuffer: 64 * 1024 * 1024,
+      env
+    });
+  } finally {
+    progress.stop();
+  }
+
+  // If buffered in default prompt mode, stream output cleanly after progress indicator
+  if (isDefaultPromptMode && result) {
+    if (result.stdout && result.stdout.length > 0) {
+      process.stdout.write(result.stdout);
+    }
+    if (result.stderr && result.stderr.length > 0) {
+      process.stderr.write(result.stderr);
+    }
+  }
 
   // Auto-detect and record conversation ID and session manifest for rollback guard
   try {
