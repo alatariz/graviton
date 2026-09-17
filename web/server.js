@@ -181,7 +181,7 @@ export const server = http.createServer(async (req, res) => {
  * Starts the server with automatic fallback if the preferred port is occupied.
  * Default preferred port: 3333 (to avoid collisions with generic port 3000 apps).
  */
-export function startStudioServer(preferredPort = 3333, maxRetries = 10) {
+export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
   function attemptListen(port) {
     server.removeAllListeners('error');
     server.on('error', (err) => {
@@ -205,8 +205,8 @@ export function startStudioServer(preferredPort = 3333, maxRetries = 10) {
       console.log(`   ⚡ GRAVITON V3.0.0 WEB STUDIO ONLINE (Zero-Dependency)`);
       console.log(`===============================================================\x1b[0m`);
       console.log(`  Local URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
-      if (port !== 3000) {
-        console.log(`  Port Note : \x1b[90mRunning on port ${port} (never collides with port 3000)\x1b[0m`);
+      if (port !== preferredPort) {
+        console.log(`  Port Note : \x1b[90mRunning on fallback port ${port} (preferred port ${preferredPort} in use)\x1b[0m`);
       }
       console.log(`  Docs URL  : \x1b[36mhttp://localhost:${port}/docs.html\x1b[0m`);
       console.log(`\x1b[90m  Press Ctrl+C to terminate studio.\x1b[0m\n`);
@@ -219,5 +219,5 @@ export function startStudioServer(preferredPort = 3333, maxRetries = 10) {
 
 // Auto-start if run directly
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  startStudioServer(Number(process.env.PORT) || 3333);
+  startStudioServer(Number(process.env.PORT) || 3000);
 }

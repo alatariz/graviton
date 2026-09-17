@@ -15,8 +15,8 @@ cd web
 npm start
 ```
 
-Open your browser at `http://localhost:3333` (or `http://localhost:3333/docs.html`) to view the interactive studio and documentation.
-*Note: If port 3333 is occupied, the server automatically shifts to the next open port (3334, 3335, etc.) to prevent collisions.*
+Open your browser at `http://localhost:3000` (or `http://localhost:3000/docs.html`) to view the interactive studio and documentation.
+*Note: If port 3000 is occupied, the server automatically shifts to the next open port (3001, 3002, etc.) to prevent collisions.*
 
 ## Rebuilding the Pages
 

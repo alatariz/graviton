@@ -1,0 +1,5 @@
+﻿# GitHub Linguist Configuration
+# Mark Web Studio UI pages & assets as documentation/detectable=false
+# so the repository language stats reflect pure JavaScript (100% JS)
+web/public/** linguist-documentation=true
+web/public/** linguist-detectable=false
