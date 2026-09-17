@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import { spawnSync } from 'child_process';
 import { resolveAgyExecutable } from '../bin/graviton-relay.js';
+import { getBrainDir } from './session-manager.js';
 
 /**
  * Runs a comprehensive system health check for Graviton & Antigravity.
@@ -84,7 +85,7 @@ export function runDoctor(cwd = process.cwd(), options = {}) {
 
   // 3. Antigravity Brain Directory
   const homeDir = process.env.USERPROFILE || process.env.HOME || os.homedir() || '';
-  const brainDir = path.join(homeDir, '.gemini', 'antigravity', 'brain');
+  const brainDir = getBrainDir();
   if (fs.existsSync(brainDir)) {
     diagnostics.push({
       category: 'Antigravity',
