@@ -101,16 +101,34 @@ export function compactWorkspaceSession(cwd = process.cwd()) {
     } catch {}
   }
 
+  let previousMemory = null;
+  if (fs.existsSync(memoryFile)) {
+    try {
+      previousMemory = JSON.parse(fs.readFileSync(memoryFile, 'utf8'));
+    } catch {}
+  }
+
   const touched = sessionData.touchedFilesHistory || [];
   const turns = sessionData.turns || 0;
   const tokens = sessionData.cumulativeTokens || 0;
 
+  // Merge active files cumulatively: recent touched files take priority over older memory
+  const mergedFilesSet = new Set();
+  for (const f of touched) mergedFilesSet.add(f);
+  if (previousMemory && Array.isArray(previousMemory.activeFiles)) {
+    for (const f of previousMemory.activeFiles) mergedFilesSet.add(f);
+  }
+
+  const activeFiles = Array.from(mergedFilesSet).slice(0, 15);
+  const totalTurns = (previousMemory && previousMemory.previousTurns ? previousMemory.previousTurns : 0) + turns;
+  const totalTokens = (previousMemory && previousMemory.tokensSavedEstimate ? previousMemory.tokensSavedEstimate : 0) + tokens;
+
   const summary = {
     compactedAt: Date.now(),
-    previousTurns: turns,
-    tokensSavedEstimate: tokens,
-    activeFiles: touched,
-    memo: `Project context compacted after ${turns} turns. Active working files: ${touched.join(', ') || 'none'}.`
+    previousTurns: totalTurns,
+    tokensSavedEstimate: totalTokens,
+    activeFiles,
+    memo: `Project context compacted after ${totalTurns} turns. Active working files: ${activeFiles.join(', ') || 'none'}.`
   };
 
   try {
@@ -120,7 +138,7 @@ export function compactWorkspaceSession(cwd = process.cwd()) {
     return {
       success: true,
       summary: summary.memo,
-      message: `Session successfully compacted! Active memory saved (${touched.length} files tracked). Context window refreshed.`
+      message: `Session successfully compacted! Active memory saved (${activeFiles.length} files tracked). Context window refreshed.`
     };
   } catch (err) {
     return {

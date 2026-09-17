@@ -43,7 +43,7 @@ export async function startChatRepl(options = {}) {
 
   console.log(`
 \x1b[1m\x1b[36m===============================================================
-  GRAVITON V2.8.0 INTERACTIVE REPL CHAT (SYNTAX PRECISION & DELTA ACTIVE)
+  GRAVITON V2.9.0 INTERACTIVE REPL CHAT (FULL ENGINE INTEGRITY ACTIVE)
 ===============================================================\x1b[0m
 \x1b[90mWorkspace   : \x1b[1m${cwd}\x1b[0m
 ${activeTopicDisplay}

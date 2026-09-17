@@ -81,6 +81,14 @@ export function recordFileSnapshot(cwd, relPath, content, conversationId = 'defa
   const normalizedRel = normalizePosixPath(relPath);
   const lineCount = content.split(/\r?\n/).length;
 
+  let diskMtime = null;
+  try {
+    const absPath = path.isAbsolute(relPath) ? relPath : path.resolve(cwd, relPath);
+    if (fs.existsSync(absPath)) {
+      diskMtime = fs.statSync(absPath).mtimeMs;
+    }
+  } catch {}
+
   const manifest = getManifest(snapshotDir);
   const safeName = getSafeFileName(normalizedRel);
   const contentPath = path.join(snapshotDir, safeName);
@@ -92,6 +100,7 @@ export function recordFileSnapshot(cwd, relPath, content, conversationId = 'defa
       hash,
       lineCount,
       safeName,
+      mtimeMs: diskMtime,
       updatedAt: Date.now()
     };
     saveManifest(snapshotDir, manifest);
@@ -105,7 +114,7 @@ export function recordFileSnapshot(cwd, relPath, content, conversationId = 'defa
  * @param {string} cwd
  * @param {string} relPath
  * @param {string} [conversationId]
- * @returns {{ hash: string, content: string, lineCount: number } | null}
+ * @returns {{ hash: string, content: string, lineCount: number, mtimeMs: number|null } | null}
  */
 export function getPreviousSnapshot(cwd, relPath, conversationId = 'default') {
   const snapshotDir = getSnapshotDir(cwd, conversationId);
@@ -125,6 +134,7 @@ export function getPreviousSnapshot(cwd, relPath, conversationId = 'default') {
       return {
         hash: meta.hash,
         lineCount: meta.lineCount,
+        mtimeMs: meta.mtimeMs || null,
         content
       };
     } catch {
@@ -132,6 +142,42 @@ export function getPreviousSnapshot(cwd, relPath, conversationId = 'default') {
     }
   }
   return null;
+}
+
+/**
+ * Detects if a file was modified out-of-band on disk since the last session snapshot.
+ * @param {string} cwd
+ * @param {string} relPath
+ * @param {string} [conversationId]
+ * @returns {{ modified: boolean, prevHash?: string, currentHash?: string, mtimeChanged?: boolean }}
+ */
+export function checkOutOfBandModification(cwd, relPath, conversationId = 'default') {
+  const prev = getPreviousSnapshot(cwd, relPath, conversationId);
+  if (!prev) {
+    return { modified: false };
+  }
+
+  const absPath = path.isAbsolute(relPath) ? relPath : path.resolve(cwd, relPath);
+  if (!fs.existsSync(absPath)) {
+    return { modified: false };
+  }
+
+  try {
+    const stat = fs.statSync(absPath);
+    const content = fs.readFileSync(absPath, 'utf8');
+    const currentHash = computeFileHash(content);
+    const hashDiffers = currentHash !== prev.hash;
+    const mtimeDiffers = prev.mtimeMs ? Math.abs(stat.mtimeMs - prev.mtimeMs) > 10 : false;
+
+    return {
+      modified: hashDiffers,
+      prevHash: prev.hash,
+      currentHash,
+      mtimeChanged: Boolean(mtimeDiffers)
+    };
+  } catch {
+    return { modified: false };
+  }
 }
 
 /**
@@ -341,6 +387,7 @@ export function resolveDeltaHydration(filePath, rawContent, cwd = process.cwd(),
   }
 
   // 3. MODIFIED: Compute Unified Diff Hunk
+  const outOfBandCheck = checkOutOfBandModification(currentCwd, relPath, conversationId);
   const diffResult = computeHunkDiff(prev.content, rawContent, relPath);
 
   // If modifications are within the compression threshold (<= 40% changed lines)
@@ -349,14 +396,16 @@ export function resolveDeltaHydration(filePath, rawContent, cwd = process.cwd(),
     recordFileSnapshot(currentCwd, relPath, rawContent, conversationId);
 
     const savedPct = Math.max(0, Math.round((1 - (diffResult.diffText.length / Math.max(1, rawContent.length))) * 100));
+    const syncSuffix = options.showSyncNotice && outOfBandCheck.modified ? ' (Synced with Out-of-Band Disk Edit)' : '';
 
     return {
       mode: 'delta',
       relPath,
+      isOutOfBand: Boolean(outOfBandCheck.modified),
       additions: diffResult.additions,
       deletions: diffResult.deletions,
       savedPct,
-      text: `[GRAVITON TURN DELTA: ${relPath} (+${diffResult.additions}, -${diffResult.deletions} lines since previous turn)]\n\`\`\`diff\n${diffResult.diffText}\n\`\`\``
+      text: `[GRAVITON TURN DELTA: ${relPath} (+${diffResult.additions}, -${diffResult.deletions} lines since previous turn${syncSuffix})]\n\`\`\`diff\n${diffResult.diffText}\n\`\`\``
     };
   }
 
