@@ -1,4 +1,4 @@
-// src/cli-filter.js - Graviton V2.0.0 Deterministic Terminal Output Filter
+// src/cli-filter.js - Graviton V3.0.0 Deterministic Terminal Output Filter
 
 export function stripAnsi(str) {
   if (!str) return '';

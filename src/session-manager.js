@@ -1,11 +1,11 @@
-// src/session-manager.js - Graviton V2.0.0 Workspace Conversation Manager
+// src/session-manager.js - Graviton V3.0.0 Workspace Conversation Manager
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import readline from 'readline';
 
 /**
- * Graviton V2.0.0 Workspace Conversation Manager
+ * Graviton V3.0.0 Workspace Conversation Manager
  * Provides Antigravity IDE-style conversation history management:
  * - Multi-conversation tracking per workspace (.graviton-conversations.json)
  * - Auto-generated human-readable topic titles

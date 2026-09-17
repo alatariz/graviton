@@ -1,4 +1,4 @@
-// src/workspace-helper.js - Graviton V2.0.0 Workspace Context & Sensitive Data Scrubbing
+// src/workspace-helper.js - Graviton V3.0.0 Workspace Context & Sensitive Data Scrubbing
 import fs from 'fs';
 import path from 'path';
 

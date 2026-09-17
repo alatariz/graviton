@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 
 /**
- * Graviton V2.0.0 Local Analytics Telemetry & Gamification Engine
+ * Graviton V3.0.0 Local Analytics Telemetry & Gamification Engine
  * Safely tracks metrics at: os.homedir() + '/.graviton/stats.json'
  * Tracks:
  *  - intercepted_calls: increments on every execution
@@ -116,7 +116,7 @@ export function formatTelemetryDashboard(stats = getTelemetry()) {
   return [
     '',
     `${cyan}┌────────────────────────────────────────────────────────────────────────┐${reset}`,
-    `${cyan}│${reset} ${bold}GRAVITON ENTERPRISE TELEMETRY DASHBOARD${reset}                        ${gray}v2.0.0${reset} ${cyan}│${reset}`,
+    `${cyan}│${reset} ${bold}GRAVITON ENTERPRISE TELEMETRY DASHBOARD${reset}                        ${gray}v3.0.0${reset} ${cyan}│${reset}`,
     `${cyan}│${reset} ${gray}Autonomous AI Relay & Lifetime Noise Pruning Metrics${reset}                    ${cyan}│${reset}`,
     `${cyan}├────────────────────────────────────────────────────────────────────────┤${reset}`,
     `${cyan}│${reset}  ${bold}METRIC${reset}                                ${bold}LIFETIME VALUE${reset}                   ${cyan}│${reset}`,

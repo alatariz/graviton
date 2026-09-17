@@ -10,8 +10,8 @@ Only the latest major and minor release versions receive security patches and up
 
 | Version | Supported          | Status                                 |
 | :---    | :---:              | :---                                   |
-| 2.0.x   | :white_check_mark: | Actively supported with security updates |
-| < 2.0.0 | :x:                | End-of-life. Please upgrade to V2.0.0.  |
+| 3.0.x   | :white_check_mark: | Actively supported with security updates |
+| < 3.0.0 | :x:                | End-of-life. Please upgrade to V3.0.0.  |
 
 ---
 

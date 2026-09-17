@@ -1,4 +1,4 @@
-// src/skill-matrix.js - Graviton V2.0.0 Antigravity Built-in Skills & Trigger Matrix
+// src/skill-matrix.js - Graviton V3.0.0 Antigravity Built-in Skills & Trigger Matrix
 
 export const SKILL_TRIGGERS = [
   {

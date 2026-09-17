@@ -782,7 +782,7 @@ export function generateEconomizerDirective(userInput, options = {}) {
 }
 
 /**
- * Graviton V2.0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
+ * Graviton V3.0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
  * Zero token cost, zero external API calls.
  */
 export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {}) {

@@ -12,7 +12,7 @@
 
   <p align="center">
     <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-3.0.0-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 3.0.0" /></a>
-    <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg?style=for-the-badge" alt="License Apache-2.0" /></a>
+    <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg?style=for-the-badge" alt="License AGPL-3.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
     <a href="https://github.com/alatariz/graviton/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alatariz/graviton/ci.yml?branch=main&label=CI%20Matrix&style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Matrix" /></a>
@@ -608,7 +608,7 @@ For full threat models, security practices, and responsible disclosure instructi
 
 <h2 id="license">License</h2>
 
-Distributed under the **Apache-2.0 License**. See [LICENSE](LICENSE) for details.
+Distributed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [LICENSE](LICENSE) for details.
 
-&copy; 2026 **[@alatariz](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
+&copy; 2026 **[Akmal Fauzan (@alatariz)](https://github.com/alatariz)** &bull; Built with precision for the Google Antigravity developer ecosystem.
 

@@ -2,6 +2,8 @@
   "name": "graviton-web-studio",
   "version": "3.0.0",
   "description": "Graviton V3.0.0 Web Studio, Documentation & Visualizer",
+  "license": "AGPL-3.0-or-later",
+  "author": "Akmal Fauzan (@alatariz)",
   "type": "module",
   "scripts": {
     "start": "node server.js"

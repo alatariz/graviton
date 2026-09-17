@@ -1,4 +1,4 @@
-// src/diff-viewer.js - Graviton V2.0.0 Colorized Session Diff Viewer
+// src/diff-viewer.js - Graviton V3.0.0 Colorized Session Diff Viewer
 import fs from 'fs';
 import path from 'path';
 
@@ -108,7 +108,7 @@ export function getSessionDiff(cwd = process.cwd()) {
   try {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const reports = [
-      `\n\x1b[1m\x1b[36m=== GRAVITON V2.0.0 SESSION DIFF REVIEW ===\x1b[0m`
+      `\n\x1b[1m\x1b[36m=== GRAVITON V3.0.0 SESSION DIFF REVIEW ===\x1b[0m`
     ];
 
     let changeCount = 0;

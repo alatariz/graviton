@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V2.0.0 Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Graviton V3.0.0 Autonomous Execution Layer
 
 process.on('uncaughtException', (err) => {
   const message = err && err.message ? err.message : String(err);
@@ -317,7 +317,7 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '2.0.0';
+    let version = '3.0.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;

@@ -1,4 +1,4 @@
-// src/session-compactor.js - Graviton V2.0.0 Smart Session Compaction & Token Budget Guard
+// src/session-compactor.js - Graviton V3.0.0 Smart Session Compaction & Token Budget Guard
 import fs from 'fs';
 import path from 'path';
 import { getWorkspaceSession, saveWorkspaceSession, clearWorkspaceSession } from './session-manager.js';
