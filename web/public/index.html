@@ -7,26 +7,24 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #040711;
-      --bg-surface: #060c1d;
-      --bg-card: rgba(8, 16, 34, 0.75);
-      --bg-card-hover: rgba(12, 24, 50, 0.85);
-      --border: rgba(56, 189, 248, 0.15);
+      --bg: #030712;
+      --bg-surface: #0b1329;
+      --bg-card: rgba(15, 23, 42, 0.7);
+      --bg-card-hover: rgba(22, 36, 66, 0.8);
+      --border: rgba(56, 189, 248, 0.12);
       --border-bright: rgba(0, 240, 255, 0.35);
-      --text-main: #f1f5f9;
+      --text-main: #f8fafc;
       --text-dim: #94a3b8;
       --text-muted: #64748b;
       --aqua: #00f0ff;
       --aqua-bright: #38bdf8;
-      --aqua-ice: #bae6fd;
-      --aqua-glow: rgba(0, 240, 255, 0.25);
-      --red: #f43f5e;
-      --red-glow: rgba(244, 63, 94, 0.25);
+      --aqua-glow: rgba(0, 240, 255, 0.2);
       --green: #10b981;
-      --green-glow: rgba(16, 185, 129, 0.25);
+      --green-glow: rgba(16, 185, 129, 0.2);
+      --purple: #a855f7;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', Consolas, monospace;
     }
@@ -35,8 +33,8 @@
     body {
       background-color: var(--bg);
       background-image: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.12), transparent),
-        radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.05), transparent);
+        radial-gradient(ellipse 90% 40% at 50% -10%, rgba(0, 240, 255, 0.1), transparent),
+        radial-gradient(circle at 10% 30%, rgba(56, 189, 248, 0.04), transparent);
       color: var(--text-main);
       font-family: var(--font-sans);
       min-height: 100vh;
@@ -44,15 +42,15 @@
       padding-bottom: 3rem;
     }
 
-    /* HEADER / NAVBAR */
+    /* HEADER */
     .cockpit-header {
-      background: rgba(6, 12, 29, 0.85);
-      backdrop-filter: blur(12px);
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 0.75rem 1.5rem;
+      padding: 0.85rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -62,37 +60,37 @@
     .brand-section {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
     }
 
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 15px var(--aqua-glow);
+      box-shadow: 0 0 20px var(--aqua-glow);
     }
 
     .brand-title {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
       color: #ffffff;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
 
     .version-badge {
-      background: rgba(0, 240, 255, 0.12);
+      background: rgba(0, 240, 255, 0.1);
       border: 1px solid var(--aqua);
       color: var(--aqua);
       font-size: 0.72rem;
       font-family: var(--font-mono);
-      font-weight: 600;
-      padding: 0.15rem 0.45rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
       border-radius: 9999px;
     }
 
@@ -100,27 +98,28 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #6ee7b7;
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
       padding: 0.3rem 0.75rem;
       border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: #34d399;
+      font-weight: 600;
     }
 
     .pulse-dot {
       width: 8px;
       height: 8px;
-      background: var(--green);
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--green);
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
       animation: pulse 2s infinite ease-in-out;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
     }
 
     .nav-actions {
@@ -130,353 +129,515 @@
     }
 
     .nav-btn {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 500;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      transition: all 0.2s ease;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
-      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
     }
 
     .nav-btn:hover {
-      color: var(--text-main);
-      background: rgba(56, 189, 248, 0.08);
-      border-color: var(--border);
+      background: rgba(30, 41, 59, 0.9);
+      border-color: var(--aqua);
+      color: #ffffff;
     }
 
     .nav-btn.primary {
-      background: rgba(0, 240, 255, 0.12);
-      border-color: var(--border-bright);
-      color: var(--aqua-ice);
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(56, 189, 248, 0.25));
+      border-color: var(--aqua);
+      color: var(--aqua);
     }
 
     .nav-btn.primary:hover {
-      background: rgba(0, 240, 255, 0.22);
-      box-shadow: 0 0 12px var(--aqua-glow);
+      box-shadow: 0 0 15px var(--aqua-glow);
     }
 
     /* CONTAINER */
     .cockpit-container {
-      max-width: 1400px;
-      margin: 1.5rem auto;
+      max-width: 1340px;
+      margin: 1.5rem auto 0;
       padding: 0 1.5rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
 
-    /* TOP METRICS HUD */
+    /* TOP METRICS HUD GRID */
     .hud-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 1rem;
     }
 
     .metric-card {
       background: var(--bg-card);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem;
+      transition: all 0.25s ease;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      backdrop-filter: blur(8px);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      justify-content: space-between;
       position: relative;
       overflow: hidden;
     }
 
     .metric-card:hover {
+      background: var(--bg-card-hover);
       border-color: var(--border-bright);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
 
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--aqua-bright), transparent);
-      opacity: 0.4;
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
 
     .metric-title {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-muted);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    }
+
+    .metric-tag {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--aqua-bright);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
     }
 
     .metric-value {
-      font-size: 1.85rem;
-      font-weight: 700;
+      font-size: 2rem;
+      font-weight: 800;
       font-family: var(--font-mono);
       color: #ffffff;
+      margin: 0.25rem 0;
       letter-spacing: -0.03em;
     }
 
     .metric-value.glow {
-      color: var(--aqua-bright);
-      text-shadow: 0 0 15px var(--aqua-glow);
+      color: var(--aqua);
+      text-shadow: 0 0 20px var(--aqua-glow);
     }
 
     .metric-sub {
-      font-size: 0.8rem;
-      color: var(--text-dim);
+      font-size: 0.78rem;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 0.6rem;
+      margin-top: 0.4rem;
     }
 
     .idr-tag {
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--aqua-bright);
-      padding: 0.1rem 0.35rem;
-      border-radius: 4px;
+      color: #34d399;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
       font-weight: 600;
     }
 
-    /* MAIN PANELS 2-COL LAYOUT */
+    /* AUTONOMOUS ENGINES PULSE BAR */
+    .engines-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.4rem;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .engines-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .engines-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .engines-badge {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+
+    .engines-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .engine-chip {
+      background: rgba(6, 12, 29, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: border-color 0.2s;
+    }
+
+    .engine-chip:hover {
+      border-color: var(--border-bright);
+    }
+
+    .engine-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .engine-meta {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .engine-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .engine-desc {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    /* MAIN WORKSPACE LAYOUT */
     .dashboard-layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 420px 1fr;
       gap: 1.5rem;
     }
 
     @media (max-width: 1024px) {
-      .dashboard-layout { grid-template-columns: 1fr; }
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
     }
 
+    /* PANELS */
     .panel {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem;
+      backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      backdrop-filter: blur(8px);
+      gap: 0.85rem;
     }
 
     .panel-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.75rem;
+      align-items: center;
     }
 
     .panel-title {
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       color: #ffffff;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .panel-badge {
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--aqua-bright);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-dim);
     }
 
-    /* PORT GUARD TABLE */
+    /* PORT GUARD */
     .port-list {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
-      max-height: 280px;
+      gap: 0.5rem;
+      max-height: 200px;
       overflow-y: auto;
     }
 
     .port-item {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      background: rgba(6, 12, 29, 0.6);
-      border: 1px solid var(--border);
-      padding: 0.65rem 0.85rem;
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      transition: all 0.15s;
-    }
-
-    .port-item:hover {
-      border-color: var(--border-bright);
-      background: rgba(6, 12, 29, 0.9);
-    }
-
-    .port-badge {
-      font-weight: 700;
-      color: var(--aqua-bright);
-      display: flex;
       align-items: center;
-      gap: 0.4rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      background: rgba(6, 12, 29, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
     }
 
-    .port-cmd {
-      color: var(--text-dim);
-      font-size: 0.78rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 220px;
+    .port-item.active {
+      border-left: 3px solid #f59e0b;
     }
 
-    .btn-kill {
+    .btn-stop {
       background: rgba(244, 63, 94, 0.15);
-      border: 1px solid rgba(244, 63, 94, 0.4);
+      border: 1px solid rgba(244, 63, 94, 0.35);
       color: #fda4af;
       padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      font-family: var(--font-sans);
-      font-size: 0.75rem;
-      font-weight: 600;
+      border-radius: 5px;
+      font-size: 0.72rem;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
 
-    .btn-kill:hover {
-      background: var(--red);
+    .btn-stop:hover {
+      background: #f43f5e;
       color: #ffffff;
-      box-shadow: 0 0 10px var(--red-glow);
     }
 
     .empty-state {
-      padding: 1.5rem;
+      padding: 1.2rem;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.85rem;
-      border: 1px dashed var(--border);
+      font-size: 0.82rem;
+      background: rgba(6, 12, 29, 0.4);
       border-radius: 8px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
     }
 
-    /* CODE & INPUTS */
-    .input-group {
+    /* GRAPH EXPLORER */
+    .graph-explorer {
+      max-height: 280px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .graph-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(6, 12, 29, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      transition: background 0.15s;
+    }
+
+    .graph-item:hover {
+      background: rgba(30, 41, 59, 0.6);
+      border-color: var(--border);
+    }
+
+    .file-name {
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
       gap: 0.4rem;
     }
 
-    .text-input, .text-area, select.text-input {
-      background: rgba(4, 7, 17, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-main);
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      padding: 0.65rem 0.85rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-      width: 100%;
+    .file-deps-tag {
+      font-size: 0.68rem;
+      color: var(--aqua);
+      background: rgba(0, 240, 255, 0.08);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
     }
 
-    .text-input:focus, .text-area:focus, select.text-input:focus {
-      border-color: var(--aqua-bright);
-      box-shadow: 0 0 10px var(--aqua-glow);
-    }
-
+    /* PROMPT SIMULATOR & STUDIO */
     .text-area {
-      resize: vertical;
-      min-height: 120px;
-      line-height: 1.4;
-    }
-
-    .btn-action {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(56, 189, 248, 0.3));
-      border: 1px solid var(--aqua);
-      color: #ffffff;
-      font-family: var(--font-sans);
-      font-weight: 600;
-      font-size: 0.85rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-    }
-
-    .btn-action:hover {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), rgba(56, 189, 248, 0.45));
-      box-shadow: 0 0 15px var(--aqua-glow);
-      transform: translateY(-1px);
-    }
-
-    /* RESULT VIEWER */
-    .result-box {
-      background: #02050c;
+      width: 100%;
+      background: rgba(4, 7, 18, 0.75);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 0.85rem;
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-area:focus {
+      border-color: var(--aqua);
+      box-shadow: 0 0 10px var(--aqua-glow);
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .chip-btn {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: rgba(30, 41, 59, 0.9);
+      border-color: var(--aqua);
+      color: #ffffff;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #00f0ff, #0284c7);
+      border: none;
+      color: #040711;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    }
+
+    .result-box {
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 1rem;
       font-family: var(--font-mono);
       font-size: 0.8rem;
-      color: var(--aqua-ice);
-      max-height: 220px;
+      color: #e2e8f0;
+      max-height: 280px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-all;
     }
 
-    /* DEPENDENCY GRAPH TREE */
-    .graph-explorer {
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #0b1329;
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 640px;
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
-      max-height: 320px;
-      overflow-y: auto;
+      gap: 1rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
     }
 
-    .file-node {
+    .modal-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      background: rgba(6, 12, 29, 0.6);
-      border: 1px solid var(--border);
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-    }
-
-    .file-node.entry {
-      border-color: rgba(0, 240, 255, 0.4);
-      background: rgba(0, 240, 255, 0.05);
-    }
-
-    .file-info {
-      display: flex;
       align-items: center;
-      gap: 0.5rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
-    .file-stats {
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
       color: var(--text-muted);
-      font-size: 0.72rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .command-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+
+    .command-table td {
+      padding: 0.45rem 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .command-table tr td:first-child {
+      color: var(--aqua);
+      font-weight: 600;
+      width: 140px;
+    }
+
+    .command-table tr td:last-child {
+      color: var(--text-dim);
+      font-family: var(--font-sans);
     }
 
     /* TOAST */
@@ -484,21 +645,20 @@
       position: fixed;
       bottom: 2rem;
       right: 2rem;
-      background: rgba(8, 16, 34, 0.95);
+      background: #0f172a;
       border: 1px solid var(--aqua);
-      box-shadow: 0 0 20px var(--aqua-glow);
       color: #ffffff;
-      padding: 0.75rem 1.25rem;
+      padding: 0.75rem 1.2rem;
       border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      z-index: 999;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-size: 0.82rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       gap: 0.6rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 300;
     }
 
     .toast.show {
@@ -509,204 +669,198 @@
 </head>
 <body>
 
+  <!-- HEADER -->
   <header class="cockpit-header">
     <div class="brand-section">
       <div class="brand-logo">
-        <img src="/icon.svg" alt="Graviton" width="28" height="28">
+        <img src="/icon.svg" alt="Graviton" width="30" height="30">
       </div>
       <div class="brand-title">
         GRAVITON COCKPIT
-        <span class="version-badge">v3.9.0</span>
+        <span class="version-badge">v3.12.0</span>
       </div>
       <div class="status-indicator">
         <div class="pulse-dot"></div>
-        <span id="status-text">127.0.0.1:3000 LIVE</span>
+        <span>100% AUTONOMOUS • ZERO-CONFIG</span>
       </div>
     </div>
 
     <nav class="nav-actions">
       <button class="nav-btn primary" onclick="refreshAllData()">🔄 Refresh HUD</button>
-      <button class="nav-btn" onclick="document.getElementById('scaffold-section').scrollIntoView({behavior: 'smooth'})">⚡ Scaffold Engine</button>
+      <button class="nav-btn" onclick="openCommandGuide()">⚡ CLI Command Guide</button>
     </nav>
   </header>
 
+  <!-- MAIN CONTAINER -->
   <main class="cockpit-container">
 
+    <!-- 1. TOP EXECUTIVE TELEMETRY HUD -->
     <section class="hud-grid">
       <div class="metric-card">
-        <div class="metric-title">
-          <span>Tokens Economized</span>
-          <span>⚡ CUMULATIVE</span>
+        <div class="metric-header">
+          <span class="metric-title">Tokens Protected</span>
+          <span class="metric-tag">LIFETIME</span>
         </div>
         <div class="metric-value glow" id="hud-tokens">0</div>
         <div class="metric-sub">
           <span>Prompts Accelerated:</span>
-          <strong id="hud-prompts" style="color: #fff;">0</strong>
+          <strong id="hud-prompts" style="color: #ffffff;">0</strong>
         </div>
       </div>
 
       <div class="metric-card">
-        <div class="metric-title">
-          <span>Gemini 3.8 Flash Saved</span>
-          <span>$0.15/M</span>
-        </div>
-        <div class="metric-value" id="hud-flash-usd">$0.000</div>
-        <div class="metric-sub">
-          <span>Equivalent:</span>
-          <span class="idr-tag" id="hud-flash-idr">Rp 0</span>
-        </div>
-      </div>
-
-      <div class="metric-card">
-        <div class="metric-title">
-          <span>Gemini 3.1 Pro Saved</span>
-          <span>$2.00/M</span>
+        <div class="metric-header">
+          <span class="metric-title">Gemini 3.1 Pro Saved</span>
+          <span class="metric-tag">$1.25/M</span>
         </div>
         <div class="metric-value" id="hud-pro-usd">$0.000</div>
         <div class="metric-sub">
-          <span>Equivalent:</span>
+          <span>Equivalent Value:</span>
           <span class="idr-tag" id="hud-pro-idr">Rp 0</span>
         </div>
       </div>
 
       <div class="metric-card">
-        <div class="metric-title">
-          <span>KV-Cache Reuse Rate</span>
-          <span>CACHE EFFICIENCY</span>
+        <div class="metric-header">
+          <span class="metric-title">Gemini 3.8 Flash Saved</span>
+          <span class="metric-tag">$0.075/M</span>
+        </div>
+        <div class="metric-value" id="hud-flash-usd">$0.000</div>
+        <div class="metric-sub">
+          <span>Equivalent Value:</span>
+          <span class="idr-tag" id="hud-flash-idr">Rp 0</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">KV-Cache Reuse Rate</span>
+          <span class="metric-tag">EFFICIENCY</span>
         </div>
         <div class="metric-value" id="hud-cache-rate">94.2%</div>
         <div class="metric-sub">
-          <span>Prefix Status:</span>
+          <span>Prefix Optimization:</span>
           <strong style="color: #34d399;">Deterministic 0ms</strong>
         </div>
       </div>
     </section>
 
+    <!-- 2. AUTONOMOUS ENGINES LIVE STATUS -->
+    <section class="engines-bar">
+      <div class="engines-header">
+        <div class="engines-title">
+          <span>🤖 Autonomous Background Engines</span>
+        </div>
+        <span class="engines-badge">ALL ENGINES ENGAGED</span>
+      </div>
+      <div class="engines-grid">
+        <div class="engine-chip">
+          <div class="engine-icon">⚡</div>
+          <div class="engine-meta">
+            <span class="engine-name">Zero-Token Scaffolder</span>
+            <span class="engine-desc">Auto-scaffolds games & apps (0 tokens)</span>
+          </div>
+        </div>
+        <div class="engine-chip">
+          <div class="engine-icon">🔄</div>
+          <div class="engine-meta">
+            <span class="engine-name">Live Screen Hot-Reload</span>
+            <span class="engine-desc">SSE auto-updates browser tab</span>
+          </div>
+        </div>
+        <div class="engine-chip">
+          <div class="engine-icon">📦</div>
+          <div class="engine-meta">
+            <span class="engine-name">Zero-Setup Single-File Bundler</span>
+            <span class="engine-desc">Auto-compiles into 1 offline HTML</span>
+          </div>
+        </div>
+        <div class="engine-chip">
+          <div class="engine-icon">🛡️</div>
+          <div class="engine-meta">
+            <span class="engine-name">Syntax Self-Healer</span>
+            <span class="engine-desc">Auto-closes unclosed brackets & JSON</span>
+          </div>
+        </div>
+        <div class="engine-chip">
+          <div class="engine-icon">🧠</div>
+          <div class="engine-meta">
+            <span class="engine-name">Memory Auto-Compactor</span>
+            <span class="engine-desc">Auto-distills context at 6 turns / 25k</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. MAIN DUAL-COLUMN WORKSPACE COCKPIT -->
     <div class="dashboard-layout">
 
-      <!-- LEFT COLUMN -->
+      <!-- LEFT COLUMN: SYSTEM & WORKSPACE -->
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
+        <!-- ACTIVE PORT GUARD -->
         <section class="panel">
           <div class="panel-header">
             <div class="panel-title">
-              🛡️ Active Port Guard
-              <span class="panel-badge" id="port-count-badge">0 Active</span>
+              <span>🛡️ Active Port Guard</span>
             </div>
-            <button class="nav-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="fetchPorts()">Refresh Ports</button>
+            <button class="nav-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="fetchPorts()">Scan</button>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            Monitors occupied development ports and terminates lingering processes with 1 click.
+          <p class="panel-subtitle">
+            Monitors occupied development ports and terminates background processes on demand.
           </p>
           <div class="port-list" id="port-container">
             <div class="empty-state">Checking active dev ports...</div>
           </div>
         </section>
 
+        <!-- WORKSPACE DEPENDENCY GRAPH -->
         <section class="panel">
           <div class="panel-header">
             <div class="panel-title">
-              🕸️ Autonomous Dependency Graph
-              <span class="panel-badge" id="graph-count-badge">0 Files</span>
+              <span>🕸️ Autonomous Dependency Graph</span>
             </div>
-            <input type="text" id="graph-search" placeholder="Search workspace files..." class="text-input" style="width: 180px; padding: 0.3rem 0.6rem; font-size: 0.75rem;" oninput="filterGraphList()">
+            <input type="text" id="graph-search" placeholder="Filter files..." class="text-area" style="width: 140px; min-height: 0; padding: 0.25rem 0.5rem; font-size: 0.75rem;" oninput="filterGraphList()">
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            In-memory AST graph mapping entry points and callers for surgical context reduction.
+          <p class="panel-subtitle">
+            In-memory AST graph mapping callers and dependencies for surgical context scoping.
           </p>
           <div class="graph-explorer" id="graph-container">
             <div class="empty-state">Scanning workspace AST...</div>
           </div>
         </section>
 
-        <!-- ZERO-TOKEN PROJECT SCAFFOLDER -->
-        <section class="panel" id="scaffold-section">
-          <div class="panel-header">
-            <div class="panel-title">
-              🏗️ Zero-Token Project Scaffolder
-              <span class="panel-badge">grav scaffold</span>
-            </div>
-          </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            Lays down 100% runnable boilerplate with procedural canvas textures & Web Audio before prompting.
-          </p>
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <select id="scaffold-domain" class="text-input">
-              <option value="voxel_minecraft">🎮 3D Voxel World (Minecraft Clone)</option>
-              <option value="fps_arena">🎯 3D FPS Arena (CS2 Clone)</option>
-              <option value="arcade_2d">🕹️ 2D Arcade Game (Flappy / Snake / Canvas)</option>
-              <option value="fullstack_saas">📊 Full-Stack SaaS Application</option>
-            </select>
-            <div style="display: flex; gap: 0.75rem;">
-              <input type="text" id="scaffold-dir" value="." placeholder="Target directory (e.g. ./my-app)" class="text-input">
-              <button class="btn-action" onclick="runScaffolder()">Scaffold Files</button>
-            </div>
-          </div>
-          <div class="result-box" id="scaffold-result" style="display: none;"></div>
-        </section>
-
       </div>
 
-      <!-- RIGHT COLUMN -->
+      <!-- RIGHT COLUMN: PROMPT INTENT SIMULATOR & STUDIO -->
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
         <section class="panel">
           <div class="panel-header">
             <div class="panel-title">
-              📦 Zero-Setup Single-File Bundler
-              <span class="panel-badge">grav bundle</span>
+              <span>⚡ Autonomous Prompt Simulator & Studio</span>
             </div>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            Inlines local CSS, JS, and image assets into a standalone, offline-ready single HTML file.
+          <p class="panel-subtitle">
+            Type any natural prompt in plain English or Indonesian. Graviton automatically decides scaffolding, bundling, live-running, compression, and healing without manual flags.
           </p>
-          <div style="display: flex; gap: 0.75rem;">
-            <input type="text" id="bundle-entry" value="index.html" placeholder="Entry HTML (e.g. index.html)" class="text-input">
-            <button class="btn-action" onclick="runBundler()">Bundle Now</button>
-          </div>
-          <div class="result-box" id="bundle-result" style="display: none;"></div>
-        </section>
 
-        <section class="panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              ✨ Autonomous Code Self-Healer
-              <span class="panel-badge">AST Guard</span>
-            </div>
-            <button class="nav-btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="loadSampleBrokenCode()">Load Sample Broken Code</button>
-          </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            Instantly repairs unclosed brackets/strings, trailing commas, and missing import extensions.
-          </p>
-          <div class="input-group">
-            <textarea id="heal-code" class="text-area" placeholder="Paste unclosed JS/TS/JSON code here..."></textarea>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button class="btn-action" onclick="runSelfHealer()">Auto-Heal Syntax</button>
-            <span id="heal-status" style="font-size: 0.78rem; color: var(--text-dim); font-family: var(--font-mono);"></span>
-          </div>
-          <div class="result-box" id="heal-result" style="display: none;"></div>
-        </section>
+          <textarea id="prompt-input" class="text-area" placeholder="Enter any natural request (e.g., 'buatkan game minecraft voxel 3d lengkap dengan zombie', 'bundle kodingan jadi 1 file', or 'add user validation in auth.js')..."></textarea>
 
-        <section class="panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              ⚡ Autonomous Prompt Overclock Studio
-              <span class="panel-badge">Gemini 3.8/3.1</span>
-            </div>
+          <div class="quick-chips">
+            <button class="chip-btn" onclick="setSamplePrompt('buatkan game minecraft voxel 3d lengkap dengan mobs zombie')">🎮 Minecraft 3D</button>
+            <button class="chip-btn" onclick="setSamplePrompt('buatkan game 3d fps shooter arena cs2 style')">🎯 CS2 FPS Arena</button>
+            <button class="chip-btn" onclick="setSamplePrompt('satukan kodingan web ini jadi satu file html standalone')">📦 Standalone Bundle</button>
+            <button class="chip-btn" onclick="setSamplePrompt('architect a high-concurrency microservices backend with rate limiter')">⚡ Deep Overclock</button>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-dim);">
-            Compiles natural language requests into zero-stub, edge-case complete technical specifications.
-          </p>
-          <div class="input-group">
-            <textarea id="prompt-input" class="text-area" placeholder="e.g. buatkan saya game minecraft voxel 3d based on web"></textarea>
+
+          <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem;">
+            <button class="btn-action" onclick="simulateRouting()">🚀 Simulate Autonomous Routing</button>
+            <button class="nav-btn" onclick="launchInAntigravity()">Launch Antigravity CLI</button>
+            <span id="route-status" style="font-size: 0.78rem; color: var(--text-dim); font-family: var(--font-mono);"></span>
           </div>
-          <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <button class="btn-action" onclick="runSynthesizer(true)">🚀 Overclock Prompt</button>
-            <button class="nav-btn" onclick="runSynthesizer(false)">Fast Mode</button>
-            <span id="synth-status" style="font-size: 0.78rem; color: var(--text-dim); font-family: var(--font-mono);"></span>
-          </div>
-          <div class="result-box" id="synth-result" style="display: none;"></div>
+
+          <div class="result-box" id="route-result" style="display: none;"></div>
         </section>
 
       </div>
@@ -715,6 +869,63 @@
 
   </main>
 
+  <!-- CLI COMMAND GUIDE MODAL -->
+  <div class="modal-overlay" id="guide-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚡ Graviton CLI Command Guide</div>
+        <button class="modal-close" onclick="closeCommandGuide()">✕</button>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-dim);">
+        Graviton runs 95% of tasks autonomously from <code>grav "&lt;prompt&gt;"</code>. The commands below are curated utility shortcuts:
+      </p>
+      <table class="command-table">
+        <tbody>
+          <tr>
+            <td>grav "&lt;prompt&gt;"</td>
+            <td>[Default] Autonomous execution with auto-scaffold, live-runner, bundler, and self-healer</td>
+          </tr>
+          <tr>
+            <td>grav diff</td>
+            <td>Review colorized line-by-line diff of recent modifications made by AI</td>
+          </tr>
+          <tr>
+            <td>grav undo</td>
+            <td>Revert files modified or created during the most recent AI session</td>
+          </tr>
+          <tr>
+            <td>grav stats</td>
+            <td>Display unified lifetime token & dollar savings dashboard + active ports (alias: <code>grav hud</code>)</td>
+          </tr>
+          <tr>
+            <td>grav graph</td>
+            <td>Render ASCII/Unicode multi-file dependency graph of project</td>
+          </tr>
+          <tr>
+            <td>grav doc</td>
+            <td>Diagnose system health, Node.js runtime, & Antigravity installation</td>
+          </tr>
+          <tr>
+            <td>grav web</td>
+            <td>Launch this localhost visual developer cockpit (http://localhost:3000)</td>
+          </tr>
+          <tr>
+            <td>grav chat</td>
+            <td>Launch interactive REPL chat session with continuous context</td>
+          </tr>
+          <tr>
+            <td>grav stop [port]</td>
+            <td>Terminate background dev daemon or free blocked development port</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="nav-btn primary" onclick="closeCommandGuide()">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
   <div class="toast" id="toast">
     <span>✔</span>
     <span id="toast-msg">Notification</span>
@@ -730,6 +941,25 @@
       setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
+    function openCommandGuide() {
+      document.getElementById('guide-modal').classList.add('open');
+    }
+
+    function closeCommandGuide() {
+      document.getElementById('guide-modal').classList.remove('open');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'guide-modal') {
+        closeCommandGuide();
+      }
+    }
+
+    function setSamplePrompt(text) {
+      document.getElementById('prompt-input').value = text;
+      simulateRouting();
+    }
+
     async function fetchHud() {
       try {
         const res = await fetch('/api/hud');
@@ -740,7 +970,7 @@
         document.getElementById('hud-prompts').innerText = Number(data.promptsOptimized || 0).toLocaleString();
         document.getElementById('hud-flash-usd').innerText = '$' + Number(data.flashCostSavedUsd || 0).toFixed(4);
         document.getElementById('hud-flash-idr').innerText = 'Rp ' + Number(data.flashCostSavedIdr || 0).toLocaleString('id-ID');
-        document.getElementById('hud-pro-usd').innerText = '$' + Number(data.proCostSavedUsd || 0).toFixed(4);
+        document.getElementById('hud-pro-usd').innerText = '$' + Number(data.proCostSavedUsd || 0).toFixed(3);
         document.getElementById('hud-pro-idr').innerText = 'Rp ' + Number(data.proCostSavedIdr || 0).toLocaleString('id-ID');
         document.getElementById('hud-cache-rate').innerText = Number(data.kvCacheReuseRate || 94.2).toFixed(1) + '%';
       } catch (e) {
@@ -750,34 +980,38 @@
 
     async function fetchPorts() {
       const container = document.getElementById('port-container');
-      const badge = document.getElementById('port-count-badge');
       try {
         const res = await fetch('/api/ports');
         if (!res.ok) return;
         const ports = await res.json();
-        badge.innerText = ports.length + ' Active';
 
-        if (ports.length === 0) {
-          container.innerHTML = '<div class="empty-state">✔ No occupied dev ports. Environment is completely clean.</div>';
+        if (!ports || ports.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="color: #34d399; border-color: rgba(16, 185, 129, 0.2);">
+              ✔ Ports 3000, 5173, 8080 are free. No conflicts detected.
+            </div>`;
           return;
         }
 
-        container.innerHTML = ports.map(p => `
-          <div class="port-item">
-            <div class="port-badge">
-              <span style="color: var(--aqua);">●</span> Port ${p.port}
+        container.innerHTML = '';
+        ports.forEach(p => {
+          const item = document.createElement('div');
+          item.className = 'port-item active';
+          item.innerHTML = `
+            <div>
+              <strong style="color: #fbbf24;">Port ${p.port}</strong>
+              <span style="color: var(--text-dim); margin-left: 0.5rem;">(PID: ${p.pid})</span>
             </div>
-            <div class="port-cmd" title="${p.command || 'Process'}">${p.command || 'PID ' + p.pid}</div>
-            <button class="btn-kill" onclick="killPort(${p.port})">Kill Port</button>
-          </div>
-        `).join('');
+            <button class="btn-stop" onclick="stopPort(${p.port})">Release Port</button>
+          `;
+          container.appendChild(item);
+        });
       } catch (e) {
-        container.innerHTML = '<div class="empty-state" style="color: var(--red);">Failed to inspect dev ports</div>';
+        container.innerHTML = `<div class="empty-state">Could not inspect dev ports.</div>`;
       }
     }
 
-    async function killPort(port) {
-      if (!confirm(`Are you sure you want to terminate the process running on port ${port}?`)) return;
+    async function stopPort(port) {
       try {
         const res = await fetch('/api/stop-port', {
           method: 'POST',
@@ -786,208 +1020,141 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast(`Port ${port} terminated successfully!`);
+          showToast(`Port ${port} released successfully`);
           fetchPorts();
         } else {
-          alert(data.error || 'Failed to kill port');
+          showToast(`Failed: ${data.error}`);
         }
       } catch (e) {
-        alert(e.message);
+        showToast(`Error releasing port ${port}`);
       }
     }
 
     async function fetchGraph() {
       const container = document.getElementById('graph-container');
-      const badge = document.getElementById('graph-count-badge');
       try {
         const res = await fetch('/api/graph');
         if (!res.ok) return;
         graphData = await res.json();
-        badge.innerText = (graphData.fileCount || 0) + ' Files';
-        renderGraphFiles(graphData.files || {});
+        renderGraphList(graphData.nodes || []);
       } catch (e) {
-        container.innerHTML = '<div class="empty-state" style="color: var(--red);">Failed to index dependency graph</div>';
+        container.innerHTML = `<div class="empty-state">No graph available in this workspace.</div>`;
       }
     }
 
-    function renderGraphFiles(files) {
+    function renderGraphList(nodes) {
       const container = document.getElementById('graph-container');
-      const keys = Object.keys(files);
-      if (keys.length === 0) {
-        container.innerHTML = '<div class="empty-state">No source files detected in active workspace.</div>';
+      container.innerHTML = '';
+
+      if (!nodes || nodes.length === 0) {
+        container.innerHTML = `<div class="empty-state">No source files indexed yet.</div>`;
         return;
       }
 
-      container.innerHTML = keys.map(k => {
-        const f = files[k];
-        const isEntry = graphData.entryPoints && graphData.entryPoints.includes(k);
-        return `
-          <div class="file-node ${isEntry ? 'entry' : ''}">
-            <div class="file-info">
-              <span>${isEntry ? '⭐' : '📄'}</span>
-              <strong style="color: ${isEntry ? 'var(--aqua-bright)' : '#fff'};">${k}</strong>
-            </div>
-            <div class="file-stats">
-              <span>${(f.size / 1024).toFixed(1)} KB</span>
-              <span>•</span>
-              <span>${f.imports?.length || 0} imp</span>
-              <span>•</span>
-              <span>${f.importedBy?.length || 0} callers</span>
-            </div>
+      nodes.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'graph-item';
+        const inDeps = n.incomingDeps ? n.incomingDeps.length : 0;
+        const outDeps = n.dependencies ? n.dependencies.length : 0;
+        item.innerHTML = `
+          <div class="file-name">
+            <span>📄</span>
+            <span>${n.relativePath || n.file}</span>
+          </div>
+          <div class="file-deps-tag">
+            ${outDeps} out / ${inDeps} in
           </div>
         `;
-      }).join('');
+        container.appendChild(item);
+      });
     }
 
     function filterGraphList() {
-      if (!graphData || !graphData.files) return;
-      const q = document.getElementById('graph-search').value.toLowerCase().trim();
-      const filtered = {};
-      for (const [k, v] of Object.entries(graphData.files)) {
-        if (k.toLowerCase().includes(q)) filtered[k] = v;
-      }
-      renderGraphFiles(filtered);
+      if (!graphData || !graphData.nodes) return;
+      const query = document.getElementById('graph-search').value.toLowerCase().trim();
+      const filtered = graphData.nodes.filter(n => {
+        const pathStr = (n.relativePath || n.file || '').toLowerCase();
+        return pathStr.includes(query);
+      });
+      renderGraphList(filtered);
     }
 
-    async function runScaffolder() {
-      const domain = document.getElementById('scaffold-domain').value;
-      const targetDir = document.getElementById('scaffold-dir').value.trim() || '.';
-      const resultBox = document.getElementById('scaffold-result');
-      resultBox.style.display = 'block';
-      resultBox.innerText = `Scaffolding ${domain} boilerplate in ${targetDir}...`;
-
-      try {
-        const res = await fetch('/api/scaffold', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ domain, targetDir })
-        });
-        const data = await res.json();
-        if (data.success) {
-          resultBox.innerHTML = `
-✔ Scaffolding Complete!
-Domain        : ${data.domain}
-Target Dir    : ${data.targetDir}
-Files Created : ${data.filesCreated.join(', ')}
-Template Size : ${(data.templateSizeBytes / 1024).toFixed(1)} KB
-<br><span style="color:#10b981;">👉 Ready for Antigravity with zero token waste!</span>
-          `;
-          showToast(`Scaffolded ${domain} successfully!`);
-          fetchGraph();
-        } else {
-          resultBox.innerText = `✖ Error: ${data.error}`;
-        }
-      } catch (e) {
-        resultBox.innerText = `✖ Network Error: ${e.message}`;
-      }
-    }
-
-    async function runBundler() {
-      const entry = document.getElementById('bundle-entry').value.trim() || 'index.html';
-      const resultBox = document.getElementById('bundle-result');
-      resultBox.style.display = 'block';
-      resultBox.innerText = `Bundling ${entry} into a standalone single file...`;
-
-      try {
-        const res = await fetch('/api/bundle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entry })
-        });
-        const data = await res.json();
-        if (data.success) {
-          resultBox.innerHTML = `
-✔ Bundled successfully!
-Output file   : ${data.output}
-Bundled size  : ${(data.stats.bundledSizeBytes / 1024).toFixed(1)} KB
-Inlined CSS   : ${data.stats.inlinedStyles} tags
-Inlined JS    : ${data.stats.inlinedScripts} tags
-Inlined Imgs  : ${data.stats.inlinedAssets} assets
-<br><a href="/${data.output}" target="_blank" style="color: var(--aqua); text-decoration: underline;">👉 Click here to test bundled standalone app</a>
-          `;
-          showToast(`Bundled ${entry} successfully!`);
-        } else {
-          resultBox.innerText = `✖ Error: ${data.error}`;
-        }
-      } catch (e) {
-        resultBox.innerText = `✖ Network Error: ${e.message}`;
-      }
-    }
-
-    async function runSelfHealer() {
-      const code = document.getElementById('heal-code').value;
-      const resultBox = document.getElementById('heal-result');
-      const statusSpan = document.getElementById('heal-status');
-
-      if (!code.trim()) {
-        alert('Please paste code to heal');
-        return;
-      }
-
-      statusSpan.innerText = 'Analyzing AST...';
-      try {
-        const res = await fetch('/api/heal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filePath: 'sample.js', code })
-        });
-        const data = await res.json();
-        statusSpan.innerText = data.wasHealed ? '✔ Repaired' : '✔ Clean (No syntax issues)';
-        resultBox.style.display = 'block';
-
-        let issuesText = data.issuesFixed?.length 
-          ? `// Issues Fixed:\n// • ${data.issuesFixed.join('\n// • ')}\n\n`
-          : `// No syntax errors found.\n\n`;
-
-        resultBox.innerText = issuesText + data.healedCode;
-        showToast(data.wasHealed ? 'Syntax auto-healed!' : 'Code is already valid');
-      } catch (e) {
-        statusSpan.innerText = '✖ Error';
-        resultBox.innerText = e.message;
-      }
-    }
-
-    function loadSampleBrokenCode() {
-      document.getElementById('heal-code').value = `function calculateTotal(cart) {
-  if (!cart) {
-    return 0;
-  
-  const formatted = {
-    items: cart.items,
-    total: cart.items.reduce((sum, item) => sum + item.price, 0),
-  
-  return formatted;`;
-      showToast('Loaded sample broken code with missing brackets & trailing comma');
-    }
-
-    async function runSynthesizer(deep) {
+    async function simulateRouting() {
       const prompt = document.getElementById('prompt-input').value.trim();
-      const resultBox = document.getElementById('synth-result');
-      const statusSpan = document.getElementById('synth-status');
+      const statusEl = document.getElementById('route-status');
+      const resultBox = document.getElementById('route-result');
 
       if (!prompt) {
-        alert('Please enter a prompt to overclock');
+        showToast('Please enter a prompt first.');
         return;
       }
 
-      statusSpan.innerText = 'Overclocking prompt...';
-      resultBox.style.display = 'block';
-      resultBox.innerText = 'Compiling cognitive contracts and zero-stub directives...';
-
+      statusEl.innerText = 'Analyzing intent...';
       try {
-        const res = await fetch('/api/synthesize', {
+        const res = await fetch('/api/route', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, deep })
+          body: JSON.stringify({ prompt })
         });
         const data = await res.json();
-        statusSpan.innerText = '✔ Overclocked';
-        resultBox.innerText = `[TOKENS ESTIMATED]: Saved ~${data.stats?.tokensSaved || 0} tokens\n\n` + data.optimizedText;
-        showToast('Prompt successfully overclocked with zero-stub blueprints!');
-        fetchHud();
+
+        let output = `=== [GRAVITON AUTONOMOUS ROUTING ANALYSIS] ===\n\n`;
+        output += `Input Prompt : "${prompt}"\n`;
+
+        if (data.playIntent && data.playIntent.handled) {
+          output += `Intent       : 🎮 PURE PLAY / PREVIEW INTENT\n`;
+          output += `Action       : Launch live-reload server & auto-open default browser tab.\n`;
+          output += `Token Cost   : 0 tokens (Executed 100% locally in 0ms)\n`;
+        } else if (data.bundleIntent && data.bundleIntent.isBundleIntent) {
+          if (data.bundleIntent.isPure) {
+            output += `Intent       : 📦 PURE STANDALONE BUNDLE INTENT\n`;
+            output += `Action       : Compile index.html + CSS + JS into single dist/bundle.html.\n`;
+            output += `Token Cost   : 0 tokens (Executed 100% locally in 0ms, AI skipped)\n`;
+          } else {
+            output += `Intent       : 📦 HYBRID CODE EDIT + BUNDLE INTENT\n`;
+            output += `Action       : Forward code changes to Antigravity, then auto-bundle post-execution.\n`;
+          }
+        } else if (data.scaffoldIntent && data.scaffoldIntent.triggered) {
+          output += `Intent       : 🏗️ ZERO-TOKEN PROJECT CREATION (${data.scaffoldIntent.domain})\n`;
+          output += `Action 1     : Scaffold runnable 60 FPS foundation on disk (0 tokens).\n`;
+          output += `Action 2     : Spawn background live-reload server & open browser tab.\n`;
+          output += `Action 3     : Inject foundation directive to tell Antigravity not to rewrite boilerplate.\n`;
+          output += `Token Savings: ~12,500 tokens economized!\n\n`;
+          output += `Directive:\n${data.scaffoldIntent.directive}\n`;
+        } else {
+          output += `Intent       : ⚡ STANDARD CODE / ARCHITECTURAL TASK\n`;
+          output += `Action       : Apply AST indexing, delta compression & brevity overclock.\n`;
+        }
+
+        resultBox.innerText = output;
+        resultBox.style.display = 'block';
+        statusEl.innerText = 'Analysis complete.';
       } catch (e) {
-        statusSpan.innerText = '✖ Error';
-        resultBox.innerText = e.message;
+        statusEl.innerText = 'Simulation failed.';
+        showToast('Error during intent simulation.');
+      }
+    }
+
+    async function launchInAntigravity() {
+      const prompt = document.getElementById('prompt-input').value.trim();
+      if (!prompt) {
+        showToast('Please enter a prompt to launch in Antigravity.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/forward-antigravity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Antigravity CLI launched in terminal window!');
+        } else {
+          showToast(`Error: ${data.error}`);
+        }
+      } catch (e) {
+        showToast('Could not reach backend server.');
       }
     }
 
@@ -995,16 +1162,14 @@ Inlined Imgs  : ${data.stats.inlinedAssets} assets
       fetchHud();
       fetchPorts();
       fetchGraph();
-      showToast('HUD, Port Guard & Dependency Graph refreshed!');
+      showToast('Cockpit telemetry updated!');
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      fetchHud();
-      fetchPorts();
-      fetchGraph();
-      setInterval(fetchHud, 4000);
-      setInterval(fetchPorts, 8000);
-    });
+    // Initial load
+    fetchHud();
+    fetchPorts();
+    fetchGraph();
+    setInterval(fetchHud, 10000);
   </script>
 </body>
 </html>

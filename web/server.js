@@ -12,6 +12,7 @@ import { bundleWebApplication } from '../src/bundler.js';
 import { selfHealFile } from '../src/self-healer.js';
 import { listActivePorts, killProcessOnPort } from '../src/port-guard.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
+import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent } from '../src/autonomous-router.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -178,6 +179,28 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1i. API: POST /api/route (Autonomous Intent Simulation & Diagnostics)
+  if (req.method === 'POST' && pathname === '/api/route') {
+    try {
+      const body = await parseJsonBody(req);
+      const prompt = body.prompt || '';
+      const playIntent = await detectPlayIntent(prompt, process.cwd());
+      const bundleIntent = detectBundleIntent(prompt, process.cwd());
+      const scaffoldIntent = await detectScaffoldIntent(prompt, process.cwd());
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        prompt,
+        playIntent,
+        bundleIntent,
+        scaffoldIntent
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
   // 2. API: POST /api/synthesize
   if (req.method === 'POST' && pathname === '/api/synthesize') {
     try {
@@ -294,7 +317,7 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   ⚡ GRAVITON V3.9.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
+      console.log(`   ⚡ GRAVITON V3.12.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
       console.log(`  Cockpit URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {
