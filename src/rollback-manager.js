@@ -124,12 +124,75 @@ export function saveSessionManifest(cwd = process.cwd(), conversationId = '', ba
 }
 
 /**
+ * Retrieves the list of reversible items from the latest workspace session manifest.
+ * Each item has a 1-based index (id), type ('modified' | 'created'), and relative path.
+ * @param {string} cwd
+ * @returns {Array<{ id: number, type: 'modified' | 'created', path: string, original?: string, backup?: string }>}
+ */
+export function listRollbackItems(cwd = process.cwd()) {
+  const normalizedCwd = path.resolve(cwd);
+  let manifest = null;
+
+  const localManifest = path.join(normalizedCwd, '.graviton-manifest.json');
+  if (fs.existsSync(localManifest)) {
+    try {
+      manifest = JSON.parse(fs.readFileSync(localManifest, 'utf8'));
+    } catch {}
+  }
+
+  if (!manifest) {
+    try {
+      const manifestsDir = getManifestsDir();
+      const indexPath = path.join(manifestsDir, 'workspace-manifests.json');
+      if (fs.existsSync(indexPath)) {
+        const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        manifest = index[normalizedCwd];
+      }
+    } catch {}
+  }
+
+  if (!manifest) return [];
+
+  const items = [];
+  let counter = 1;
+
+  if (Array.isArray(manifest.modified)) {
+    for (const mod of manifest.modified) {
+      const rel = path.relative(normalizedCwd, mod.original).replace(/\\/g, '/');
+      items.push({
+        id: counter++,
+        type: 'modified',
+        path: rel,
+        original: mod.original,
+        backup: mod.backup
+      });
+    }
+  }
+
+  if (Array.isArray(manifest.created)) {
+    for (const createdPath of manifest.created) {
+      const rel = path.relative(normalizedCwd, createdPath).replace(/\\/g, '/');
+      items.push({
+        id: counter++,
+        type: 'created',
+        path: rel,
+        original: createdPath
+      });
+    }
+  }
+
+  return items;
+}
+
+/**
  * Reverts the workspace to the state prior to the most recent AI session.
+ * Supports granular selective rollback by item indices (e.g. [1, 2]).
  * Restores modified files from shadow backup and deletes newly created files.
  * @param {string} cwd
- * @returns {{ success: boolean, restored: string[], removed: string[], message?: string }}
+ * @param {number[]|null} [targetIndices] Optional 1-based indices to selectively rollback
+ * @returns {{ success: boolean, restored: string[], removed: string[], remainingCount?: number, message?: string }}
  */
-export function executeRollback(cwd = process.cwd()) {
+export function executeRollback(cwd = process.cwd(), targetIndices = null) {
   const normalizedCwd = path.resolve(cwd);
   let manifest = null;
 
@@ -162,59 +225,126 @@ export function executeRollback(cwd = process.cwd()) {
     };
   }
 
+  // Build unified item list
+  const allItems = [];
+  let counter = 1;
+  if (Array.isArray(manifest.modified)) {
+    for (const mod of manifest.modified) {
+      allItems.push({
+        id: counter++,
+        type: 'modified',
+        original: mod.original,
+        backup: mod.backup,
+        rel: path.relative(normalizedCwd, mod.original).replace(/\\/g, '/')
+      });
+    }
+  }
+  if (Array.isArray(manifest.created)) {
+    for (const createdPath of manifest.created) {
+      allItems.push({
+        id: counter++,
+        type: 'created',
+        original: createdPath,
+        rel: path.relative(normalizedCwd, createdPath).replace(/\\/g, '/')
+      });
+    }
+  }
+
+  // Filter items if specific targetIndices provided (e.g. [1, 2])
+  let itemsToProcess = allItems;
+  let hasFilter = false;
+  if (Array.isArray(targetIndices) && targetIndices.length > 0) {
+    hasFilter = true;
+    const targetsSet = new Set(targetIndices.map(n => Number(n)));
+    itemsToProcess = allItems.filter(item => targetsSet.has(item.id));
+    if (itemsToProcess.length === 0) {
+      return {
+        success: false,
+        restored: [],
+        removed: [],
+        message: `No matching items found for item numbers: ${targetIndices.join(', ')} (Available: 1 to ${allItems.length})`
+      };
+    }
+  }
+
   const restored = [];
   const removed = [];
+  const processedIds = new Set();
 
-  // Revert modified files
-  if (Array.isArray(manifest.modified)) {
-    for (const item of manifest.modified) {
-      const originalPath = item.original;
-      const backupPath = item.backup;
-      if (backupPath && fs.existsSync(backupPath)) {
+  for (const item of itemsToProcess) {
+    if (item.type === 'modified') {
+      if (item.backup && fs.existsSync(item.backup)) {
         try {
-          const originalDir = path.dirname(originalPath);
+          const originalDir = path.dirname(item.original);
           if (!fs.existsSync(originalDir)) {
             fs.mkdirSync(originalDir, { recursive: true });
           }
-          fs.copyFileSync(backupPath, originalPath);
-          const rel = path.relative(normalizedCwd, originalPath).replace(/\\/g, '/');
-          restored.push(rel);
+          fs.copyFileSync(item.backup, item.original);
+          restored.push(item.rel);
+          processedIds.add(item.id);
         } catch {}
       }
-    }
-  }
-
-  // Delete newly created files
-  if (Array.isArray(manifest.created)) {
-    for (const filePath of manifest.created) {
-      if (fs.existsSync(filePath)) {
+    } else if (item.type === 'created') {
+      if (fs.existsSync(item.original)) {
         try {
-          fs.unlinkSync(filePath);
-          const rel = path.relative(normalizedCwd, filePath).replace(/\\/g, '/');
-          removed.push(rel);
+          fs.unlinkSync(item.original);
+          removed.push(item.rel);
+          processedIds.add(item.id);
         } catch {}
+      } else {
+        removed.push(item.rel);
+        processedIds.add(item.id);
       }
     }
   }
 
-  // Clean up local manifest so rollback is not accidentally duplicated
-  try {
-    if (fs.existsSync(localManifest)) {
-      fs.unlinkSync(localManifest);
-    }
-    const manifestsDir = getManifestsDir();
-    const indexPath = path.join(manifestsDir, 'workspace-manifests.json');
-    if (fs.existsSync(indexPath)) {
-      const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-      delete index[normalizedCwd];
-      fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
-    }
-  } catch {}
+  // Update or clear manifest
+  const remainingItems = allItems.filter(item => !processedIds.has(item.id));
+
+  if (remainingItems.length === 0 || !hasFilter) {
+    // Completely cleaned up
+    try {
+      if (fs.existsSync(localManifest)) {
+        fs.unlinkSync(localManifest);
+      }
+      const manifestsDir = getManifestsDir();
+      const indexPath = path.join(manifestsDir, 'workspace-manifests.json');
+      if (fs.existsSync(indexPath)) {
+        const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        delete index[normalizedCwd];
+        fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
+      }
+    } catch {}
+  } else {
+    // Partial rollback: update manifest with remaining items
+    const remainingModified = remainingItems
+      .filter(it => it.type === 'modified')
+      .map(it => ({ original: it.original, backup: it.backup }));
+    const remainingCreated = remainingItems
+      .filter(it => it.type === 'created')
+      .map(it => it.original);
+
+    manifest.modified = remainingModified;
+    manifest.created = remainingCreated;
+
+    try {
+      fs.writeFileSync(localManifest, JSON.stringify(manifest, null, 2), 'utf8');
+      const manifestsDir = getManifestsDir();
+      const indexPath = path.join(manifestsDir, 'workspace-manifests.json');
+      if (fs.existsSync(indexPath)) {
+        const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+        index[normalizedCwd] = manifest;
+        fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
+      }
+    } catch {}
+  }
 
   return {
     success: true,
     restored,
     removed,
-    message: `Rollback complete: ${restored.length} files restored, ${removed.length} new files removed.`
+    remainingCount: remainingItems.length,
+    message: `Rollback complete: ${restored.length} files restored, ${removed.length} new files removed.` +
+      (remainingItems.length > 0 ? ` (${remainingItems.length} file(s) remain in session manifest)` : '')
   };
 }

@@ -238,7 +238,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
     }
 
     if (input === '/undo' || input === '/rollback') {
-      console.log('\x1b[36m[GRAVITON]\x1b[0m Running Safety Rollback Guard...');
+      console.log('\x1b[36m[GRAVITON SAFETY ROLLBACK]\x1b[0m Running Safety Rollback Guard...');
       const res = executeRollback(cwd);
       if (res.success) {
         console.log(`\x1b[32m✔  Rollback completed: ${res.restored.length} files restored, ${res.removed.length} new files removed.\x1b[0m`);
@@ -356,7 +356,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         targetConvId = existingSession.id;
         continueSession = true;
         activeTitle = existingSession.title;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing topic: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON SESSION MANAGER]\x1b[0m Continuing topic: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
         const autoComp = checkAndApplySlidingWindow(cwd, targetConvId);
         if (autoComp.autoCompacted) {
           console.log(`\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Distilled ${autoComp.turnsCompacted} earlier turns into working memory (Estimated ~${autoComp.tokensSavedEstimate.toLocaleString()} tokens saved).`);
@@ -403,7 +403,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         cwd,
         isDeep: options.isDeep || false,
         effort: modelInfo.effort,
-        model: modelInfo.modelName,
+        model: modelInfo.baseModel || modelInfo.modelName,
         modelTier: modelInfo.tier,
         modelReason: modelInfo.reason
       });

@@ -30,7 +30,7 @@ import {
   getConversationHistory,
   formatConversationHistory
 } from '../src/session-manager.js';
-import { executeRollback } from '../src/rollback-manager.js';
+import { executeRollback, listRollbackItems } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort, detectWorkspaceDevServer } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
 import { compactWorkspaceSession, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
@@ -105,7 +105,7 @@ const rawArgs = process.argv.slice(2);
 
 async function main() {
   // 1. Version Banner: At the very beginning of CLI execution
-  console.log('\x1b[1;36m[Graviton Active]\x1b[0m');
+  console.log('\x1b[1;36m[GRAVITON ACTIVE]\x1b[0m');
 
   // Fire-and-forget self-cleaning shadow backup (zero latency impact)
   purgeOldBackups();
@@ -448,10 +448,37 @@ async function main() {
     process.exit(0);
   }
 
-  // 5b. SAFETY ROLLBACK GUARD
+  // 5b. SAFETY ROLLBACK GUARD (Supports granular selective undo: grav --undo 1, 2)
   if (command === 'undo' || command === 'rollback' || command === 'rb' || command === '--undo' || command === '--rollback') {
-    console.log('\x1b[36m[GRAVITON]\x1b[0m Initiating Safety Rollback Guard...');
-    const res = executeRollback(process.cwd());
+    const rawRestArgs = filteredArgs.slice(1).join(' ').trim();
+
+    // List manifest items: grav undo list / grav --undo --list
+    if (rawRestArgs === 'list' || rawRestArgs === '--list' || rawRestArgs === 'ls') {
+      const items = listRollbackItems(process.cwd());
+      if (items.length === 0) {
+        console.log(`\x1b[33m[!] No recorded Graviton session manifest found to rollback in this workspace.\x1b[0m`);
+      } else {
+        console.log(`\n\x1b[1m\x1b[36m=== GRAVITON ROLLBACK MANIFEST ITEMS ===\x1b[0m`);
+        items.forEach(item => {
+          const typeTag = item.type === 'modified' ? '\x1b[33m[Modified]\x1b[0m' : '\x1b[32m[Created]\x1b[0m';
+          console.log(`  \x1b[1m${item.id}.\x1b[0m ${typeTag} ${item.path}`);
+        });
+        console.log(`\n\x1b[90mRun grav --undo <numbers> (e.g. grav --undo 1, 2) to selectively rollback.\x1b[0m\n`);
+      }
+      process.exit(0);
+    }
+
+    // Parse target indices if provided: e.g. "1, 2" or "1 2"
+    let targetIndices = null;
+    if (rawRestArgs) {
+      const parsed = rawRestArgs.split(/[,\s]+/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+      if (parsed.length > 0) {
+        targetIndices = parsed;
+      }
+    }
+
+    console.log('\x1b[36m[GRAVITON SAFETY ROLLBACK]\x1b[0m Initiating Safety Rollback Guard' + (targetIndices ? ` for item(s) [${targetIndices.join(', ')}]...` : '...'));
+    const res = executeRollback(process.cwd(), targetIndices);
     if (res.success) {
       console.log(`\n\x1b[1m\x1b[32m=== GRAVITON ROLLBACK SUCCESSFUL ===\x1b[0m`);
       if (res.restored.length > 0) {
@@ -462,7 +489,12 @@ async function main() {
         console.log(`\x1b[33m  ✔  Removed ${res.removed.length} newly created file(s):\x1b[0m`);
         res.removed.forEach(f => console.log(`     - \x1b[1m${f}\x1b[0m`));
       }
-      console.log(`\n\x1b[90mWorkspace restored to pre-session state.\x1b[0m\n`);
+      if (res.remainingCount > 0) {
+        console.log(`\n\x1b[36m  ●  Remaining files in session manifest:\x1b[0m \x1b[1m${res.remainingCount}\x1b[0m \x1b[90m(use 'grav --undo list' to view)\x1b[0m`);
+      } else {
+        console.log(`\n\x1b[90mWorkspace restored to pre-session state.\x1b[0m`);
+      }
+      console.log('');
     } else {
       console.log(`\x1b[33m[!] ${res.message || 'No changes to rollback.'}\x1b[0m`);
     }
@@ -476,7 +508,7 @@ async function main() {
       console.error('\x1b[31mError: Please specify the command to run as a background daemon (e.g. graviton start "node server.js").\x1b[0m');
       process.exit(1);
     }
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting background daemon: \x1b[1m${cmdToRun}\x1b[0m...`);
+    console.log(`\x1b[36m[GRAVITON DEV DAEMON]\x1b[0m Starting background daemon: \x1b[1m${cmdToRun}\x1b[0m...`);
     const daemon = startBackgroundDaemon(cmdToRun, process.cwd());
     console.log(`\x1b[32m✔  Background daemon running (PID: ${daemon.pid})\x1b[0m`);
     console.log(`\x1b[90mUse 'graviton stop' to terminate, or 'graviton ports' to inspect listening ports.\x1b[0m\n`);
@@ -486,7 +518,7 @@ async function main() {
   // 5d. PORT GUARD & DAEMON STOPPER
   if (command === 'stop') {
     const target = filteredArgs[1] || 'all';
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m Stopping daemons / freeing port: \x1b[1m${target}\x1b[0m...`);
+    console.log(`\x1b[36m[GRAVITON PORT GUARD]\x1b[0m Stopping daemons / freeing port: \x1b[1m${target}\x1b[0m...`);
     const results = stopDaemonOrPort(target, process.cwd());
     if (results.length > 0) {
       results.forEach(r => {
@@ -521,7 +553,7 @@ async function main() {
 
   // 5g. SMART SESSION COMPACTOR
   if (command === 'compact' || command === '--compact' || command === 'cmp') {
-    console.log('\x1b[36m[GRAVITON]\x1b[0m Compacting active workspace session...');
+    console.log('\x1b[36m[GRAVITON SESSION COMPACTOR]\x1b[0m Compacting active workspace session...');
     const res = compactWorkspaceSession(process.cwd());
     if (res.success) {
       console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
@@ -747,7 +779,7 @@ async function main() {
         targetConversationId = selected.id;
         continueSession = true;
         activeTitle = selected.title;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Resuming conversation [${conversationTarget}]: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON SESSION MANAGER]\x1b[0m Resuming conversation [${conversationTarget}]: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
       } else {
         console.error(`\x1b[31mError: Conversation '${conversationTarget}' not found.\x1b[0m`);
         process.exit(1);
@@ -758,7 +790,7 @@ async function main() {
         targetConversationId = active.id;
         continueSession = true;
         activeTitle = active.title;
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing conversation: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
+        console.log(`\x1b[36m[GRAVITON SESSION MANAGER]\x1b[0m Continuing conversation: "\x1b[33m${activeTitle}\x1b[0m" (${targetConversationId.slice(0, 8)}...)`);
       } else {
         continueSession = false;
       }
@@ -850,7 +882,7 @@ async function main() {
     if (isPureRunPrompt && isNotInspectOrCreate) {
       const existingDev = detectWorkspaceDevServer(currentCwd);
       if (existingDev && existingDev.exists && existingDev.command) {
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Detected dev server (\x1b[1m${existingDev.command}\x1b[0m). Launching background daemon...`);
+        console.log(`\x1b[36m[GRAVITON DEV DAEMON]\x1b[0m Detected dev server (\x1b[1m${existingDev.command}\x1b[0m). Launching background daemon...`);
         const daemon = startBackgroundDaemon(existingDev.command, currentCwd);
         const url = `http://localhost:${existingDev.port}/`;
         openBrowser(url);
@@ -883,7 +915,7 @@ async function main() {
     console.log(`  Reasoning Effort      : \x1b[1m${modelInfo.effort}\x1b[0m`);
     console.log(`  Selection Reason      : \x1b[90m${modelInfo.reason}\x1b[0m`);
     console.log(`---------------------------------------------------------------`);
-    console.log(`\x1b[1;32m[Graviton Dry-Run]\x1b[0m Pre-flight inspection complete. 0 tokens consumed. Antigravity was not invoked.\n`);
+    console.log(`\x1b[1;32m[GRAVITON DRY-RUN]\x1b[0m Pre-flight inspection complete. 0 tokens consumed. Antigravity was not invoked.\n`);
     process.exit(0);
   }
 
@@ -900,7 +932,7 @@ async function main() {
     isFast,
     userPrompt: input,
     effort: modelInfo.effort,
-    model: modelInfo.modelName,
+    model: modelInfo.baseModel || modelInfo.modelName,
     modelTier: modelInfo.tier,
     modelReason: modelInfo.reason,
     mode: isFast ? 'accept-edits' : (isDeep ? 'plan' : 'accept-edits')

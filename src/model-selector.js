@@ -193,9 +193,17 @@ export function resolveModelAndEffort(options = {}) {
     }
   }
 
+  // 4. Resolve clean base model and execution-safe effort for agy
+  const baseModel = tier === 'pro' ? 'gemini-3.1-pro' : 'gemini-3.8-flash';
+  // Note: Antigravity CLI (agy) only supports 'low' and 'high' effort for gemini-3.1-pro.
+  // For Pro tier with default/medium effort, agyEffort safely maps to 'high' without conflicting flags.
+  const agyEffort = (tier === 'pro' && effort === 'medium') ? 'high' : effort;
+
   return {
     effort,
+    agyEffort,
     tier,
+    baseModel,
     modelName,
     reason: classification.reason
   };

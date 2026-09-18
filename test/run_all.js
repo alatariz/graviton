@@ -41,7 +41,8 @@ const testFiles = [
   'test_v310_auto_compactor.js',
   'test_v311_live_runner.js',
   'test_v312_autonomous_router.js',
-  'test_v313_model_selector.js'
+  'test_v313_model_selector.js',
+  'test_v314_granular_undo_and_model_fix.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

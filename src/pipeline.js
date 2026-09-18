@@ -1032,7 +1032,8 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 6. [BREVITY PROTOCOL]: Output zero pleasantries, zero conversational filler, and zero apologies. Use terse, dense technical fragments. Execute requested tasks directly using tools without asking questions. Always complete requested actions before finishing.
 7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
 8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.
-9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.`.replace(/\r\n/g, '\n');
+9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.
+10. [AUTONOMOUS DIRECT EXECUTION - ZERO APPROVAL REQUESTS]: You are executing with full autonomous privileges (--dangerously-skip-permissions). NEVER output phrases requesting user approval or review, such as "AWAITING USER APPROVAL", "SUMMARY OF ACTIONABLE DECISIONS", "Please review the implementation plan and approve", or ask the user for confirmation. Execute modifications immediately and autonomously.`.replace(/\r\n/g, '\n');
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous

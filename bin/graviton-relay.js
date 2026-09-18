@@ -87,6 +87,49 @@ export function detectFatalErrorPattern(text) {
 }
 
 /**
+ * Cleans raw terminal output:
+ * 1. Drops interactive approval / confirmation prompts ("AWAITING USER APPROVAL...", etc.)
+ * 2. Strips Markdown bold formatting (**text** and __text__)
+ * 3. Strips Markdown header tokens (#, ##, ###)
+ * 4. Strips conversational pleasantries and filler
+ */
+export function cleanTerminalOutput(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  const lines = text.split(/\r?\n/);
+  const cleanedLines = [];
+
+  for (let line of lines) {
+    // Drop approval or confirmation requests
+    if (
+      /AWAITING USER APPROVAL/i.test(line) ||
+      /SUMMARY OF ACTIONABLE DECISIONS/i.test(line) ||
+      /Please review the implementation plan and approve/i.test(line) ||
+      /approve to proceed/i.test(line) ||
+      /User Review Required/i.test(line) ||
+      /Awaiting your approval/i.test(line)
+    ) {
+      continue;
+    }
+
+    // Strip markdown headers (# at start of line)
+    line = line.replace(/^#{1,6}\s+/g, '');
+
+    // Strip markdown bold **text** or __text__
+    line = line.replace(/\*\*(.*?)\*\*/g, '$1');
+    line = line.replace(/__(.*?)__/g, '$1');
+    line = line.replace(/\*\*/g, '');
+
+    // Strip conversational filler / greetings
+    line = line.replace(/^(?:Certainly!|Sure!|Here is|Here's|I have completed|Feel free to|Let me know if)[^.\n]*[.:]/i, '');
+
+    cleanedLines.push(line);
+  }
+
+  return cleanedLines.join('\n');
+}
+
+/**
  * Dynamically resolves the antigravity / agy executable path across Windows, macOS, and Linux
  * by searching through ~/.gemini/bin, AppData/Local/agy/bin, system PATH, and system discovery (where/which).
  * Strictly filters out GUI desktop apps (Antigravity.exe) to ensure only the CLI runner (agy) is selected.
@@ -307,12 +350,31 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     process.exit(1);
   }
 
+  // 1. Resolve normalized model and effort for Antigravity CLI (agy)
+  let resolvedEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
+  let normalizedModel = options.model || '';
+
+  if (normalizedModel) {
+    if (normalizedModel.includes('gemini-3.1-pro')) {
+      normalizedModel = 'gemini-3.1-pro';
+      // agy only supports 'low' and 'high' effort for gemini-3.1-pro
+      if (resolvedEffort === 'medium') {
+        resolvedEffort = 'high';
+      }
+    } else if (normalizedModel.includes('gemini-3.8-flash')) {
+      normalizedModel = 'gemini-3.8-flash';
+    } else if (normalizedModel.includes('gemini-3.7-flash')) {
+      normalizedModel = 'gemini-3.7-flash';
+    }
+  }
+
   if (!options.args && !options.silent) {
-    const modelTag = options.model ? `Model: \x1b[1m${options.model}\x1b[0m | ` : '';
-    const resolvedEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
-    const effortTag = `Effort: \x1b[1m${resolvedEffort}\x1b[0m`;
+    const displayModel = normalizedModel || options.model || '';
+    const modelTag = displayModel ? `Model: \x1b[1m${displayModel}\x1b[0m | ` : '';
+    const userEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
+    const effortTag = `Effort: \x1b[1m${userEffort}\x1b[0m`;
     const reasonTag = options.modelReason ? ` \x1b[90m(${options.modelReason})\x1b[0m` : '';
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m ${modelTag}${effortTag}${reasonTag}`);
+    console.log(`\x1b[36m[GRAVITON MODEL SELECTOR]\x1b[0m ${modelTag}${effortTag}${reasonTag}`);
   }
 
   const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
@@ -323,7 +385,6 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   if (options.args) {
     args = [...options.args];
   } else {
-    const resolvedEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
     const resolvedMode = options.mode || (options.isDeep ? 'plan' : 'accept-edits');
     args = [
       '--dangerously-skip-permissions',
@@ -333,8 +394,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       '--output-format', 'stream-json'
     ];
 
-    if (options.model) {
-      args.push('--model', options.model);
+    if (normalizedModel) {
+      args.push('--model', normalizedModel);
     }
 
     if (options.addDir !== false) {
@@ -432,13 +493,33 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let toolStartTime = null;
 
     // Watchdog and Fail-Fast state
-    // Default idle timeout is 180s (3 minutes) as requested by the user, with a warning at 90s.
-    const IDLE_TIMEOUT_SEC = Number(process.env.GRAVITON_IDLE_TIMEOUT) || (options.idleTimeout || 180);
-    const IDLE_WARN_SEC = Math.floor(IDLE_TIMEOUT_SEC / 2);
+    // Hardcoded idle kill disabled to protect large generation / deep reasoning tasks.
+    // Can be configured via GRAVITON_IDLE_TIMEOUT environment variable if needed.
+    const IDLE_TIMEOUT_SEC = Number(process.env.GRAVITON_IDLE_TIMEOUT) || 0;
+    const IDLE_WARN_SEC = IDLE_TIMEOUT_SEC > 0 ? Math.floor(IDLE_TIMEOUT_SEC / 2) : 90;
     let lastActivityTime = Date.now();
     let hasWarnedIdle = false;
     let aborted = false;
     let failReason = null;
+    let toolLineActive = false;
+    let streamLineBuffer = '';
+
+    const processStreamChunk = (chunk, isFinal = false) => {
+      streamLineBuffer += chunk;
+      const lines = streamLineBuffer.split('\n');
+      if (!isFinal) {
+        streamLineBuffer = lines.pop() || '';
+      } else {
+        streamLineBuffer = '';
+      }
+
+      for (const rawLine of lines) {
+        const cleaned = cleanTerminalOutput(rawLine);
+        if (cleaned && cleaned.trim()) {
+          process.stdout.write(cleaned + '\n');
+        }
+      }
+    };
 
     const recordActivity = () => {
       lastActivityTime = Date.now();
@@ -458,22 +539,22 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       const idleSec = Math.floor((now - lastActivityTime) / 1000);
       const totalElapsedSec = Math.floor((now - startTime) / 1000);
 
-      // Periodic reasoning update when waiting (every 5 seconds when idleSec >= 5, no active tool, and no text streaming)
-      if (!hasReceivedResponse && !currentActiveTool && idleSec >= 5 && idleSec % 5 === 0) {
+      // Periodic reasoning update when waiting (every 30 seconds when idleSec >= 15, no active tool, and no text streaming)
+      if (!hasReceivedResponse && !currentActiveTool && idleSec >= 15 && totalElapsedSec > 0 && totalElapsedSec % 30 === 0) {
         console.log(`\x1b[90m[GRAVITON] AI analyzing context & thinking... (${totalElapsedSec}s elapsed)\x1b[0m`);
       }
 
-      // Gentle warning when quiet for half the idle timeout (90s)
-      if (idleSec >= IDLE_WARN_SEC && !hasWarnedIdle) {
+      // Gentle warning when quiet (only if idle timeout explicitly enabled)
+      if (IDLE_TIMEOUT_SEC > 0 && idleSec >= IDLE_WARN_SEC && !hasWarnedIdle) {
         hasWarnedIdle = true;
         console.log(`\x1b[33m[!] Antigravity is quiet (no activity for ${idleSec}s). Still waiting (limit: ${IDLE_TIMEOUT_SEC}s), or press Ctrl+C to cancel.\x1b[0m`);
       }
 
-      // Inactivity timeout abort at 3 minutes (180s)
-      if (idleSec >= IDLE_TIMEOUT_SEC) {
-        console.error(`\n\x1b[1;31m[GRAVITON FAIL-FAST]\x1b[0m Antigravity stalled with no activity for ${IDLE_TIMEOUT_SEC}s (3 minutes).`);
+      // Inactivity timeout abort ONLY if explicitly configured
+      if (IDLE_TIMEOUT_SEC > 0 && idleSec >= IDLE_TIMEOUT_SEC) {
+        console.error(`\n\x1b[1;31m[GRAVITON FAIL-FAST]\x1b[0m Antigravity stalled with no activity for ${IDLE_TIMEOUT_SEC}s.`);
         console.error(`\x1b[90mTerminated stalled process. No tokens or time wasted waiting blindly.\x1b[0m`);
-        triggerFailFast(`Inactivity timeout: Antigravity stopped responding (no activity for ${IDLE_TIMEOUT_SEC}s / 3m)`);
+        triggerFailFast(`Inactivity timeout: Antigravity stopped responding (no activity for ${IDLE_TIMEOUT_SEC}s)`);
       }
     }, 1000);
 
@@ -502,7 +583,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
           if (data.event === 'step_update' && data.step_update) {
             const step = data.step_update;
 
-            // Real-time tool updates with clear icons and filenames
+            // Real-time tool updates with clear icons and filenames on single line
             if (step.step_type === 'tool') {
               if (step.state === 'ACTIVE') {
                 const toolName = step.tool_name;
@@ -527,15 +608,25 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                 }
 
                 if (toolDesc && toolDesc !== lastReportedTool) {
+                  if (toolLineActive) {
+                    process.stdout.write('\n');
+                    toolLineActive = false;
+                  }
                   lastReportedTool = toolDesc;
-                  console.log(toolDesc);
+                  process.stdout.write(toolDesc);
+                  toolLineActive = true;
                 }
               } else if (step.state === 'DONE') {
                 const dur = step.duration_seconds
                   ? `${step.duration_seconds.toFixed(1)}s`
                   : (toolStartTime ? `${((Date.now() - toolStartTime) / 1000).toFixed(1)}s` : '');
                 const durStr = dur ? ` \x1b[90m(${dur})\x1b[0m` : '';
-                console.log(`   \x1b[32m✔\x1b[0m  Done${durStr}`);
+                if (toolLineActive) {
+                  process.stdout.write(` \x1b[32m✔\x1b[0m  Done${durStr}\n`);
+                  toolLineActive = false;
+                } else {
+                  console.log(`\x1b[32m✔\x1b[0m  Done${durStr}`);
+                }
                 currentActiveTool = null;
                 toolStartTime = null;
               }
@@ -543,9 +634,13 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
             // Stream agent response text live as it arrives
             if (step.step_type === 'agent_response' && step.text_delta) {
+              if (toolLineActive) {
+                process.stdout.write('\n');
+                toolLineActive = false;
+              }
               currentActiveTool = null;
               hasReceivedResponse = true;
-              process.stdout.write(step.text_delta);
+              processStreamChunk(step.text_delta);
             }
 
             // Track tokens
@@ -556,8 +651,14 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
             if (data.result.usage && data.result.usage.total_tokens) {
               turnTokens = data.result.usage.total_tokens;
             }
+            if (toolLineActive) {
+              process.stdout.write('\n');
+              toolLineActive = false;
+            }
             if (!hasReceivedResponse && data.result.response) {
-              process.stdout.write(data.result.response);
+              processStreamChunk(data.result.response, true);
+            } else {
+              processStreamChunk('', true);
             }
             if (data.result.status && data.result.status !== 'SUCCESS') {
               triggerFailFast(`Antigravity result status: ${data.result.status}`);
@@ -565,7 +666,11 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
           }
         } catch {
           // If non-JSON text line, output directly
-          process.stdout.write(line + '\n');
+          if (toolLineActive) {
+            process.stdout.write('\n');
+            toolLineActive = false;
+          }
+          processStreamChunk(line + '\n');
         }
       }
     });
@@ -587,6 +692,11 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
     child.on('close', code => {
       clearInterval(watchdog);
+      if (toolLineActive) {
+        process.stdout.write('\n');
+        toolLineActive = false;
+      }
+      processStreamChunk('', true);
 
       try {
         const latestConvId = getLatestConversationId();
@@ -610,6 +720,10 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       const isOk = !aborted && code === 0 && !failReason;
       const finalStatus = isOk ? 0 : (code !== 0 && code !== null ? code : 1);
       const isTimedOut = Boolean(aborted || (failReason && /timeout/i.test(failReason)));
+
+      if (!isOk) {
+        console.error(`\n\x1b[33m[GRAVITON TIP]\x1b[0m For fast direct execution, use \x1b[1m-f\x1b[0m (e.g. \x1b[36mgrav -f "<task>"\x1b[0m). For deep architectural reasoning, use \x1b[1m-d\x1b[0m (\x1b[36mgrav -d "<task>"\x1b[0m).`);
+      }
 
       if (!isOk && options.rejectOnError) {
         return reject(new Error(failReason || `[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
