@@ -195,12 +195,12 @@ export function formatDoctorReport(result) {
 
   for (const item of result.diagnostics) {
     let icon = '\x1b[32m✔\x1b[0m';
-    if (item.status === 'warn') icon = '\x1b[33m⚠\x1b[0m';
+    if (item.status === 'warn') icon = '\x1b[33m●\x1b[0m';
     if (item.status === 'error') icon = '\x1b[31m✖\x1b[0m';
 
     lines.push(`  ${icon}  \x1b[1m${item.name}\x1b[0m: ${item.details}`);
     if (item.fix) {
-      lines.push(`     \x1b[36m👉 Fix:\x1b[0m ${item.fix}`);
+      lines.push(`     \x1b[36m↳  Fix:\x1b[0m ${item.fix}`);
     }
   }
 

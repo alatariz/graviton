@@ -1,4 +1,4 @@
-# Graviton V3.0.0 Git Ignore Rules
+# Graviton Git Ignore Rules
 node_modules/
 .env*
 .DS_Store

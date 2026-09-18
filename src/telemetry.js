@@ -116,7 +116,7 @@ export function formatTelemetryDashboard(stats = getTelemetry()) {
   return [
     '',
     `${cyan}┌────────────────────────────────────────────────────────────────────────┐${reset}`,
-    `${cyan}│${reset} ${bold}GRAVITON ENTERPRISE TELEMETRY DASHBOARD${reset}                        ${gray}v3.0.0${reset} ${cyan}│${reset}`,
+    `${cyan}│${reset} ${bold}GRAVITON ENTERPRISE TELEMETRY DASHBOARD${reset}                                ${cyan}│${reset}`,
     `${cyan}│${reset} ${gray}Autonomous AI Relay & Lifetime Noise Pruning Metrics${reset}                    ${cyan}│${reset}`,
     `${cyan}├────────────────────────────────────────────────────────────────────────┤${reset}`,
     `${cyan}│${reset}  ${bold}METRIC${reset}                                ${bold}LIFETIME VALUE${reset}                   ${cyan}│${reset}`,

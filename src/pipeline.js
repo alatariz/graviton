@@ -152,14 +152,14 @@ export function pruneNoise(rawText, options = {}) {
   // 0. Rate Limit Interceptor (Fatal Alarm)
   const RATE_LIMIT_REGEX = /429|Too Many Requests|Quota Exceeded|exhausted/i;
   if (RATE_LIMIT_REGEX.test(rawText)) {
-    console.error('\x1b[1m\x1b[31m[🚨 FATAL: ANTIGRAVITY API RATE LIMIT EXCEEDED. TAKE A BREAK.]\x1b[0m');
+    console.error('\x1b[1m\x1b[31m[FATAL: ANTIGRAVITY API RATE LIMIT EXCEEDED. TAKE A BREAK.]\x1b[0m');
     process.exit(1);
   }
 
   // 0b. Unauthenticated Interceptor (Fatal Alarm)
   const UNAUTH_REGEX = /not recognized|not found|unauthorized|login/i;
   if (!options.isPrompt && UNAUTH_REGEX.test(rawText)) {
-    console.error('\x1b[1m\x1b[31m[🚨 FATAL: Antigravity CLI is missing or not authenticated. Please install and login to Antigravity first.]\x1b[0m');
+    console.error('\x1b[1m\x1b[31m[FATAL: Antigravity CLI is missing or not authenticated. Please install and login to Antigravity first.]\x1b[0m');
     process.exit(1);
   }
 
@@ -806,7 +806,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const currentCwd = cwd || process.cwd();
   let cleanedInput = pruneNoise(userInput || '', { isPrompt: true });
 
-  // Stack Trace Squeezer (V2.6.0)
+  // Stack Trace Squeezer
   if (!options.noSqueeze) {
     const traceResult = squeezeMixedContent(cleanedInput, currentCwd);
     if (traceResult.hasTrace) {
@@ -814,7 +814,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     }
   }
 
-  // Autonomous Prompt Architect & Dynamic Reprompter (V3.5.0)
+  // Autonomous Prompt Architect & Dynamic Reprompter
   let architectIntent = 'general';
   if (!options.noArchitect) {
     const architectResult = architectPrompt(cleanedInput, {
@@ -913,7 +913,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
         const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
         const cappedContent = readAndTruncateFile(resolved, 500);
 
-        // DELTA COMPRESSION HOOK (V2.5.0)
+        // DELTA COMPRESSION HOOK
         // If continuous conversation session is active and delta is not disabled:
         if (options.isContinuous && !options.noDelta) {
           const deltaResult = resolveDeltaHydration(resolved, rawFileContent, currentCwd, {
@@ -1036,7 +1036,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous
-    ? `[GRAVITON V2.0 SESSION CONTINUITY ACTIVE]\nWorkspace tree already indexed in previous turn. Delta Target Scope applied below.`
+    ? `[GRAVITON SESSION CONTINUITY ACTIVE]\nWorkspace tree already indexed in previous turn. Delta Target Scope applied below.`
     : workspaceInfo;
 
   const targetDirectiveBlock = targetScope && targetScope.directive ? `\n\n${targetScope.directive}` : '';
@@ -1063,7 +1063,7 @@ ${cleanedInput}`.replace(/\r\n/g, '\n').trim();
   const promptTokens = estimateTokens(finalPrompt);
   recordOdometer(promptTokens);
 
-  // Local Analytics Telemetry (V2.0.0)
+  // Local Analytics Telemetry
   const rawInputTokens = estimateTokens(userInput);
   const cleanedInputTokens = estimateTokens(cleanedInput);
   const inputTokensSaved = Math.max(0, rawInputTokens - cleanedInputTokens);
@@ -1152,7 +1152,7 @@ if (process.argv[1]) {
     if (isDirectCli) {
       process.on('uncaughtException', (err) => {
         const message = err && err.message ? err.message : String(err);
-        console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
+        console.error(`\x1b[1;31m[GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
         process.exit(1);
       });
       await import('../bin/graviton.js');

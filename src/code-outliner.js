@@ -848,15 +848,15 @@ export function generateAstFunctionIndex(code, filename = '', options = {}) {
   // Format the surgical view index
   const headerLines = [
     `[GRAVITON AST FUNCTION INDEX: ${displayName} (${totalLines} lines | ${functionEntries.length} declarations)]`,
-    `⚡ Large file detected (>250 lines). DO NOT load the entire file into context.`,
-    `⚡ Use 'view_file' with 'StartLine' and 'EndLine' targeting specific ranges below:`,
+    `Large file detected (>250 lines). DO NOT load the entire file into context.`,
+    `Use 'view_file' with 'StartLine' and 'EndLine' targeting specific ranges below:`,
     `--------------------------------------------------------------------------------`
   ];
 
   const rowLines = entries.map(e => {
     const range = `L${e.startLine}-L${e.endLine}`.padEnd(10, ' ');
     const typeLabel = e.type === 'setup' ? 'Setup' : e.type;
-    const focusMarker = targetFocusEntry && targetFocusEntry.name === e.name ? ' 🎯 [TARGET FOCUS]' : '';
+    const focusMarker = targetFocusEntry && targetFocusEntry.name === e.name ? ' [TARGET FOCUS]' : '';
     return `  ${range} : [${typeLabel}] ${e.signature || e.name}${focusMarker}`;
   });
 
@@ -899,13 +899,13 @@ export function formatAstFunctionIndex(astResult, options = {}) {
   const reset = isAnsi ? '\x1b[0m' : '';
 
   const header = `\n${bold}${cyan}================================================================================${reset}\n` +
-    `${bold}  GRAVITON AST FUNCTION INDEXER ${reset}${gray}(V3.3.0 Large File Shield)${reset}\n` +
+    `${bold}  GRAVITON AST FUNCTION INDEXER ${reset}${gray}(Large File Shield)${reset}\n` +
     `${bold}${cyan}================================================================================${reset}\n` +
     `  ${bold}File:${reset} ${astResult.filename} ${gray}(${astResult.totalLines} lines)${reset}\n` +
     `  ${bold}Declarations:${reset} ${green}${astResult.functionsFound} found${reset}\n` +
     `  ${bold}Token Economy:${reset} ~${astResult.originalTokens.toLocaleString()} tokens → ~${astResult.indexTokens.toLocaleString()} tokens ` +
     `${bold}${green}(${astResult.reductionPct}% saved, ~${astResult.tokensSavedEstimate.toLocaleString()} tokens protected)${reset}\n\n` +
-    `  ${yellow}⚡ Surgical View Guide: Use 'view_file' with 'StartLine' and 'EndLine' below:${reset}\n` +
+    `  ${yellow}Surgical View Guide: Use 'view_file' with 'StartLine' and 'EndLine' below:${reset}\n` +
     `  ${gray}----------------------------------------------------------------------------${reset}`;
 
   const rows = astResult.entries.map(e => {

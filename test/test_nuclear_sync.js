@@ -13,7 +13,7 @@ const result = runAntigravityWithAutoAllow('test', {
 assert.ok(result && typeof result === 'object', 'Result must be an object from spawnSync');
 assert.strictEqual(typeof result.then, 'undefined', 'Result must NOT be a Promise (strictly synchronous)');
 assert.strictEqual(result.status, 0, 'Exit status must be 0 for --version');
-console.log('  ✔ Function executed completely synchronously, returned status 0 without any Promise');
+console.log('  ✔  Function executed completely synchronously, returned status 0 without any Promise');
 
 // 2. Test Error Checking & Non-Zero Exit Code
 console.log('\n[TEST 2] Non-zero status handling');
@@ -35,7 +35,7 @@ try {
   });
 } catch (err) {
   assert.ok(loggedError, 'Must log [GRAVITON ERROR] on non-zero exit code');
-  console.log('  ✔ Non-zero exit code handled cleanly');
+  console.log('  ✔  Non-zero exit code handled cleanly');
 } finally {
   console.log = origLog;
 }

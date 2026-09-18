@@ -235,9 +235,9 @@ pub async fn run_service(cfg: Config) -> Result<(), ()> {
   assert.strictEqual(bigFileRes.isLargeFile, true, 'Must identify as large file');
   assert.ok(bigFileRes.totalLines > 250, 'Must be > 250 lines');
   assert.ok(bigFileRes.reductionPct >= 80, `Must achieve >=80% token reduction (actual: ${bigFileRes.reductionPct}%)`);
-  assert.ok(bigFileRes.formattedIndex.includes('⚡ Large file detected (>250 lines). DO NOT load the entire file into context.'));
-  assert.ok(bigFileRes.formattedIndex.includes("⚡ Use 'view_file' with 'StartLine' and 'EndLine' targeting specific ranges below:"));
-  console.log(`✔ PASS: 350-line file reduced by ${bigFileRes.reductionPct}% (~${bigFileRes.tokensSavedEstimate.toLocaleString()} tokens saved).\n`);
+  assert.ok(bigFileRes.formattedIndex.includes('Large file detected (>250 lines). DO NOT load the entire file into context.'));
+  assert.ok(bigFileRes.formattedIndex.includes("Use 'view_file' with 'StartLine' and 'EndLine' targeting specific ranges below:"));
+  console.log(`✔  PASS: 350-line file reduced by ${bigFileRes.reductionPct}% (~${bigFileRes.tokensSavedEstimate.toLocaleString()} tokens saved).\n`);
 
   // [TEST 7] Pipeline constructSuperPrompt Integration
   console.log('[TEST 7] Testing constructSuperPrompt hydration with large file (>250 lines)...');

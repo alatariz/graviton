@@ -274,7 +274,7 @@ export function formatAsciiGraph(graph) {
   lines.push(`Total Files: \x1b[32m${fileCount}\x1b[0m | Dependency Links: \x1b[36m${edgeCount}\x1b[0m | Isolated: \x1b[33m${isolatedFiles.length}\x1b[0m`);
   if (circular.length > 0) {
     lines.push(`Circular Dependency Warnings (${circular.length}):`);
-    circular.forEach(c => lines.push(`  ⚠ ${c[0]} <---> ${c[1]}`));
+    circular.forEach(c => lines.push(`  \x1b[33m●\x1b[0m  ${c[0]} <---> ${c[1]}`));
   }
   lines.push('---------------------------------------------------------------');
 

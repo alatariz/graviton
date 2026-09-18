@@ -143,7 +143,7 @@ export function getSessionDiff(cwd = process.cwd()) {
       return '\x1b[90mNo file changes detected in the latest session.\x1b[0m';
     }
 
-    reports.push(`\n\x1b[36m👉 Tip:\x1b[0m To revert all changes above, run '\x1b[1mgraviton undo\x1b[0m'.\n`);
+    reports.push(`\n\x1b[36mTip:\x1b[0m To revert all changes above, run '\x1b[1mgraviton undo\x1b[0m'.\n`);
     return reports.join('\n');
   } catch (err) {
     return `\x1b[31mFailed to read session diff: ${err.message}\x1b[0m`;

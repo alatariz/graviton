@@ -1,4 +1,4 @@
-﻿// src/budget-guard.js - Graviton V3.1.0 Pre-Flight Budget Guard & Dry-Run Inspector
+// src/budget-guard.js - Graviton V3.1.0 Pre-Flight Budget Guard & Dry-Run Inspector
 import fs from 'fs';
 import path from 'path';
 import { estimateTokens } from './pipeline.js';
@@ -134,10 +134,10 @@ export function formatPreFlightReport(weightData, options = {}) {
   if (budgetLimit) {
     const pct = ((totalEstimatedTokens / budgetLimit) * 100).toFixed(1);
     if (isWithinBudget) {
-      lines.push(`  \x1b[1mBudget Ceiling\x1b[0m        : \x1b[32m${budgetLimit.toLocaleString()} tokens (✔ WITHIN BUDGET: ${pct}%)\x1b[0m`);
+      lines.push(`  \x1b[1mBudget Ceiling\x1b[0m        : \x1b[32m${budgetLimit.toLocaleString()} tokens (✔  WITHIN BUDGET: ${pct}%)\x1b[0m`);
     } else {
       const excess = totalEstimatedTokens - budgetLimit;
-      lines.push(`  \x1b[1mBudget Ceiling\x1b[0m        : \x1b[1;31m${budgetLimit.toLocaleString()} tokens (✖ EXCEEDED by +${excess.toLocaleString()} tokens, ${pct}%)\x1b[0m`);
+      lines.push(`  \x1b[1mBudget Ceiling\x1b[0m        : \x1b[1;31m${budgetLimit.toLocaleString()} tokens (✖  EXCEEDED by +${excess.toLocaleString()} tokens, ${pct}%)\x1b[0m`);
     }
   } else {
     lines.push(`  \x1b[1mBudget Ceiling\x1b[0m        : \x1b[90mUnbounded (Tip: set via --budget 20k)\x1b[0m`);

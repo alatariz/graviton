@@ -1,4 +1,4 @@
-// src/chat-repl.js - Graviton V3.0.0 Interactive REPL Shell
+// src/chat-repl.js - Graviton Interactive REPL Shell
 import readline from 'readline';
 import path from 'path';
 import { constructSuperPrompt, readOdometer } from './pipeline.js';
@@ -39,7 +39,7 @@ export async function startChatRepl(options = {}) {
 
   const active = getActiveConversation(cwd);
   const activeTopicDisplay = active && active.title
-    ? `\x1b[33m● Active Topic: "${active.title}" (${active.id.slice(0, 8)}...)\x1b[0m`
+    ? `\x1b[33m●  Active Topic: "${active.title}" (${active.id.slice(0, 8)}...)\x1b[0m`
     : `\x1b[90m(Fresh session - first prompt will automatically title the topic)\x1b[0m`;
 
   console.log(`
@@ -130,7 +130,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         const hist = getConversationHistory(cwd, sel.id, 5);
         console.log(formatConversationHistory(hist));
       } else {
-        console.log(`\x1b[31m✖ Conversation '${target}' not found.\x1b[0m`);
+        console.log(`\x1b[31m✖  Conversation '${target}' not found.\x1b[0m`);
       }
       updatePrompt();
       rl.prompt();
@@ -158,9 +158,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       const target = input.replace(/^(\/del|\/d|d|del)\s+/i, '').trim();
       const res = deleteWorkspaceConversation(cwd, target);
       if (res.success) {
-        console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+        console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[31m✖ ${res.message}\x1b[0m`);
+        console.log(`\x1b[31m✖  ${res.message}\x1b[0m`);
       }
       updatePrompt();
       rl.prompt();
@@ -178,9 +178,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       const newTitle = input.replace(/^\/rename\s+/, '').trim();
       const res = renameWorkspaceConversation(cwd, 'active', newTitle);
       if (res.success) {
-        console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+        console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[31m✖ ${res.message}\x1b[0m`);
+        console.log(`\x1b[31m✖  ${res.message}\x1b[0m`);
       }
       updatePrompt();
       rl.prompt();
@@ -189,7 +189,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
 
     if (input === '/new' || input === '/n' || input === '--n' || input === 'n') {
       clearWorkspaceSession(cwd);
-      console.log('\x1b[32m✔ Session reset. Next prompt will start a fresh conversation with a new topic.\x1b[0m');
+      console.log('\x1b[32m✔  Session reset. Next prompt will start a fresh conversation with a new topic.\x1b[0m');
       updatePrompt();
       rl.prompt();
       return;
@@ -211,7 +211,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log('  \x1b[90mNo file snapshots currently cached for this session.\x1b[0m');
       } else {
         console.log(`\n\x1b[1m\x1b[36m=== ACTIVE CONVERSATION DELTA SNAPSHOTS (${snaps.length} files) ===\x1b[0m`);
-        snaps.forEach(s => console.log(`  \x1b[32m✔\x1b[0m \x1b[1m${s.file}\x1b[0m (${s.lineCount} lines) - updated ${new Date(s.updatedAt).toLocaleTimeString()}`));
+        snaps.forEach(s => console.log(`  \x1b[32m✔\x1b[0m  \x1b[1m${s.file}\x1b[0m (${s.lineCount} lines) - updated ${new Date(s.updatedAt).toLocaleTimeString()}`));
         console.log(`\x1b[90mSubsequent turns will only send diff hunks for these files.\x1b[0m\n`);
       }
       updatePrompt();
@@ -223,7 +223,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       const active = getActiveConversation(cwd);
       const convId = active ? active.id : 'default';
       clearSessionSnapshots(cwd, convId);
-      console.log('  \x1b[32m✔ Delta snapshots cleared for this session. Next turn will establish fresh baselines.\x1b[0m');
+      console.log('  \x1b[32m✔  Delta snapshots cleared for this session. Next turn will establish fresh baselines.\x1b[0m');
       updatePrompt();
       rl.prompt();
       return;
@@ -241,7 +241,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       console.log('\x1b[36m[GRAVITON]\x1b[0m Running Safety Rollback Guard...');
       const res = executeRollback(cwd);
       if (res.success) {
-        console.log(`\x1b[32m✔ Rollback completed: ${res.restored.length} files restored, ${res.removed.length} new files removed.\x1b[0m`);
+        console.log(`\x1b[32m✔  Rollback completed: ${res.restored.length} files restored, ${res.removed.length} new files removed.\x1b[0m`);
       } else {
         console.log(`\x1b[33m[!] ${res.message}\x1b[0m`);
       }
@@ -252,7 +252,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
 
     if (input === '/compact') {
       const res = compactWorkspaceSession(cwd);
-      console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+      console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
       updatePrompt();
       rl.prompt();
       return;
@@ -261,9 +261,9 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
     if (input === '/ports') {
       const activePorts = listActivePorts();
       if (activePorts.length === 0) {
-        console.log('  \x1b[32m✔ All local dev ports (3000, 5173, etc.) are free!\x1b[0m');
+        console.log('  \x1b[32m✔  All local dev ports (3000, 5173, etc.) are free!\x1b[0m');
       } else {
-        activePorts.forEach(p => console.log(`  \x1b[33m● Port ${p.port} active (PID: ${p.pid})\x1b[0m`));
+        activePorts.forEach(p => console.log(`  \x1b[33m●  Port ${p.port} active (PID: ${p.pid})\x1b[0m`));
       }
       updatePrompt();
       rl.prompt();
@@ -275,7 +275,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       const target = parts[1] || 'all';
       const results = stopDaemonOrPort(target, cwd);
       if (results.length > 0) {
-        results.forEach(r => console.log(`  \x1b[32m✔ ${r.message || 'Process terminated'}\x1b[0m`));
+        results.forEach(r => console.log(`  \x1b[32m✔  ${r.message || 'Process terminated'}\x1b[0m`));
       } else {
         console.log('  \x1b[90mNo active background daemons or ports found.\x1b[0m');
       }
@@ -288,10 +288,10 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       const curActive = getActiveConversation(cwd);
       const odo = readOdometer();
       if (curActive && curActive.id) {
-        console.log(`  \x1b[36m● Active Topic:\x1b[0m "${curActive.title}"`);
-        console.log(`  \x1b[36m● Conversation ID:\x1b[0m ${curActive.id.slice(0, 8)}...`);
-        console.log(`  \x1b[36m● Turns:\x1b[0m ${curActive.turns || 1}`);
-        console.log(`  \x1b[36m● Estimated Tokens:\x1b[0m ~ ${curActive.cumulativeTokens || odo.lastSessionTokens} tokens`);
+        console.log(`  \x1b[36m●  Active Topic:\x1b[0m "${curActive.title}"`);
+        console.log(`  \x1b[36m●  Conversation ID:\x1b[0m ${curActive.id.slice(0, 8)}...`);
+        console.log(`  \x1b[36m●  Turns:\x1b[0m ${curActive.turns || 1}`);
+        console.log(`  \x1b[36m●  Estimated Tokens:\x1b[0m ~ ${curActive.cumulativeTokens || odo.lastSessionTokens} tokens`);
       } else {
         console.log('  \x1b[90mNo active conversation in this workspace yet.\x1b[0m');
       }
@@ -336,7 +336,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         }
         const fullDocPath = path.resolve(cwd, targetFile);
         if (!fs.existsSync(fullDocPath)) {
-          console.log(`\x1b[31m✖ File '${targetFile}' not found in workspace.\x1b[0m`);
+          console.log(`\x1b[31m✖  File '${targetFile}' not found in workspace.\x1b[0m`);
           updatePrompt();
           rl.prompt();
           return;

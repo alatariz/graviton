@@ -380,7 +380,7 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   GRAVITON V3.13.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
+      console.log(`   GRAVITON DEVELOPER COCKPIT ONLINE (100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
       console.log(`  Cockpit URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {

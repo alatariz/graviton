@@ -247,7 +247,7 @@ export function getSpawnConfig(options = {}) {
 /**
  * Executes Antigravity synchronously with full terminal I/O streaming.
  *
- * Graviton V3.0.0 Rock-Solid Synchronous Relay:
+ * Graviton Rock-Solid Synchronous Relay:
  * 1. Resolves binary path searching both 'agy' and 'antigravity' in ~/.gemini/bin, AppData, and PATH.
  * 2. Injects superPrompt via -p (or -i if interactive) with --dangerously-skip-permissions.
  * 3. Uses shell: false for native binaries (.exe on Windows, ELF on Linux, Mach-O on macOS)
@@ -290,7 +290,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // Validate executable existence
   if (!agyExecutable || !fs.existsSync(agyExecutable)) {
     console.error(
-      `\n\x1b[1;31m[🚨 GRAVITON FATAL ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) is not installed on this machine!\n\n` +
+      `\n\x1b[1;31m[GRAVITON FATAL ERROR]\x1b[0m Google Antigravity CLI (\x1b[33magy\x1b[0m) is not installed on this machine!\n\n` +
       `Graviton is an autonomous acceleration layer for Google Antigravity. Binary \x1b[33magy\x1b[0m or \x1b[33magy.exe\x1b[0m was not found on your system.\n` +
       `\x1b[90m(Note: Antigravity Desktop App alone does not automatically link CLI commands without agy).\x1b[0m\n\n` +
       `\x1b[1mHow to Install Google Antigravity CLI on Windows:\x1b[0m\n` +
@@ -471,7 +471,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
       // Inactivity timeout abort at 3 minutes (180s)
       if (idleSec >= IDLE_TIMEOUT_SEC) {
-        console.error(`\n\x1b[1;31m[🚨 GRAVITON FAIL-FAST]\x1b[0m Antigravity stalled with no activity for ${IDLE_TIMEOUT_SEC}s (3 minutes).`);
+        console.error(`\n\x1b[1;31m[GRAVITON FAIL-FAST]\x1b[0m Antigravity stalled with no activity for ${IDLE_TIMEOUT_SEC}s (3 minutes).`);
         console.error(`\x1b[90mTerminated stalled process. No tokens or time wasted waiting blindly.\x1b[0m`);
         triggerFailFast(`Inactivity timeout: Antigravity stopped responding (no activity for ${IDLE_TIMEOUT_SEC}s / 3m)`);
       }
@@ -480,7 +480,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     const checkFatal = (text) => {
       const fatal = detectFatalErrorPattern(text);
       if (fatal && !aborted) {
-        console.error(`\n\x1b[1;31m[🚨 GRAVITON FAIL-FAST]\x1b[0m Fatal error detected: \x1b[1m${fatal}\x1b[0m`);
+        console.error(`\n\x1b[1;31m[GRAVITON FAIL-FAST]\x1b[0m Fatal error detected: \x1b[1m${fatal}\x1b[0m`);
         console.error(`\x1b[90mTerminated immediately to prevent waiting or wasting tokens.\x1b[0m`);
         triggerFailFast(fatal);
       }
@@ -513,17 +513,17 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
                 if (toolName === 'view_file') {
                   const file = params.AbsolutePath || params.TargetFile || '';
-                  toolDesc = `\x1b[36m⚙  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+                  toolDesc = `\x1b[36m●  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
                   const file = params.TargetFile || params.AbsolutePath || '';
-                  toolDesc = `\x1b[33m✍  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+                  toolDesc = `\x1b[33m●  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'run_command') {
                   const cmd = (params.CommandLine || '').slice(0, 45);
-                  toolDesc = `\x1b[35m▶  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
+                  toolDesc = `\x1b[35m●  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
                 } else if (toolName === 'grep_search' || toolName === 'find_by_name') {
-                  toolDesc = `\x1b[34m🔍 [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;
+                  toolDesc = `\x1b[34m●  [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;
                 } else {
-                  toolDesc = `\x1b[36m⚙  [AI Tool]\x1b[0m Executing \x1b[1m${toolName}\x1b[0m...`;
+                  toolDesc = `\x1b[36m●  [AI Tool]\x1b[0m Executing \x1b[1m${toolName}\x1b[0m...`;
                 }
 
                 if (toolDesc && toolDesc !== lastReportedTool) {
@@ -535,7 +535,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                   ? `${step.duration_seconds.toFixed(1)}s`
                   : (toolStartTime ? `${((Date.now() - toolStartTime) / 1000).toFixed(1)}s` : '');
                 const durStr = dur ? ` \x1b[90m(${dur})\x1b[0m` : '';
-                console.log(`   \x1b[32m✔\x1b[0m Done${durStr}`);
+                console.log(`   \x1b[32m✔\x1b[0m  Done${durStr}`);
                 currentActiveTool = null;
                 toolStartTime = null;
               }

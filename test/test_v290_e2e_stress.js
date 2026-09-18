@@ -160,11 +160,11 @@ Error: Request failed with status 500
   assert(superPrompt.includes('internal library frames collapsed'), 'Stack trace must be squeezed');
   assert(superPrompt.includes('[GRAVITON PERSISTED COMPACT MEMORY]'), 'Compact memory must be injected');
   assert(superPrompt.includes('[SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]'), 'Economizer directive must be present');
-  assert(superPrompt.includes('[GRAVITON V2.0 SESSION CONTINUITY ACTIVE]'), 'Session continuity must be active');
+  assert(superPrompt.includes('[GRAVITON SESSION CONTINUITY ACTIVE]'), 'Session continuity must be active');
 
-  console.log(`✔ Grand multi-engine coexistence matrix completed in ${duration}ms with 0 leaks and 100% coherence.\n`);
+  console.log(`✔  Grand multi-engine coexistence matrix completed in ${duration}ms with 0 leaks and 100% coherence.\n`);
 
-  console.log('\x1b[1;32m✔ ALL GRAVITON V2.9.0 GRAND STRESS & COHERENCE TESTS PASSED 100%!\x1b[0m\n');
+  console.log('\x1b[1;32m✔  ALL GRAVITON V2.9.0 GRAND STRESS & COHERENCE TESTS PASSED 100%!\x1b[0m\n');
 } finally {
   try {
     fs.rmSync(testDir, { recursive: true, force: true });

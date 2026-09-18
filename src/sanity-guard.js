@@ -464,16 +464,16 @@ export function formatSanityReport(issues = []) {
   if (!issues || issues.length === 0) return '';
 
   const lines = [
-    `\n\x1b[1;33m⚠️  [GRAVITON SANITY GUARD WARNING]\x1b[0m`,
+    `\n\x1b[1;33m[GRAVITON SANITY GUARD WARNING]\x1b[0m`,
     `\x1b[33mDetected potential syntax issues in files recently modified by AI:\x1b[0m`
   ];
 
   for (const issue of issues) {
     const loc = issue.line ? ` (Line ${issue.line}${issue.col ? ':' + issue.col : ''})` : '';
-    lines.push(`  \x1b[31m●\x1b[0m \x1b[1m${issue.file}\x1b[0m${loc}: \x1b[90m${issue.error}\x1b[0m`);
+    lines.push(`  \x1b[31m●\x1b[0m  \x1b[1m${issue.file}\x1b[0m${loc}: \x1b[90m${issue.error}\x1b[0m`);
   }
 
-  lines.push(`\x1b[36m👉 Recommendation:\x1b[0m Type '\x1b[1mgraviton undo\x1b[0m' to revert changes, or instruct: '\x1b[1mgraviton "fix the recent syntax error"\x1b[0m'\n`);
+  lines.push(`\x1b[36mRecommendation:\x1b[0m Type '\x1b[1mgraviton undo\x1b[0m' to revert changes, or instruct: '\x1b[1mgraviton "fix the recent syntax error"\x1b[0m'\n`);
 
   return lines.join('\n');
 }

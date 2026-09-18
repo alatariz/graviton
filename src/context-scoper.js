@@ -172,7 +172,7 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
     const targetList = targets.map(t => '`' + t + '`').join(', ');
     const sourceLabel = isLastTouch ? 'Last-Touch Context' : 'Predicted Target Scope';
     directive = `
-[GRAVITON V2.0 ACTIVE TARGET SCOPE (${sourceLabel})]
+[GRAVITON ACTIVE TARGET SCOPE (${sourceLabel})]
 - Primary Target File(s): ${targetList}
 - Directive to AI: Focus your changes directly on the target file(s) above. Do NOT perform redundant exploratory tool calls (list_dir/grep_search).
 `.trim();

@@ -290,13 +290,13 @@ export function condenseTestOutput(rawText, options = {}) {
     }
     const suitesText = passingSuitesCount > 0 ? ` across ${passingSuitesCount} suites` : '';
     const countText = passedTestsCount > 0 ? `${passedTestsCount} tests` : 'All tests';
-    testBlock = `✔ ${countText} passed${suitesText} (0 failures). Output condensed for token economy.`;
+    testBlock = `✔  ${countText} passed${suitesText} (0 failures). Output condensed for token economy.`;
   } else {
     const cleanFailures = failureLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
     const summaryText = summaryLines.join(' | ') || `Tests: ${failedTestsCount || 1} failed, ${passedTestsCount} passed`;
     testBlock = `[GRAVITON TEST SQUEEZER: ${failedTestsCount || 1} failed, ${passedTestsCount} passed]\n` +
-      (passedTestsCount > 0 ? `✔ ${passedTestsCount} passing tests collapsed for token economy.\n\n` : '') +
-      `✖ Test Failures & Diffs:\n${cleanFailures}\n\n` +
+      (passedTestsCount > 0 ? `✔  ${passedTestsCount} passing tests collapsed for token economy.\n\n` : '') +
+      `✖  Test Failures & Diffs:\n${cleanFailures}\n\n` +
       `Test Summary: ${summaryText}`;
   }
 

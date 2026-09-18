@@ -77,7 +77,7 @@ export function renderAsciiHud(metrics = null) {
 
   const lines = [
     '===============================================================',
-    '   GRAVITON V3.12.0 DEVELOPER COCKPIT & ECONOMY HUD',
+    '   GRAVITON DEVELOPER COCKPIT & ECONOMY HUD',
     '===============================================================',
     `  All-Time Tokens Protected : \x1b[1;32m~${data.tokensSaved.toLocaleString()} tokens\x1b[0m`,
     `  Total Prompts Accelerated : \x1b[1;36m${data.promptsOptimized} prompts\x1b[0m`,
@@ -92,10 +92,10 @@ export function renderAsciiHud(metrics = null) {
   ];
 
   if (data.activePorts.length === 0) {
-    lines.push('    \x1b[32m✔\x1b[0m Ports 3000, 5173, 8080 are free. No port conflicts detected.');
+    lines.push('    \x1b[32m✔\x1b[0m  Ports 3000, 5173, 8080 are free. No port conflicts detected.');
   } else {
     data.activePorts.forEach(p => {
-      lines.push(`    \x1b[33m●\x1b[0m Port \x1b[1m${p.port}\x1b[0m (PID: ${p.pid}) -> Use 'grav stop ${p.port}' to release`);
+      lines.push(`    \x1b[33m●\x1b[0m  Port \x1b[1m${p.port}\x1b[0m (PID: ${p.pid}) -> Use 'grav stop ${p.port}' to release`);
     });
   }
 

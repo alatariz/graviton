@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// bin/graviton.js - Official GRAVITON CLI: Graviton V3.0.0 Autonomous Execution Layer
+// bin/graviton.js - Official GRAVITON CLI: Autonomous Execution Layer
 
 process.on('uncaughtException', (err) => {
   const message = err && err.message ? err.message : String(err);
-  console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
+  console.error(`\x1b[1;31m[GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
   process.exit(1);
 });
 
@@ -266,9 +266,9 @@ async function main() {
       }
       const res = deleteWorkspaceConversation(process.cwd(), conversationTarget);
       if (res.success) {
-        console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+        console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[31m✖ ${res.message}\x1b[0m`);
+        console.log(`\x1b[31m✖  ${res.message}\x1b[0m`);
       }
       process.exit(0);
     }
@@ -283,7 +283,7 @@ async function main() {
         await startChatRepl({ cwd: process.cwd(), isDeep });
         return;
       } else {
-        console.log(`\x1b[31m✖ Conversation '${conversationTarget}' not found.\x1b[0m`);
+        console.log(`\x1b[31m✖  Conversation '${conversationTarget}' not found.\x1b[0m`);
       }
       process.exit(0);
     }
@@ -301,12 +301,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '3.5.0';
+    let version = '3.13.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.9.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version}`);
     process.exit(0);
   }
 
@@ -347,11 +347,11 @@ async function main() {
     }
 
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON INITIALIZATION ===\x1b[0m`);
-    console.log(`  \x1b[32m✔\x1b[0m Graviton Config Path : \x1b[1m${gravitonDir}\x1b[0m`);
-    console.log(`  \x1b[32m✔\x1b[0m Local Skill Vault    : \x1b[1m${skillsDir}\x1b[0m`);
-    console.log(`  \x1b[32m✔\x1b[0m Skills Status        : \x1b[1m${Object.keys(initialSkills).length}\x1b[0m skills available (${createdCount} new)`);
-    console.log(`  \x1b[32m✔\x1b[0m Workspace Ignore     : \x1b[1m${ignoreStatus}\x1b[0m`);
-    console.log(`  \x1b[32m✔\x1b[0m Auto-Allow Relay     : Active`);
+    console.log(`  \x1b[32m✔\x1b[0m  Graviton Config Path : \x1b[1m${gravitonDir}\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m  Local Skill Vault    : \x1b[1m${skillsDir}\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m  Skills Status        : \x1b[1m${Object.keys(initialSkills).length}\x1b[0m skills available (${createdCount} new)`);
+    console.log(`  \x1b[32m✔\x1b[0m  Workspace Ignore     : \x1b[1m${ignoreStatus}\x1b[0m`);
+    console.log(`  \x1b[32m✔\x1b[0m  Auto-Allow Relay     : Active`);
     console.log(`\x1b[90mGraviton initialized successfully. Ready to accelerate Antigravity.\x1b[0m\n`);
     process.exit(0);
   }
@@ -392,7 +392,7 @@ async function main() {
     console.log(`\x1b[36m[GRAVITON BUNDLER]\x1b[0m Inlining \x1b[1m${entry}\x1b[0m into standalone single HTML...`);
     const res = bundleWebApplication(entry, output, process.cwd());
     if (res.success) {
-      console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(res.originalSize / 1024).toFixed(1)} KB -> ${(res.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+      console.log(`\x1b[1;32m✔  Bundled successfully!\x1b[0m \x1b[90m(${(res.originalSize / 1024).toFixed(1)} KB -> ${(res.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
       console.log(`  Destination : \x1b[1;36m${res.outputPath}\x1b[0m`);
       console.log(`  Files Inlined (${res.filesInlined.length}):`);
       res.filesInlined.forEach(f => console.log(`    ↳ \x1b[90m${f}\x1b[0m`));
@@ -411,12 +411,12 @@ async function main() {
     console.log(`\x1b[36m[GRAVITON SCAFFOLDER]\x1b[0m Initializing runnable \x1b[1m${domain}\x1b[0m boilerplate in \x1b[1m${targetDir}\x1b[0m...`);
     const res = scaffoldProject(domain, targetDir);
     if (res.success) {
-      console.log(`\x1b[1;32m✔ Scaffolded successfully!\x1b[0m \x1b[90m(${(res.templateSizeBytes / 1024).toFixed(1)} KB boilerplate)\x1b[0m`);
+      console.log(`\x1b[1;32m✔  Scaffolded successfully!\x1b[0m \x1b[90m(${(res.templateSizeBytes / 1024).toFixed(1)} KB boilerplate)\x1b[0m`);
       console.log(`  Target Directory : \x1b[1;36m${res.targetDir}\x1b[0m`);
       console.log(`  Files Created    : \x1b[90m${res.filesCreated.join(', ')}\x1b[0m (with procedural 16x16 canvas textures & Web Audio)`);
       const runner = await launchLiveRunner(targetDir);
-      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
-      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m\n`);
+      console.log(`\x1b[1m\x1b[32m✔  Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+      console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m\n`);
     } else {
       console.error(`\x1b[31m[!] Scaffold error: ${res.error}\x1b[0m`);
     }
@@ -433,8 +433,8 @@ async function main() {
     }
     console.log(`\x1b[36m[GRAVITON LIVE RUNNER]\x1b[0m Starting live-reload preview server for \x1b[1m${targetDir}\x1b[0m...`);
     const runner = await launchLiveRunner(targetDir);
-    console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
-    console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+    console.log(`\x1b[1m\x1b[32m✔  Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+    console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m`);
     console.log(`\x1b[90m(Live-Reload is active. Any file edits made by AI will refresh the browser automatically.)\x1b[0m\n`);
     process.exit(0);
   }
@@ -455,11 +455,11 @@ async function main() {
     if (res.success) {
       console.log(`\n\x1b[1m\x1b[32m=== GRAVITON ROLLBACK SUCCESSFUL ===\x1b[0m`);
       if (res.restored.length > 0) {
-        console.log(`\x1b[32m  ✔ Restored ${res.restored.length} modified file(s):\x1b[0m`);
+        console.log(`\x1b[32m  ✔  Restored ${res.restored.length} modified file(s):\x1b[0m`);
         res.restored.forEach(f => console.log(`     - \x1b[1m${f}\x1b[0m`));
       }
       if (res.removed.length > 0) {
-        console.log(`\x1b[33m  ✔ Removed ${res.removed.length} newly created file(s):\x1b[0m`);
+        console.log(`\x1b[33m  ✔  Removed ${res.removed.length} newly created file(s):\x1b[0m`);
         res.removed.forEach(f => console.log(`     - \x1b[1m${f}\x1b[0m`));
       }
       console.log(`\n\x1b[90mWorkspace restored to pre-session state.\x1b[0m\n`);
@@ -478,7 +478,7 @@ async function main() {
     }
     console.log(`\x1b[36m[GRAVITON]\x1b[0m Starting background daemon: \x1b[1m${cmdToRun}\x1b[0m...`);
     const daemon = startBackgroundDaemon(cmdToRun, process.cwd());
-    console.log(`\x1b[32m✔ Background daemon running (PID: ${daemon.pid})\x1b[0m`);
+    console.log(`\x1b[32m✔  Background daemon running (PID: ${daemon.pid})\x1b[0m`);
     console.log(`\x1b[90mUse 'graviton stop' to terminate, or 'graviton ports' to inspect listening ports.\x1b[0m\n`);
     process.exit(0);
   }
@@ -490,7 +490,7 @@ async function main() {
     const results = stopDaemonOrPort(target, process.cwd());
     if (results.length > 0) {
       results.forEach(r => {
-        console.log(`\x1b[32m  ✔ ${r.message || `Stopped process ${r.target}`}\x1b[0m`);
+        console.log(`\x1b[32m  ✔  ${r.message || `Stopped process ${r.target}`}\x1b[0m`);
       });
     } else {
       console.log(`\x1b[90mNo active background daemons or blocked ports found.\x1b[0m`);
@@ -503,10 +503,10 @@ async function main() {
     console.log(`\n\x1b[1m\x1b[36m=== GRAVITON PORT GUARD: ACTIVE DEV PORTS ===\x1b[0m`);
     const active = listActivePorts();
     if (active.length === 0) {
-      console.log(`  \x1b[32m✔\x1b[0m All common dev ports (3000, 3001, 4200, 5173, 8000, 8080) are free!`);
+      console.log(`  \x1b[32m✔\x1b[0m  All common dev ports (3000, 3001, 4200, 5173, 8000, 8080) are free!`);
     } else {
       active.forEach(item => {
-        console.log(`  \x1b[33m●\x1b[0m Port \x1b[1m${item.port}\x1b[0m is occupied by PID \x1b[1m${item.pid}\x1b[0m \x1b[90m(use 'graviton stop ${item.port}' to free)\x1b[0m`);
+        console.log(`  \x1b[33m●\x1b[0m  Port \x1b[1m${item.port}\x1b[0m is occupied by PID \x1b[1m${item.pid}\x1b[0m \x1b[90m(use 'graviton stop ${item.port}' to free)\x1b[0m`);
       });
     }
     console.log('');
@@ -524,7 +524,7 @@ async function main() {
     console.log('\x1b[36m[GRAVITON]\x1b[0m Compacting active workspace session...');
     const res = compactWorkspaceSession(process.cwd());
     if (res.success) {
-      console.log(`\x1b[32m✔ ${res.message}\x1b[0m`);
+      console.log(`\x1b[32m✔  ${res.message}\x1b[0m`);
     } else {
       console.log(`\x1b[33m[!] ${res.message}\x1b[0m`);
     }
@@ -545,7 +545,7 @@ async function main() {
     process.exit(0);
   }
 
-  // 5j. AST FUNCTION INDEXER (V3.3.0 Large File Shield)
+  // 5j. AST FUNCTION INDEXER (Large File Shield)
   if (command === 'index' || command === '--index') {
     const targetFile = filteredArgs[1];
     if (!targetFile) {
@@ -587,7 +587,7 @@ async function main() {
     const superPrompt = constructSuperPrompt(input, process.cwd(), { isDeep, isFast });
     copyToClipboard(superPrompt);
     console.log(superPrompt);
-    console.error(`\n\x1b[32m✔ SuperPrompt assembled & Copied to clipboard!\x1b[0m \x1b[90m(Graviton Zero-Token Middleware)\x1b[0m`);
+    console.error(`\n\x1b[32m✔  SuperPrompt assembled & Copied to clipboard!\x1b[0m \x1b[90m(Graviton Zero-Token Middleware)\x1b[0m`);
     process.exit(0);
   }
 
@@ -686,15 +686,15 @@ async function main() {
   }
 
   // =========================================================================
-  // AUTONOMOUS INTENT & PRE-FLIGHT DISPATCHER (V3.12.0)
+  // AUTONOMOUS INTENT & PRE-FLIGHT DISPATCHER
   // =========================================================================
 
   // 1. Pure Play Intent: Opens live-server and browser without invoking AI
   const playIntent = await detectPlayIntent(input, currentCwd);
   if (playIntent && playIntent.handled) {
     if (playIntent.runner) {
-      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${playIntent.runner.url}\x1b[0m (PID: ${playIntent.runner.pid})`);
-      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m\n`);
+      console.log(`\x1b[1m\x1b[32m✔  Live server active at \x1b[1;36m${playIntent.runner.url}\x1b[0m (PID: ${playIntent.runner.pid})`);
+      console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m\n`);
     }
     process.exit(0);
   }
@@ -707,7 +707,7 @@ async function main() {
       const bRes = bundleIntent.result;
       console.log(`\x1b[36m[GRAVITON AUTONOMOUS BUNDLER]\x1b[0m Inlining project into standalone single HTML...`);
       if (bRes && bRes.success) {
-        console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+        console.log(`\x1b[1;32m✔  Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
         console.log(`  Destination : \x1b[1;36m${bRes.outputPath}\x1b[0m`);
         console.log(`  Files Inlined (${bRes.filesInlined.length}):`);
         bRes.filesInlined.forEach(f => console.log(`    ↳ \x1b[90m${f}\x1b[0m`));
@@ -726,10 +726,10 @@ async function main() {
   const scaffoldIntent = await detectScaffoldIntent(input, currentCwd);
   if (scaffoldIntent && scaffoldIntent.triggered) {
     console.log(`\x1b[36m[GRAVITON AUTONOMOUS ROUTER]\x1b[0m Detected new \x1b[1m${scaffoldIntent.domain}\x1b[0m project request.`);
-    console.log(`\x1b[32m✔ Autonomously scaffolded runnable foundation on disk (${scaffoldIntent.filesCreated.join(', ')}) (0 tokens).\x1b[0m`);
+    console.log(`\x1b[32m✔  Autonomously scaffolded runnable foundation on disk (${scaffoldIntent.filesCreated.join(', ')}) (0 tokens).\x1b[0m`);
     if (scaffoldIntent.runner) {
-      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${scaffoldIntent.runner.url}\x1b[0m (PID: ${scaffoldIntent.runner.pid})`);
-      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32m✔  Live server active at \x1b[1;36m${scaffoldIntent.runner.url}\x1b[0m (PID: ${scaffoldIntent.runner.pid})`);
+      console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m`);
     }
     autonomousScaffoldDirective = scaffoldIntent.directive || '';
   }
@@ -823,10 +823,10 @@ async function main() {
     const domain = detectDomainFromPrompt(input);
     const scaffoldRes = scaffoldProject(domain, currentCwd);
     if (scaffoldRes.success) {
-      console.log(`\x1b[32m✔ [SCAFFOLD]: Initialized ${domain} runnable boilerplate on disk (${scaffoldRes.filesCreated.join(', ')}).\x1b[0m`);
+      console.log(`\x1b[32m✔  [SCAFFOLD]: Initialized ${domain} runnable boilerplate on disk (${scaffoldRes.filesCreated.join(', ')}).\x1b[0m`);
       const runner = await launchLiveRunner(currentCwd);
-      console.log(`\x1b[1m\x1b[32m✔ Live game preview active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
-      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+      console.log(`\x1b[1m\x1b[32m✔  Live game preview active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+      console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m`);
     }
   }
 
@@ -854,8 +854,8 @@ async function main() {
         const daemon = startBackgroundDaemon(existingDev.command, currentCwd);
         const url = `http://localhost:${existingDev.port}/`;
         openBrowser(url);
-        console.log(`\x1b[1m\x1b[32m✔ Web server active at \x1b[1;36m${url}\x1b[0m (PID: ${daemon.pid})`);
-        console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+        console.log(`\x1b[1m\x1b[32m✔  Web server active at \x1b[1;36m${url}\x1b[0m (PID: ${daemon.pid})`);
+        console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m`);
         console.log(`\x1b[90mTip: Run 'grav stop' to terminate, or 'grav ports' to view listening ports.\x1b[0m\n`);
         process.exit(0);
       }
@@ -888,7 +888,7 @@ async function main() {
   }
 
   if (preFlightWeight.totalEstimatedTokens > 25000 && !isFast) {
-    console.log(`\x1b[33m[⚠️ GRAVITON TOKEN ALERT]\x1b[0m High context load detected: \x1b[1m~${preFlightWeight.totalEstimatedTokens.toLocaleString()} tokens\x1b[0m across ${preFlightWeight.targetFiles.length} files.`);
+    console.log(`\x1b[33m[GRAVITON TOKEN ALERT]\x1b[0m High context load detected: \x1b[1m~${preFlightWeight.totalEstimatedTokens.toLocaleString()} tokens\x1b[0m across ${preFlightWeight.targetFiles.length} files.`);
     console.log(`\x1b[90mTip: Graviton is automatically pruning and compressing context for optimal efficiency.\x1b[0m`);
   }
 
@@ -940,7 +940,7 @@ async function main() {
     console.log(`\n\x1b[36m[GRAVITON AUTONOMOUS BUNDLER]\x1b[0m Inlining completed changes into standalone HTML...`);
     const bRes = bundleWebApplication('index.html', null, currentCwd);
     if (bRes && bRes.success) {
-      console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+      console.log(`\x1b[1;32m✔  Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
       console.log(`  Destination : \x1b[1;36m${bRes.outputPath}\x1b[0m\n`);
     }
   }
@@ -957,6 +957,6 @@ async function main() {
 
 main().catch(err => {
   const message = err && err.message ? err.message : String(err);
-  console.error(`\x1b[1;31m[🚨 GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
+  console.error(`\x1b[1;31m[GRAVITON ERROR]\x1b[0m \x1b[31m${message}\x1b[0m`);
   process.exit(1);
 });

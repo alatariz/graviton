@@ -439,7 +439,7 @@ export function formatConversationHistory(historyData) {
     out += `  \x1b[90mModified Files: ${historyData.activeFiles.slice(0, 5).join(', ')}${historyData.activeFiles.length > 5 ? '...' : ''}\x1b[0m\n`;
   }
 
-  out += `\x1b[32m✔ Active topic switched: "${historyData.title}"\x1b[0m\n`;
+  out += `\x1b[32m✔  Active topic switched: "${historyData.title}"\x1b[0m\n`;
   out += `\x1b[90mYou can now continue this conversation below.\x1b[0m\n`;
   out += `\x1b[36m===============================================================\x1b[0m\n`;
 
@@ -604,7 +604,7 @@ export function formatConversationList(cwd = process.cwd()) {
   conversations.forEach((conv, index) => {
     const num = index + 1;
     const isActive = conv.id === activeId;
-    const statusBullet = isActive ? `\x1b[32m● [Active]\x1b[0m` : `\x1b[90m○\x1b[0m`;
+    const statusBullet = isActive ? `\x1b[32m●  [Active]\x1b[0m` : `\x1b[90m○  \x1b[0m`;
     const titleFormatted = isActive ? `\x1b[1m\x1b[37m"${conv.title}"\x1b[0m` : `\x1b[37m"${conv.title}"\x1b[0m`;
     const tokensK = conv.cumulativeTokens ? `~${Math.round(conv.cumulativeTokens / 100) / 10}k` : '0';
     const relativeTime = formatRelativeTime(conv.updatedAt);
@@ -700,7 +700,7 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
 
       if (trimmed.toLowerCase() === 'n' || trimmed.toLowerCase() === 'new') {
         clearWorkspaceSession(normalizedCwd);
-        console.log('\x1b[32m✔ Fresh conversation ready. Previous session reset.\x1b[0m\n');
+        console.log('\x1b[32m✔  Fresh conversation ready. Previous session reset.\x1b[0m\n');
         resolve({ isNew: true });
         return;
       }
@@ -710,9 +710,9 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
         const targetNum = parts[1];
         const res = deleteWorkspaceConversation(normalizedCwd, targetNum);
         if (res.success) {
-          console.log(`\x1b[32m✔ ${res.message}\x1b[0m\n`);
+          console.log(`\x1b[32m✔  ${res.message}\x1b[0m\n`);
         } else {
-          console.log(`\x1b[31m✖ ${res.message}\x1b[0m\n`);
+          console.log(`\x1b[31m✖  ${res.message}\x1b[0m\n`);
         }
         resolve({ deleted: true });
         return;
@@ -726,7 +726,7 @@ export async function runInteractiveConversationPicker(cwd = process.cwd(), onSe
           resolve(selected);
           return;
         } else {
-          console.log(`\x1b[31m✖ Invalid conversation number '${trimmed}'.\x1b[0m\n`);
+          console.log(`\x1b[31m✖  Invalid conversation number '${trimmed}'.\x1b[0m\n`);
           resolve(null);
           return;
         }

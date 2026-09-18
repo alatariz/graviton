@@ -23,7 +23,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['-h'],
         interceptedAction: 'help',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'-h'\x1b[0m (Help)...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'-h'\x1b[0m (Help)...`
       };
     }
 
@@ -32,7 +32,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['-v'],
         interceptedAction: 'version',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'-v'\x1b[0m (Version)...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'-v'\x1b[0m (Version)...`
       };
     }
 
@@ -41,7 +41,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['doc'],
         interceptedAction: 'doctor',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'doc'\x1b[0m (Doctor)...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'doc'\x1b[0m (Doctor)...`
       };
     }
 
@@ -50,7 +50,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['stats'],
         interceptedAction: 'stats',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'stats'\x1b[0m...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'stats'\x1b[0m...`
       };
     }
 
@@ -59,7 +59,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['web'],
         interceptedAction: 'web',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'web'\x1b[0m...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'web'\x1b[0m...`
       };
     }
 
@@ -68,7 +68,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['diff'],
         interceptedAction: 'diff',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'diff'\x1b[0m...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'diff'\x1b[0m...`
       };
     }
 
@@ -77,7 +77,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['compact'],
         interceptedAction: 'compact',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'compact'\x1b[0m...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'compact'\x1b[0m...`
       };
     }
 
@@ -86,7 +86,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
       return {
         args: ['undo'],
         interceptedAction: 'undo',
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'undo'\x1b[0m...`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected. Auto-correcting \x1b[1m'${first}'\x1b[0m to \x1b[32m'undo'\x1b[0m...`
       };
     }
 
@@ -97,7 +97,7 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
         args: [],
         interceptedAction: 'stray_symbol',
         symbol: first,
-        notice: `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Stray input symbol detected (\x1b[1m'${first}'\x1b[0m). No prompt provided.\n   \x1b[90m(Tip: run 'grav -h' for help & options)\x1b[0m`
+        notice: `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Stray input symbol detected (\x1b[1m'${first}'\x1b[0m). No prompt provided.\n   \x1b[90m(Tip: run 'grav -h' for help & options)\x1b[0m`
       };
     }
   }
@@ -108,19 +108,19 @@ export function sanitizeArgsWithTypoGuard(rawArgs = []) {
 
   if (/^={1,2}f(?:ast)?$/i.test(first)) {
     modifiedArgs[0] = '-f';
-    correctedNotice = `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-f'\x1b[0m...`;
+    correctedNotice = `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-f'\x1b[0m...`;
   } else if (/^={1,2}d(?:eep)?$/i.test(first)) {
     modifiedArgs[0] = '-d';
-    correctedNotice = `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-d'\x1b[0m...`;
+    correctedNotice = `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-d'\x1b[0m...`;
   } else if (/^={1,2}p(?:aste)?$/i.test(first)) {
     modifiedArgs[0] = '-p';
-    correctedNotice = `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-p'\x1b[0m...`;
+    correctedNotice = `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-p'\x1b[0m...`;
   } else if (/^={1,2}c(?:onversation)?$/i.test(first)) {
     modifiedArgs[0] = '-c';
-    correctedNotice = `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-c'\x1b[0m...`;
+    correctedNotice = `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-c'\x1b[0m...`;
   } else if (/^={1,2}n(?:ew)?$/i.test(first)) {
     modifiedArgs[0] = '-n';
-    correctedNotice = `\x1b[33m💡 [GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-n'\x1b[0m...`;
+    correctedNotice = `\x1b[33m[GRAVITON TYPO GUARD]\x1b[0m Keyboard slip detected ('=' is adjacent to '-'). Correcting flag \x1b[1m'${first}'\x1b[0m to \x1b[32m'-n'\x1b[0m...`;
   }
 
   return {
