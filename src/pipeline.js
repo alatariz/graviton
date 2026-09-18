@@ -8,12 +8,15 @@ import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js
 import { isSkeletonCandidate, isAstCandidate, generateAstFunctionIndex, skeletonizeCode, shrinkSvg } from './code-outliner.js';
 import { resolveDeltaHydration } from './delta-compressor.js';
 import { squeezeMixedContent } from './stack-squeezer.js';
+import { architectPrompt } from './prompt-architect.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { redactSecrets } from './workspace-helper.js';
+
+export { architectPrompt } from './prompt-architect.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -797,6 +800,18 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     const traceResult = squeezeMixedContent(cleanedInput, currentCwd);
     if (traceResult.hasTrace) {
       cleanedInput = traceResult.squeezedText;
+    }
+  }
+
+  // Autonomous Prompt Architect & Dynamic Reprompter (V3.5.0)
+  if (!options.noArchitect) {
+    const architectResult = architectPrompt(cleanedInput, {
+      cwd: currentCwd,
+      isDeep: Boolean(options.isDeep),
+      isFast: Boolean(options.isFast)
+    });
+    if (architectResult.architectedPrompt && architectResult.architectedPrompt !== cleanedInput) {
+      cleanedInput = architectResult.architectedPrompt;
     }
   }
 
