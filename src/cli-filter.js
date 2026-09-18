@@ -1,4 +1,5 @@
-// src/cli-filter.js - Graviton V3.0.0 Deterministic Terminal Output Filter
+// src/cli-filter.js - Graviton V3.4.0 Deterministic Terminal & Test Runner Squeezer
+import { condenseTestOutput, condenseBuildOutput } from './stack-squeezer.js';
 
 export function stripAnsi(str) {
   if (!str) return '';
@@ -42,68 +43,11 @@ export function filterGitStatus(raw) {
 }
 
 export function filterTestOutput(raw) {
-  const clean = stripAnsi(raw);
-  const lines = clean.split('\n');
-  const failures = [];
-  let summary = '';
-  let inFailure = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.match(/FAIL|✕|ERR!|error:/i)) {
-      inFailure = true;
-      failures.push(line);
-    } else if (inFailure) {
-      if (trimmed.startsWith('at ') || trimmed.startsWith('-->') || trimmed.includes('Expected:') || trimmed.includes('Received:')) {
-        failures.push('  ' + trimmed);
-      } else if (trimmed === '' || trimmed.startsWith('PASS') || trimmed.startsWith('✓')) {
-        inFailure = false;
-      }
-    }
-
-    if (trimmed.match(/(?:Tests?:|test result:).*?(?:passed|failed)/i)) {
-      summary = trimmed;
-    }
-  }
-
-  if (failures.length > 0) {
-    return `✖ Test Failures:\n${failures.slice(0, 25).join('\n')}\n\n${summary || 'Run tests with --verbose for full trace.'}`;
-  }
-
-  if (summary) {
-    return `✓ ${summary}`;
-  }
-
-  return lines.filter(l => !l.includes('node_modules') && !l.includes('Debugger attached')).slice(0, 20).join('\n');
+  return condenseTestOutput(raw);
 }
 
 export function filterBuildOutput(raw) {
-  const clean = stripAnsi(raw);
-  const lines = clean.split('\n');
-  const warnings = [];
-  const errors = [];
-  let summary = '';
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.match(/error\b|error\[E\d+\]/i)) {
-      errors.push(trimmed);
-    } else if (trimmed.match(/warning\b/i)) {
-      warnings.push(trimmed);
-    } else if (trimmed.match(/Finished|compiled successfully|built in/i)) {
-      summary = trimmed;
-    }
-  }
-
-  if (errors.length > 0) {
-    return `✖ Build Failed:\n${errors.slice(0, 15).join('\n')}\n\n${warnings.length > 0 ? `(${warnings.length} warnings omitted)` : ''}`;
-  }
-
-  if (summary) {
-    return `✓ ${summary} · ${warnings.length > 0 ? `${warnings.length} warnings` : '0 warnings'}`;
-  }
-
-  return clean.split('\n').filter(l => l.trim().length > 0).slice(-5).join('\n');
+  return condenseBuildOutput(raw);
 }
 
 export function filterCliOutput(command, rawOutput) {

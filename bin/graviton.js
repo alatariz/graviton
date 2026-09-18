@@ -228,7 +228,7 @@ async function main() {
   Brevity Protocol Enforcer      Enforces zero-fluff technical directives & strips AI preambles
   Surgical Diff Enforcer         Restricts code mutations to minimal blast radius & diff hunks
   Patch Response Economizer      Enforces Search/Replace patch responses instead of full rewrites
-  Terminal Stream Filter         Strips build chatter, progress bars, and isolates errors
+  Terminal & Test Runner Squeezer Collapses test & compiler chatter, isolating failures and diffs
   Runtime Trace Squeezer         Prunes internal vendor & framework frames from error logs
   Selective Context Scoper       Targeted workspace mapping & referenced file extraction
   Static Import Resolver         Shallow dependency graph tracing across JS, TS, Py, Go, Rust
@@ -344,12 +344,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '3.0.0';
+    let version = '3.4.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.0.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.4.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 
@@ -571,12 +571,6 @@ async function main() {
     copyToClipboard(superPrompt);
     console.log(superPrompt);
     console.error(`\n\x1b[32m✔ SuperPrompt assembled & Copied to clipboard!\x1b[0m \x1b[90m(Graviton Zero-Token Middleware)\x1b[0m`);
-    process.exit(0);
-  }
-
-  // 6c. VERSION
-  if (command === 'version' || command === '--version' || command === '-v') {
-    console.log('GRAVITON v3.3.0 (Graviton V3.3.0 Production-Ready Autonomous Engine)');
     process.exit(0);
   }
 
