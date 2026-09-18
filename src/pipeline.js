@@ -9,6 +9,7 @@ import { isSkeletonCandidate, isAstCandidate, generateAstFunctionIndex, skeleton
 import { resolveDeltaHydration } from './delta-compressor.js';
 import { squeezeMixedContent } from './stack-squeezer.js';
 import { architectPrompt } from './prompt-architect.js';
+import { buildCognitiveContract, synthesizeDomainEdgeCases, formatDeterministicCachePrompt } from './cognitive-contract.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -17,6 +18,7 @@ import { fileURLToPath } from 'url';
 import { redactSecrets } from './workspace-helper.js';
 
 export { architectPrompt } from './prompt-architect.js';
+export { buildCognitiveContract, synthesizeDomainEdgeCases, formatDeterministicCachePrompt } from './cognitive-contract.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -804,6 +806,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   }
 
   // Autonomous Prompt Architect & Dynamic Reprompter (V3.5.0)
+  let architectIntent = 'general';
   if (!options.noArchitect) {
     const architectResult = architectPrompt(cleanedInput, {
       cwd: currentCwd,
@@ -812,6 +815,16 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     });
     if (architectResult.architectedPrompt && architectResult.architectedPrompt !== cleanedInput) {
       cleanedInput = architectResult.architectedPrompt;
+    }
+    architectIntent = architectResult.intent || 'general';
+  }
+
+  // Pre-emptive Domain Safety & Edge-Case Invariants (V3.6.0 Overclock Engine)
+  if (!options.noOverclock && !options.noEdgeCases) {
+    const edgeCases = synthesizeDomainEdgeCases(architectIntent, cleanedInput);
+    if (edgeCases && edgeCases.length > 0 && !cleanedInput.includes('[PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS]')) {
+      const edgeCaseList = edgeCases.map((ec, idx) => `   - ${ec}`).join('\n');
+      cleanedInput = `${cleanedInput}\n\n=== [PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS] ===\n${edgeCaseList}`;
     }
   }
 
@@ -1024,11 +1037,13 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
     : '';
   const economizerDirective = generateEconomizerDirective(userInput, options);
   const economizerBlock = economizerDirective ? `\n\n${economizerDirective}` : '';
+  const cognitiveContract = !options.noContract ? buildCognitiveContract(options) : '';
+  const cognitiveContractBlock = cognitiveContract ? `\n\n${cognitiveContract}` : '';
 
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
-${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}${economizerBlock}
+${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}${economizerBlock}${cognitiveContractBlock}
 
 ${workspaceBlock}${injectedFilesBlock}
 

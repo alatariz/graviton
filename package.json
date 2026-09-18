@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "3.5.0",
-  "description": "Graviton V3.5.0 - Autonomous Prompt Architect & Dynamic Reprompter, Terminal & Test Squeezer, AST Large File Shield & Context Engine for Antigravity",
+  "version": "3.6.0",
+  "description": "Graviton V3.6.0 - Fully Autonomous Zero-Config Engine, Gemini Cognitive Overclock & Zero-Stub Architecture for Antigravity",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "repository": {

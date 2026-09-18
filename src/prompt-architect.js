@@ -27,7 +27,9 @@ export function analyzePromptProfile(text) {
 
   // Intent classification based on domain keywords
   let intent = 'general';
-  if (/\b(?:game|cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon)\b/i.test(clean)) {
+  if (/\b(?:minecraft|voxel|sandbox|crafting)\b/i.test(clean)) {
+    intent = 'voxel_minecraft';
+  } else if (/\b(?:game|cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon)\b/i.test(clean)) {
     intent = 'game_dev';
   } else if (/\b(?:api|backend|rest|crud|endpoint|express|fastapi|nest|controller|route|microservice)\b/i.test(clean)) {
     intent = 'backend_api';
@@ -40,7 +42,7 @@ export function analyzePromptProfile(text) {
   }
 
   // A prompt is sparse if it asks to build/create a full system in < 25 words without technical specs
-  const isCreationVerb = /\b(?:buat(?:kan)?|bikin|create|build|make|scaffold|duplikat|clone)\b/i.test(clean);
+  const isCreationVerb = /\b(?:buat(?:kan)?|bikin|create|build|make|scaffold|duplikat|clone|cloning)\b/i.test(clean);
   const isSparse = wordCount < 25 && isCreationVerb && intent !== 'bug_fix' && !hasCodeBlock;
 
   // A prompt is rambling if it contains extensive conversational filler or greetings
@@ -143,6 +145,37 @@ export function deramblePrompt(text) {
  */
 export function expandSparsePrompt(promptText, intent, options = {}) {
   const cleanPrompt = promptText.trim();
+
+  // 0. VOXEL SANDBOX / MINECRAFT 3D BLUEPRINT
+  const isMinecraftExplicit = /\b(?:minecraft|voxel|crafting|sandbox)\b/i.test(cleanPrompt);
+  if (intent === 'voxel_minecraft' || isMinecraftExplicit) {
+    return `[ARCHITECTED TECHNICAL SPECIFICATION: Web 3D Voxel Sandbox Game (Minecraft Clone)]\n` +
+      `User Request: "${cleanPrompt}"\n\n` +
+      `Execute the complete implementation using modern Three.js (via CDN/module) and vanilla JavaScript:\n\n` +
+      `1. 3D Voxel Engine & World Generation:\n` +
+      `   - PerspectiveCamera (FOV 75, near 0.1, far 1000) with WebGLRenderer, responsive resize listener, and antialiasing.\n` +
+      `   - Procedural terrain generation using heightmap algorithms producing rolling hills, plains, and stone foundation layers.\n` +
+      `   - Spatial 3D coordinate mapping storing voxel positions and block types (Grass, Dirt, Stone, Wood, Cobblestone).\n` +
+      `   - Textured / multi-colored voxel cube meshes with distinct Grass top/sides, Dirt, Stone, Wood, and Cobblestone materials.\n\n` +
+      `2. Mining & Building Mechanics (Voxel Raycasting):\n` +
+      `   - Center-screen Raycaster tracking target block with dynamic wireframe outline highlighting the hovered block.\n` +
+      `   - Left-Click (Break/Mine): Instant block removal from 3D world with procedural particle burst and inventory update.\n` +
+      `   - Right-Click (Place/Build): Attach selected hotbar block onto the target face using intersection face normal (intersection.face.normal).\n\n` +
+      `3. Player Physics, Kinematics & Controls:\n` +
+      `   - First-person PointerLockControls with click-to-play instructions overlay.\n` +
+      `   - WASD vector movement with ground friction, acceleration, and Sprint (Shift key).\n` +
+      `   - Gravity (-30 m/s²) and Jump physics (Spacebar).\n` +
+      `   - Voxel AABB collision detection preventing player from falling through the world floor or walking through solid blocks.\n\n` +
+      `4. Inventory Hotbar & Dynamic HUD:\n` +
+      `   - Sleek bottom HUD hotbar with 5 active slots: [1] Grass, [2] Dirt, [3] Stone, [4] Wood, [5] Cobblestone.\n` +
+      `   - Active slot selection via 1-5 number keys and mouse scroll wheel with glowing visual border indicator.\n` +
+      `   - Centered minimal crosshair (+).\n\n` +
+      `5. Environment & Procedural Web Audio:\n` +
+      `   - Dynamic sky background with procedural directional sunlight creating depth and soft shadows.\n` +
+      `   - Procedural Web Audio API sound generator producing audio clicks and pops for block placement and mining (zero external audio file dependencies).\n\n` +
+      `6. Main 60 FPS Game Loop:\n` +
+      `   - High-performance requestAnimationFrame loop calculating delta time (clock.getDelta()) to guarantee smooth frame-rate-independent physics.`;
+  }
 
   // 1. GAME DEVELOPMENT BLUEPRINT (e.g. CS2, FPS, WebGL, 3D Canvas)
   if (intent === 'game_dev') {

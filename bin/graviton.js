@@ -225,6 +225,7 @@ async function main() {
 
 \x1b[1mAUTONOMOUS ENGINES\x1b[0m
   Autonomous Prompt Architect    Expands sparse requests into full technical specs or de-rambles filler
+  Gemini Cognitive Overclock     Zero-stub enforcement, domain edge-case synthesis & KV-cache optimization
   Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
   Brevity Protocol Enforcer      Enforces zero-fluff technical directives & strips AI preambles
   Surgical Diff Enforcer         Restricts code mutations to minimal blast radius & diff hunks
@@ -350,7 +351,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.5.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.6.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 
@@ -723,6 +724,10 @@ async function main() {
     isDeep: isDeep,
     isFast: isFast
   });
+
+  if (superPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
+    console.log('\x1b[36m[GRAVITON AUTONOMOUS OVERCLOCK]\x1b[0m Synthesized full-stack architecture specification with zero stubs.');
+  }
 
   const targetScope = resolveTargetScope(input, currentCwd);
   if (clipboardAttachment && clipboardAttachment.targetFiles && clipboardAttachment.targetFiles.length > 0) {
