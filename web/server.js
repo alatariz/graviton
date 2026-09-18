@@ -13,6 +13,7 @@ import { selfHealFile } from '../src/self-healer.js';
 import { listActivePorts, killProcessOnPort } from '../src/port-guard.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent } from '../src/autonomous-router.js';
+import { getWorkspaceConversations } from '../src/session-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,6 +113,53 @@ export const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/api/ports') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(listActivePorts()));
+    return;
+  }
+
+  // 1d-2. API: GET /api/conversations (Workspace Conversation History)
+  if (req.method === 'GET' && pathname === '/api/conversations') {
+    try {
+      const data = getWorkspaceConversations(process.cwd());
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(data));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: e.message, conversations: [], activeId: null }));
+    }
+    return;
+  }
+
+  // 1d-3. API: POST /api/open-cli (Open/Resume session in CLI terminal)
+  if (req.method === 'POST' && pathname === '/api/open-cli') {
+    try {
+      const body = await parseJsonBody(req);
+      const target = body.id || body.index || '';
+      const cmdStr = target ? `grav -c ${target}` : 'grav';
+
+      if (process.platform === 'win32') {
+        spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', cmdStr], {
+          cwd: process.cwd(),
+          detached: true,
+          stdio: 'ignore'
+        }).unref();
+      } else if (process.platform === 'darwin') {
+        spawn('osascript', ['-e', `tell application "Terminal" to do script "cd ${process.cwd()} && ${cmdStr}"`], {
+          detached: true,
+          stdio: 'ignore'
+        }).unref();
+      } else {
+        spawn('x-terminal-emulator', ['-e', `sh -c "cd ${process.cwd()} && ${cmdStr}; exec bash"`], {
+          detached: true,
+          stdio: 'ignore'
+        }).unref();
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, command: cmdStr }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
     return;
   }
 
@@ -317,7 +365,7 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   ⚡ GRAVITON V3.12.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
+      console.log(`   GRAVITON V3.12.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
       console.log(`  Cockpit URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {

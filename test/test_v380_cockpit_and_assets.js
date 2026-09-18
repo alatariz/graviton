@@ -116,7 +116,18 @@ async function runTests() {
     const healJson = JSON.parse(resHeal.body);
     assert.strictEqual(healJson.wasHealed, true, 'Must heal unclosed brace');
     assert(healJson.healedCode.endsWith('}'), 'Healed code must end with brace');
-    console.log('  ✔ PASS: Cockpit REST APIs (/api/hud, /api/ports, /api/graph, /api/heal) operational\n');
+
+    const resConv = await httpGet(TEST_PORT, '/api/conversations');
+    assert.strictEqual(resConv.status, 200, '/api/conversations must return 200');
+    const convJson = JSON.parse(resConv.body);
+    assert(Array.isArray(convJson.conversations), '/api/conversations must return conversations array');
+
+    const resOpenCli = await httpPost(TEST_PORT, '/api/open-cli', { id: 'test-session-123' });
+    assert.strictEqual(resOpenCli.status, 200, '/api/open-cli must return 200');
+    const openCliJson = JSON.parse(resOpenCli.body);
+    assert.strictEqual(openCliJson.success, true, '/api/open-cli must return success: true');
+    assert(openCliJson.command.includes('grav -c test-session-123'), '/api/open-cli must format grav command');
+    console.log('  ✔ PASS: Cockpit REST APIs (/api/hud, /api/ports, /api/graph, /api/heal, /api/conversations, /api/open-cli) operational\n');
 
     // [TEST 4] Procedural Asset & Audio Directives in Game Blueprints
     console.log('[TEST 4] Testing procedural texture & audio directives in game blueprints...');
