@@ -27,6 +27,7 @@ export { buildDependencyGraph, formatAsciiGraph, getSurgicalContextFiles } from 
 export { bundleWebApplication } from './bundler.js';
 export { healCodeSyntax, healRelativeImports, selfHealFile } from './self-healer.js';
 export { calculateEconomyMetrics, renderAsciiHud } from './hud.js';
+export { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from './autonomous-router.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;

@@ -48,6 +48,7 @@ import { renderAsciiHud } from '../src/hud.js';
 import { selfHealFile } from '../src/self-healer.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 import { launchLiveRunner, openBrowser } from '../src/live-runner.js';
+import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from '../src/autonomous-router.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -228,41 +229,32 @@ async function main() {
 \x1b[1mUSAGE\x1b[0m \x1b[90m(Run with 'graviton' or shorthand 'grav')\x1b[0m
   graviton "<prompt>"            (or: grav "<prompt>")
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
-  graviton -c [number] [prompt]  (or: grav -c [number])
-  graviton <command> [args...]   (or: grav <command>)
-  <command> | graviton           (or: <command> | grav)
+  graviton -c [number] [prompt]  (Resume or switch active conversation topic)
+  <command> | graviton           (Streamline test & compiler terminal chatter)
+
+\x1b[1mAUTONOMOUS ENGINES (Zero-Config / Automatic)\x1b[0m
+  • \x1b[1mZero-Token Scaffolder\x1b[0m  : Auto-detects game/app requests, scaffolds foundation on disk (0 tokens)
+  • \x1b[1mLive-Reload Dev Server\x1b[0m : Auto-launches localhost daemon & opens browser ready to play
+  • \x1b[1mStandalone Bundler\x1b[0m     : Auto-detects bundling intent, compiles multi-file into 1 HTML
+  • \x1b[1mSyntax Self-Healer\x1b[0m     : Auto-repairs unclosed brackets, trailing commas & ESM imports
+  • \x1b[1mMemory Auto-Compactor\x1b[0m  : Auto-distills past turns & keeps recent context without prompt nag
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Fast execution mode without planning (effort: low)
   -d, --deep                     Deep architecture mode with full planning
   -p, --paste                    Attach clipboard content (images, files, text)
-  -c, --conversation [number]    Open conversation history, select topic, or resume
+  -c, --conversation [number]    Open conversation history or resume topic
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
 
-\x1b[1mCOMMANDS\x1b[0m
-  "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
-  graph                          Render ASCII/Unicode multi-file dependency graph of project
+\x1b[1mUTILITY SHORTCUTS\x1b[0m
   hud                            Display real-time token savings, cost calculator & port HUD
-  bundle, export [file] [out]    Bundle web app into a single standalone offline HTML file
-  dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
-  chat, repl                     Launch interactive REPL chat session (Antigravity CLI History support)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
-  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity (agy) installation
-  index <file>                   Inspect AST function map and line ranges for any file
-  compact, cmp                   Compact long continuous session to refresh context window & save tokens
+  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   undo, rollback, rb             Revert files modified or created during the most recent AI session
-  start <cmd...>                 Launch long-running dev server cleanly as background daemon (non-hanging)
-  stop [port|all]                Terminate background daemon or free blocked development port
+  stop [port|all]                Terminate background dev daemon or free blocked development port
   ports, port                    Scan and display active listening development ports (3000, 5173, etc.)
-  init [--global]                Initialize ~/.graviton directory and local Skill Vault
-  stats, gain                    Display lifetime telemetry dashboard & token savings
-  map                            Display workspace directory tree and detected dependencies
-  clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
-  web, studio                    Launch Graviton Web Studio, live playground & visualizer (http://localhost:3000)
-  play, live [dir]               Launch instant live-reload preview server & auto-open browser
-  scaffold <type> [dir]          Scaffold zero-token project & auto-launch game in browser
-  run <cmd...>                   Execute CLI command with streamlined terminal output filtering
+  dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
   version, -v                    Display Graviton CLI version
 `);
     process.exit(0);
@@ -703,6 +695,55 @@ async function main() {
     process.exit(1);
   }
 
+  // =========================================================================
+  // AUTONOMOUS INTENT & PRE-FLIGHT DISPATCHER (V3.12.0)
+  // =========================================================================
+
+  // 1. Pure Play Intent: Opens live-server and browser without invoking AI
+  const playIntent = await detectPlayIntent(input, currentCwd);
+  if (playIntent && playIntent.handled) {
+    if (playIntent.runner) {
+      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${playIntent.runner.url}\x1b[0m (PID: ${playIntent.runner.pid})`);
+      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m\n`);
+    }
+    process.exit(0);
+  }
+
+  // 2. Bundling Intent: Pure bundle executes locally in 0 tokens; hybrid bundles post-execution
+  let shouldBundlePostExecution = false;
+  const bundleIntent = detectBundleIntent(input, currentCwd);
+  if (bundleIntent && bundleIntent.isBundleIntent) {
+    if (bundleIntent.isPure && bundleIntent.handled) {
+      const bRes = bundleIntent.result;
+      console.log(`\x1b[36m[GRAVITON AUTONOMOUS BUNDLER]\x1b[0m Inlining project into standalone single HTML...`);
+      if (bRes && bRes.success) {
+        console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+        console.log(`  Destination : \x1b[1;36m${bRes.outputPath}\x1b[0m`);
+        console.log(`  Files Inlined (${bRes.filesInlined.length}):`);
+        bRes.filesInlined.forEach(f => console.log(`    ↳ \x1b[90m${f}\x1b[0m`));
+        console.log(`\x1b[90mDouble-click the file to run offline anywhere with zero dependencies.\x1b[0m\n`);
+      } else {
+        console.error(`\x1b[31m[!] Bundle error: ${bundleIntent.error || (bRes && bRes.error)}\x1b[0m`);
+      }
+      process.exit(bRes && bRes.success ? 0 : 1);
+    } else if (bundleIntent.shouldBundlePostExecution) {
+      shouldBundlePostExecution = true;
+    }
+  }
+
+  // 3. Autonomous Scaffolding & Live Launch Intent
+  let autonomousScaffoldDirective = '';
+  const scaffoldIntent = await detectScaffoldIntent(input, currentCwd);
+  if (scaffoldIntent && scaffoldIntent.triggered) {
+    console.log(`\x1b[36m[GRAVITON AUTONOMOUS ROUTER]\x1b[0m Detected new \x1b[1m${scaffoldIntent.domain}\x1b[0m project request.`);
+    console.log(`\x1b[32m✔ Autonomously scaffolded runnable foundation on disk (${scaffoldIntent.filesCreated.join(', ')}) (0 tokens).\x1b[0m`);
+    if (scaffoldIntent.runner) {
+      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${scaffoldIntent.runner.url}\x1b[0m (PID: ${scaffoldIntent.runner.pid})`);
+      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+    }
+    autonomousScaffoldDirective = scaffoldIntent.directive || '';
+  }
+
   let targetConversationId = null;
   let continueSession = false;
   let activeTitle = null;
@@ -758,7 +799,11 @@ async function main() {
     isFast: isFast
   });
 
-  if (superPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
+  const finalSuperPrompt = autonomousScaffoldDirective
+    ? `${superPrompt}\n\n${autonomousScaffoldDirective}`
+    : superPrompt;
+
+  if (finalSuperPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
     console.log('\x1b[36m[GRAVITON AUTONOMOUS OVERCLOCK]\x1b[0m Synthesized full-stack architecture specification with zero stubs.');
   }
 
@@ -782,7 +827,7 @@ async function main() {
   stats.promptsOptimized++;
   saveStats(stats);
 
-  copyToClipboard(superPrompt);
+  copyToClipboard(finalSuperPrompt);
 
   if (isScaffold) {
     const domain = detectDomainFromPrompt(input);
@@ -844,7 +889,7 @@ async function main() {
     console.log(`\x1b[90mTip: Graviton is automatically pruning and compressing context for optimal efficiency.\x1b[0m`);
   }
 
-  const result = await runAntigravityWithAutoAllow(superPrompt, {
+  const result = await runAntigravityWithAutoAllow(finalSuperPrompt, {
     conversationId: targetConversationId,
     continueSession,
     cwd: currentCwd,
@@ -882,6 +927,22 @@ async function main() {
         console.log(`\n\x1b[1m\x1b[32m[GRAVITON DEV DAEMON]\x1b[0m Web server is actively listening at \x1b[1;36mhttp://localhost:${devServer.port}/\x1b[0m (PID: ${active.pid})\n`);
       }
     }
+  }
+
+  // Post-Execution Autonomous Bundler:
+  if (shouldBundlePostExecution) {
+    console.log(`\n\x1b[36m[GRAVITON AUTONOMOUS BUNDLER]\x1b[0m Inlining completed changes into standalone HTML...`);
+    const bRes = bundleWebApplication('index.html', null, currentCwd);
+    if (bRes && bRes.success) {
+      console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(bRes.originalSize / 1024).toFixed(1)} KB -> ${(bRes.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+      console.log(`  Destination : \x1b[1;36m${bRes.outputPath}\x1b[0m\n`);
+    }
+  }
+
+  // Post-Execution Autonomous Pre-Flight & Syntax Self-Healing Guard:
+  const healRes = autoHealWorkspaceFiles(currentCwd);
+  if (healRes && healRes.filesHealedCount > 0) {
+    console.log(`\x1b[36m[GRAVITON SELF-HEALER]\x1b[0m Auto-healed \x1b[1m${healRes.filesHealedCount}\x1b[0m file(s) on disk (closed brackets, repaired JSON trailing commas, patched imports).`);
   }
 
   console.log(`\x1b[32m✔  Execution complete. (${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
