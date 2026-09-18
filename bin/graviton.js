@@ -47,6 +47,7 @@ import { bundleWebApplication } from '../src/bundler.js';
 import { renderAsciiHud } from '../src/hud.js';
 import { selfHealFile } from '../src/self-healer.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
+import { launchLiveRunner, openBrowser } from '../src/live-runner.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -259,6 +260,8 @@ async function main() {
   map                            Display workspace directory tree and detected dependencies
   clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   web, studio                    Launch Graviton Web Studio, live playground & visualizer (http://localhost:3000)
+  play, live [dir]               Launch instant live-reload preview server & auto-open browser
+  scaffold <type> [dir]          Scaffold zero-token project & auto-launch game in browser
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
 `);
@@ -429,11 +432,29 @@ async function main() {
       console.log(`\x1b[1;32m✔ Scaffolded successfully!\x1b[0m \x1b[90m(${(res.templateSizeBytes / 1024).toFixed(1)} KB boilerplate)\x1b[0m`);
       console.log(`  Target Directory : \x1b[1;36m${res.targetDir}\x1b[0m`);
       console.log(`  Files Created    : \x1b[90m${res.filesCreated.join(', ')}\x1b[0m (with procedural 16x16 canvas textures & Web Audio)`);
-      console.log(`\x1b[90mOpen index.html in any browser or launch Antigravity to build further.\x1b[0m\n`);
+      const runner = await launchLiveRunner(targetDir);
+      console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m\n`);
     } else {
       console.error(`\x1b[31m[!] Scaffold error: ${res.error}\x1b[0m`);
     }
     process.exit(res.success ? 0 : 1);
+  }
+
+  // 4g. INSTANT LIVE-RELOAD WEB RUNNER
+  if (command === 'play' || command === 'live') {
+    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const indexPath = path.join(targetDir, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      console.log(`\x1b[33m[GRAVITON]\x1b[0m No index.html found in \x1b[1m${targetDir}\x1b[0m. Scaffolding Voxel 3D World...`);
+      scaffoldProject('voxel_minecraft', targetDir);
+    }
+    console.log(`\x1b[36m[GRAVITON LIVE RUNNER]\x1b[0m Starting live-reload preview server for \x1b[1m${targetDir}\x1b[0m...`);
+    const runner = await launchLiveRunner(targetDir);
+    console.log(`\x1b[1m\x1b[32m✔ Live server active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+    console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
+    console.log(`\x1b[90m(Live-Reload is active. Any file edits made by AI will refresh the browser automatically.)\x1b[0m\n`);
+    process.exit(0);
   }
 
   // 5. MAP & WORKSPACE HYDRATION
@@ -768,6 +789,9 @@ async function main() {
     const scaffoldRes = scaffoldProject(domain, currentCwd);
     if (scaffoldRes.success) {
       console.log(`\x1b[32m✔ [SCAFFOLD]: Initialized ${domain} runnable boilerplate on disk (${scaffoldRes.filesCreated.join(', ')}).\x1b[0m`);
+      const runner = await launchLiveRunner(currentCwd);
+      console.log(`\x1b[1m\x1b[32m✔ Live game preview active at \x1b[1;36m${runner.url}\x1b[0m (PID: ${runner.pid})`);
+      console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
     }
   }
 
@@ -791,9 +815,12 @@ async function main() {
     if (isPureRunPrompt && isNotInspectOrCreate) {
       const existingDev = detectWorkspaceDevServer(currentCwd);
       if (existingDev && existingDev.exists && existingDev.command) {
-        console.log(`\x1b[36m[GRAVITON]\x1b[0m Detected existing dev server (\x1b[1m${existingDev.command}\x1b[0m). Launching background daemon...`);
+        console.log(`\x1b[36m[GRAVITON]\x1b[0m Detected dev server (\x1b[1m${existingDev.command}\x1b[0m). Launching background daemon...`);
         const daemon = startBackgroundDaemon(existingDev.command, currentCwd);
-        console.log(`\x1b[1m\x1b[32m✔ Web server active at \x1b[1;36mhttp://localhost:${existingDev.port}/\x1b[0m (PID: ${daemon.pid})`);
+        const url = `http://localhost:${existingDev.port}/`;
+        openBrowser(url);
+        console.log(`\x1b[1m\x1b[32m✔ Web server active at \x1b[1;36m${url}\x1b[0m (PID: ${daemon.pid})`);
+        console.log(`\x1b[36m🚀 Auto-launched in your default browser ready to play!\x1b[0m`);
         console.log(`\x1b[90mTip: Run 'grav stop' to terminate, or 'grav ports' to view listening ports.\x1b[0m\n`);
         process.exit(0);
       }

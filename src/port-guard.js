@@ -3,6 +3,10 @@ import { execSync, spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Graviton V3.0.0 Port Guard & Daemon Manager
@@ -364,10 +368,17 @@ export function detectWorkspaceDevServer(cwd = process.cwd()) {
     }
   }
 
-  // 4. Check index.html (Static Web)
+  // 4. Check index.html (Static Web & Live-Reload)
   const indexPath = path.join(normalizedCwd, 'index.html');
   if (fs.existsSync(indexPath)) {
-    return { command: 'node server.js', port: 3000, type: 'static-html', exists: false, hasIndexHtml: true };
+    const liveServerScript = path.join(__dirname, '..', 'bin', 'grav-live-server.js');
+    return {
+      command: `node "${liveServerScript}" "${normalizedCwd}" 3000`,
+      port: 3000,
+      type: 'static-html',
+      exists: true,
+      hasIndexHtml: true
+    };
   }
 
   return { command: null, port: 3000, type: 'none', exists: false };

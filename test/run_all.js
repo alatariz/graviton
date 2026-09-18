@@ -38,11 +38,12 @@ const testFiles = [
   'test_v370_ecosystem.js',
   'test_v380_cockpit_and_assets.js',
   'test_v390_pure_cockpit_and_scaffold.js',
-  'test_v310_auto_compactor.js'
+  'test_v310_auto_compactor.js',
+  'test_v311_live_runner.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');
-console.log('   GRAVITON V3.10.0 MASTER TEST SUITE RUNNER');
+console.log('   GRAVITON V3.11.0 MASTER TEST SUITE RUNNER');
 console.log('===============================================================\x1b[0m\n');
 
 let passed = 0;
@@ -79,6 +80,6 @@ console.log('\x1b[1m------------------------------------------------------------
 if (failed > 0) {
   process.exit(1);
 } else {
-  console.log('\x1b[1;32m✔ ALL GRAVITON V3.10.0 TEST SUITES PASSED 100%!\x1b[0m\n');
+  console.log('\x1b[1;32m✔ ALL GRAVITON V3.11.0 TEST SUITES PASSED 100%!\x1b[0m\n');
   process.exit(0);
 }
