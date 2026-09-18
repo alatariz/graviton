@@ -17,7 +17,7 @@ import {
 } from './session-manager.js';
 import { executeRollback } from './rollback-manager.js';
 import { listActivePorts, stopDaemonOrPort } from './port-guard.js';
-import { compactWorkspaceSession, checkCompactionStatus, checkAndApplySlidingWindow } from './session-compactor.js';
+import { compactWorkspaceSession, checkCompactionStatus, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from './session-compactor.js';
 import { inspectSessionFiles } from './sanity-guard.js';
 import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
@@ -404,11 +404,11 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log(`\x1b[32m✔  Execution complete. (Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
       }
 
-      // Post-execution: Syntax Sanity Check & Compaction advisory
+      // Post-execution: Syntax Sanity Check & Autonomous Compaction
       inspectSessionFiles(cwd);
-      const compStatus = checkCompactionStatus(cwd);
-      if (compStatus.advise) {
-        console.log(compStatus.message);
+      const autoComp = autoCompactSessionIfExceeded(cwd, activeConversationId);
+      if (autoComp && autoComp.autoCompacted && autoComp.message) {
+        console.log(`\n${autoComp.message}`);
       }
 
     } catch (err) {

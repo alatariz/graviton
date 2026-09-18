@@ -4,18 +4,20 @@ import path from 'path';
 import { getWorkspaceSession, saveWorkspaceSession, clearWorkspaceSession, getConversationHistory } from './session-manager.js';
 
 export const SLIDING_WINDOW_SIZE = 4;
-export const AUTONOMOUS_COMPACT_THRESHOLD = 5;
-const MAX_RECOMMENDED_TURNS = 8;
-const MAX_RECOMMENDED_TOKENS = 80000;
+export const AUTONOMOUS_COMPACT_THRESHOLD = 6;
+export const STANDARD_TOKEN_LIMIT = 25000;
+const MAX_RECOMMENDED_TURNS = 6;
+const MAX_RECOMMENDED_TOKENS = 25000;
 
 /**
  * Tracks turn metrics and token estimates for the active workspace session.
  * @param {string} cwd
  * @param {number} tokenDelta
  * @param {string[]} touchedFiles
+ * @param {string} [prompt]
  * @returns {object} Updated session data
  */
-export function trackSessionTurn(cwd = process.cwd(), tokenDelta = 0, touchedFiles = []) {
+export function trackSessionTurn(cwd = process.cwd(), tokenDelta = 0, touchedFiles = [], prompt = null) {
   const normalizedCwd = path.resolve(cwd);
   const sessionFile = path.join(normalizedCwd, '.graviton-session');
   let sessionData = {};
@@ -44,6 +46,19 @@ export function trackSessionTurn(cwd = process.cwd(), tokenDelta = 0, touchedFil
     }
   }
 
+  if (prompt && typeof prompt === 'string') {
+    if (!Array.isArray(sessionData.promptsHistory)) {
+      sessionData.promptsHistory = [];
+    }
+    const cleanPrompt = prompt.replace(/\r?\n/g, ' ').trim();
+    if (cleanPrompt && !sessionData.promptsHistory.includes(cleanPrompt)) {
+      sessionData.promptsHistory.push(cleanPrompt.slice(0, 120));
+      if (sessionData.promptsHistory.length > 20) {
+        sessionData.promptsHistory.shift();
+      }
+    }
+  }
+
   try {
     fs.writeFileSync(sessionFile, JSON.stringify(sessionData, null, 2), 'utf8');
   } catch {}
@@ -52,7 +67,7 @@ export function trackSessionTurn(cwd = process.cwd(), tokenDelta = 0, touchedFil
 }
 
 /**
- * Checks if the current session has exceeded healthy token or turn thresholds.
+ * Checks if the current session has reached standard limits.
  * @param {string} cwd
  * @returns {{ advise: boolean, turns: number, cumulativeTokens: number, message: string }}
  */
@@ -72,9 +87,8 @@ export function checkCompactionStatus(cwd = process.cwd()) {
     const advise = turns >= MAX_RECOMMENDED_TURNS || tokens >= MAX_RECOMMENDED_TOKENS;
     let message = '';
     if (advise) {
-      message = `\n\x1b[33m[GRAVITON ADVISORY] Continuous session has reached ${turns} turns (~ ${tokens} tokens).\x1b[0m\n` +
-        `\x1b[90mExcessively long context windows may slow down response times and consume extra tokens.\x1b[0m\n` +
-        `\x1b[36m👉 Recommendation:\x1b[0m Run '\x1b[1mgraviton compact\x1b[0m' to refresh the context window while preserving core working memory.\n`;
+      message = `\n\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Continuous session reached standard limit of ${turns} turns (~ ${tokens} tokens).\x1b[0m\n` +
+        `\x1b[90mSession managed automatically via graviton compact sliding window.\x1b[0m\n`;
     }
 
     return { advise, turns, cumulativeTokens: tokens, message };
@@ -199,6 +213,7 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
   const normalizedCwd = path.resolve(cwd);
   const windowSize = options.windowSize || SLIDING_WINDOW_SIZE;
   const threshold = options.threshold || AUTONOMOUS_COMPACT_THRESHOLD;
+  const tokenLimit = options.tokenLimit || STANDARD_TOKEN_LIMIT;
 
   const sessionFile = path.join(normalizedCwd, '.graviton-session');
   let sessionData = {};
@@ -211,7 +226,11 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
   }
 
   const currentTurns = sessionData.turns || 0;
-  if (currentTurns < threshold) {
+  const currentTokens = sessionData.cumulativeTokens || 0;
+  const isTurnOver = currentTurns >= threshold;
+  const isTokenOver = currentTokens >= tokenLimit && currentTurns > windowSize;
+
+  if (!isTurnOver && !isTokenOver) {
     return {
       autoCompacted: false,
       turnsCompacted: 0,
@@ -241,6 +260,11 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
         historyTurns = hist.turns;
       }
     } catch {}
+  }
+
+  // Fallback to recorded promptsHistory in .graviton-session if historyTurns is empty
+  if (historyTurns.length === 0 && Array.isArray(sessionData.promptsHistory) && sessionData.promptsHistory.length > 0) {
+    historyTurns = sessionData.promptsHistory.map(p => ({ role: 'user', text: p }));
   }
 
   const pastToDistill = historyTurns.slice(0, turnsToCompact);
@@ -300,7 +324,60 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
 }
 
 /**
+ * Evaluates the active workspace session against standard limits (default: 6 turns or 25,000 tokens)
+ * and automatically executes sliding-window compaction with zero user manual commands required.
+ * Preserves project continuity by retaining active working files, milestone summaries, and latest 4 turns.
+ * 
+ * @param {string} cwd
+ * @param {string} [conversationId]
+ * @param {object} [options]
+ * @returns {{ autoCompacted: boolean, turnsCompacted: number, activeTurns: number, tokensSavedEstimate: number, summary?: string, message?: string }}
+ */
+export function autoCompactSessionIfExceeded(cwd = process.cwd(), conversationId = null, options = {}) {
+  const normalizedCwd = path.resolve(cwd);
+  const sessionFile = path.join(normalizedCwd, '.graviton-session');
+  
+  if (!fs.existsSync(sessionFile)) {
+    return { autoCompacted: false, turnsCompacted: 0, activeTurns: 0, tokensSavedEstimate: 0, message: '' };
+  }
+
+  let sessionData = {};
+  try {
+    sessionData = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+  } catch {
+    return { autoCompacted: false, turnsCompacted: 0, activeTurns: 0, tokensSavedEstimate: 0, message: '' };
+  }
+
+  const turns = sessionData.turns || 0;
+  const tokens = sessionData.cumulativeTokens || 0;
+  const threshold = options.threshold || AUTONOMOUS_COMPACT_THRESHOLD;
+  const tokenLimit = options.tokenLimit || STANDARD_TOKEN_LIMIT;
+
+  if (turns < threshold && tokens < tokenLimit) {
+    return { autoCompacted: false, turnsCompacted: 0, activeTurns: turns, tokensSavedEstimate: 0, message: '' };
+  }
+
+  const result = checkAndApplySlidingWindow(normalizedCwd, conversationId, {
+    threshold,
+    tokenLimit,
+    windowSize: options.windowSize || SLIDING_WINDOW_SIZE
+  });
+
+  if (result.autoCompacted) {
+    const saved = result.tokensSavedEstimate || 0;
+    const msg = `\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Standard limit reached (${turns} turns / ~${tokens.toLocaleString()} tokens). Distilled earlier context into working memory (\x1b[1;32m~${saved.toLocaleString()} tokens saved\x1b[0m). Project continuity preserved.`;
+    return {
+      ...result,
+      message: msg
+    };
+  }
+
+  return { ...result, message: '' };
+}
+
+/**
  * Reads compact memory if available to prepend to fresh sessions.
+ * Guarantees that Gemini receives previous project assets and milestones to seamlessly continue work.
  * @param {string} cwd
  * @returns {string|null}
  */
@@ -312,7 +389,10 @@ export function getCompactMemoryDirective(cwd = process.cwd()) {
     const data = JSON.parse(fs.readFileSync(memoryFile, 'utf8'));
     if (data && data.memo) {
       const windowTag = data.slidingWindowActive ? ` (Autonomous Sliding Window: Active)` : '';
-      return `[GRAVITON PERSISTED COMPACT MEMORY${windowTag}]\n${data.memo}\n`;
+      const filesTag = Array.isArray(data.activeFiles) && data.activeFiles.length > 0
+        ? `\n[PROJECT WORKING ASSETS]: ${data.activeFiles.join(', ')}`
+        : '';
+      return `[GRAVITON PERSISTED COMPACT MEMORY${windowTag}]\n${data.memo}${filesTag}\n[PROJECT CONTINUITY DIRECTIVE]: Seamlessly continue project development using existing codebase and milestones.\n`;
     }
   } catch {}
   return null;

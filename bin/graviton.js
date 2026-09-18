@@ -33,7 +33,7 @@ import {
 import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort, detectWorkspaceDevServer } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
-import { compactWorkspaceSession, checkAndApplySlidingWindow } from '../src/session-compactor.js';
+import { compactWorkspaceSession, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
@@ -719,9 +719,9 @@ async function main() {
   }
 
   if (continueSession) {
-    const autoComp = checkAndApplySlidingWindow(currentCwd, targetConversationId);
-    if (autoComp.autoCompacted) {
-      console.log(`\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Distilled ${autoComp.turnsCompacted} earlier turns into working memory (Estimated ~${autoComp.tokensSavedEstimate.toLocaleString()} tokens saved). Rolling context refreshed!`);
+    const autoComp = autoCompactSessionIfExceeded(currentCwd, targetConversationId);
+    if (autoComp && autoComp.autoCompacted && autoComp.message) {
+      console.log(autoComp.message);
     }
   }
 

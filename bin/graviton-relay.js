@@ -5,7 +5,7 @@ import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pi
 import { getLatestConversationId, saveWorkspaceSession } from '../src/session-manager.js';
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 import { inspectSessionFiles } from '../src/sanity-guard.js';
-import { trackSessionTurn, checkCompactionStatus } from '../src/session-compactor.js';
+import { trackSessionTurn, checkCompactionStatus, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
 
 /**
  * Resolves the command executable name based on the OS.
@@ -378,12 +378,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
 
       const odo = readOdometer();
-      trackSessionTurn(executionCwd, odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
+      trackSessionTurn(executionCwd, odo.lastSessionTokens || 0, shadowBackups.map(b => b.original), promptToSave);
       inspectSessionFiles(executionCwd);
 
-      const comp = checkCompactionStatus(executionCwd);
-      if (comp && comp.advise) {
-        console.log(comp.message);
+      const autoComp = autoCompactSessionIfExceeded(executionCwd, latestConvId);
+      if (autoComp && autoComp.autoCompacted && autoComp.message) {
+        console.log(`\n${autoComp.message}`);
       }
     } catch {}
 
@@ -588,12 +588,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
         saveSessionManifest(executionCwd, latestConvId || '', shadowBackups, initialSnapshot);
 
         const odo = readOdometer();
-        trackSessionTurn(executionCwd, turnTokens || odo.lastSessionTokens || 0, shadowBackups.map(b => b.original));
+        trackSessionTurn(executionCwd, turnTokens || odo.lastSessionTokens || 0, shadowBackups.map(b => b.original), promptToSave);
         inspectSessionFiles(executionCwd);
 
-        const comp = checkCompactionStatus(executionCwd);
-        if (comp && comp.advise) {
-          console.log(comp.message);
+        const autoComp = autoCompactSessionIfExceeded(executionCwd, latestConvId);
+        if (autoComp && autoComp.autoCompacted && autoComp.message) {
+          console.log(`\n${autoComp.message}`);
         }
       } catch {}
 
