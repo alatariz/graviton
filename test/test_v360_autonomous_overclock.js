@@ -104,6 +104,24 @@ try {
   assert.strictEqual(prefix1, prefix2, 'Static cache prefix must be 100% byte-for-byte identical across turns');
   console.log(`  ✔ PASS: 100% byte-for-byte prefix identity confirmed (${prefix1.length} bytes cached)\n`);
 
+  // [TEST 7] 2D Arcade Game Expansion (Flappy Bird, Snake, Tetris)
+  console.log('[TEST 7] Testing 2D arcade game autonomous expansion...');
+  const arcadePrompt = 'buatkan game flappy bird web';
+  const arcadeResult = architectPrompt(arcadePrompt);
+  assert(arcadeResult.architectedPrompt.includes('Web 2D Arcade Game'), 'Must expand to 2D Arcade Game');
+  assert(arcadeResult.architectedPrompt.includes('Canvas Rendering & Scaling'), 'Must include Canvas scaling');
+  assert(arcadeResult.architectedPrompt.includes('Entity & Physics Engine'), 'Must include Entity & Physics engine');
+  console.log('  ✔ PASS: 2D Arcade games expand into full high-DPI canvas & physics blueprints\n');
+
+  // [TEST 8] Full-Stack Interactive Web App Clone Expansion (Trello, Spotify, etc.)
+  console.log('[TEST 8] Testing full-stack web app clone autonomous expansion...');
+  const trelloPrompt = 'buatkan web app clone trello kanban';
+  const trelloResult = architectPrompt(trelloPrompt);
+  assert(trelloResult.architectedPrompt.includes('Production Interactive Web Application'), 'Must expand to Interactive Web Application');
+  assert(trelloResult.architectedPrompt.includes('Reactive State Management & Local Persistence'), 'Must include state and persistence');
+  assert(trelloResult.architectedPrompt.includes('Full CRUD operations'), 'Must include full CRUD');
+  console.log('  ✔ PASS: Web app clones expand into complete production architectures with local persistence\n');
+
   console.log('---------------------------------------------------------------');
   console.log('✔ ALL V3.6.0 AUTONOMOUS OVERCLOCK TESTS PASSED 100%!');
   console.log('---------------------------------------------------------------\n');

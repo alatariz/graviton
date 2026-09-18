@@ -29,11 +29,11 @@ export function analyzePromptProfile(text) {
   let intent = 'general';
   if (/\b(?:minecraft|voxel|sandbox|crafting)\b/i.test(clean)) {
     intent = 'voxel_minecraft';
-  } else if (/\b(?:game|cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon)\b/i.test(clean)) {
+  } else if (/\b(?:game|cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon|flappy|snake|tetris|pong|pacman|chess|catur|mario|platformer)\b/i.test(clean)) {
     intent = 'game_dev';
   } else if (/\b(?:api|backend|rest|crud|endpoint|express|fastapi|nest|controller|route|microservice)\b/i.test(clean)) {
     intent = 'backend_api';
-  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css)\b/i.test(clean)) {
+  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css|trello|kanban|todo|spotify|ecommerce|shop|store|calculator|kalkulator|editor|aplikasi|app|web\s*app)\b/i.test(clean)) {
     intent = 'frontend_ui';
   } else if (/\b(?:database|sql|table|schema|migration|bigquery|postgres|mysql|sqlite|query)\b/i.test(clean)) {
     intent = 'database_sql';
@@ -208,6 +208,29 @@ export function expandSparsePrompt(promptText, intent, options = {}) {
         `   - requestAnimationFrame loop calculating delta time (clock.getDelta()) to ensure frame-rate-independent physics at 60+ FPS.`;
     }
 
+    // 2D Arcade & Board Game Blueprint (Flappy Bird, Snake, Tetris, Pacman, Chess, etc.)
+    const is2dArcade = /\b(?:flappy|bird|snake|tetris|pong|pacman|arkanoid|breakout|space\s*invaders|catur|chess|2d|arcade)\b/i.test(cleanPrompt);
+    if (is2dArcade) {
+      return `[ARCHITECTED TECHNICAL SPECIFICATION: Web 2D Arcade Game]\n` +
+        `User Request: "${cleanPrompt}"\n\n` +
+        `Implement complete modular 2D HTML5 Canvas game with clean vanilla JavaScript:\n\n` +
+        `1. Canvas Rendering & Scaling:\n` +
+        `   - High-DPI crisp Canvas setup (handling devicePixelRatio) with auto-centering and letterboxing.\n` +
+        `   - Clean 60 FPS requestAnimationFrame game loop with delta-time physics and pause/resume capability.\n\n` +
+        `2. Entity & Physics Engine:\n` +
+        `   - Player entity with velocity, acceleration, gravity, or grid-step kinematics.\n` +
+        `   - Obstacle / enemy / piece spawner with bounding-box (AABB) or grid collision detection.\n` +
+        `   - Score, combo multiplier, difficulty progression scaling over time, and High Score persistence in localStorage.\n\n` +
+        `3. Controls & Input Handling:\n` +
+        `   - Responsive keyboard (Arrows, WASD, Space), mouse/pointer, and mobile touch tap/swipe support.\n` +
+        `   - Prevent default browser scrolling on game keys (Space, Arrow keys).\n\n` +
+        `4. Visual FX & Procedural Audio:\n` +
+        `   - Particle effect generator for explosions, collisions, and score pickups.\n` +
+        `   - Procedural Web Audio API sound synthesizer (jump beep, coin ding, game-over crash) with zero external audio dependencies.\n\n` +
+        `5. Game State Machine & HUD:\n` +
+        `   - Distinct states: Start Menu, Playing, Paused, and Game Over screen with instant restart (Space/R key or tap).`;
+    }
+
     // Generic 2D/3D Canvas Game
     return `[ARCHITECTED TECHNICAL SPECIFICATION: Web Interactive Game]\n` +
       `User Request: "${cleanPrompt}"\n\n` +
@@ -232,8 +255,35 @@ export function expandSparsePrompt(promptText, intent, options = {}) {
       `6. Testing & Health: Add a '/health' endpoint and automated test suite verifying all routes.`;
   }
 
-  // 3. FRONTEND / UI COMPONENT BLUEPRINT
+  // 3. FRONTEND & FULL-STACK WEB APPLICATION BLUEPRINT (Trello, Spotify, SaaS, Dashboards)
   if (intent === 'frontend_ui') {
+    const isWebAppClone = /\b(?:clone|cloning|duplikat|saas|trello|kanban|spotify|ecommerce|shop|store)\b/i.test(cleanPrompt)
+      || (/\b(?:app|aplikasi)\b/i.test(cleanPrompt) && !/\b(?:layout|component|navbar|modal)\b/i.test(cleanPrompt));
+    if (isWebAppClone) {
+      return `[ARCHITECTED TECHNICAL SPECIFICATION: Production Interactive Web Application]\n` +
+        `User Request: "${cleanPrompt}"\n\n` +
+        `Execute complete implementation with clean, modular HTML5, CSS3, and vanilla JavaScript:\n\n` +
+        `1. Semantic Structure & Component Architecture:\n` +
+        `   - Semantic HTML5 layout with accessibility roles and ARIA labels adapting cleanly from mobile (360px) to ultra-wide desktop.\n` +
+        `   - Header / Navigation, Main workspace view, dynamic sidebar, and modal dialog system.\n\n` +
+        `2. Responsive Layout & Views:\n` +
+        `   - Responsive Flexbox/Grid adapting gracefully across viewports.\n\n` +
+        `3. Reactive State Management & Local Persistence:\n` +
+        `   - Centralized reactive state store managing user entities, active views, and filter states.\n` +
+        `   - Automatic localStorage synchronization ensuring full data persistence across browser reloads with seed initial records.\n\n` +
+        `4. Core Functional Mechanisms & Full CRUD operations:\n` +
+        `   - Full CRUD operations (Create, Read, Update, Delete) for main domain entities.\n` +
+        `   - Interactive controls: Drag-and-drop or reordering, search/filter inputs with real-time feedback, and sorting.\n` +
+        `   - Keyboard shortcuts & focus management (Escape to close modals, Enter to submit, Tab navigation).\n\n` +
+        `5. Design System & Theming:\n` +
+        `   - Modern styling with CSS variables (tokens for colors, typography, elevation shadows, border radius) with dark/light mode toggle.\n\n` +
+        `6. Polish, Notifications & Feedback:\n` +
+        `   - Non-blocking toast notification system for success, warning, and error alerts.\n` +
+        `   - Micro-interactions, smooth hover transitions, loading skeletons, and empty state illustrations.\n\n` +
+        `7. Zero-Stub Production Guarantee:\n` +
+        `   - Self-contained, single-file or cleanly modularized bundle ready to open in any browser immediately.`;
+    }
+
     return `[ARCHITECTED TECHNICAL SPECIFICATION: Responsive UI Component]\n` +
       `User Request: "${cleanPrompt}"\n\n` +
       `Implement production-ready user interface:\n` +
@@ -253,6 +303,18 @@ export function expandSparsePrompt(promptText, intent, options = {}) {
       `2. Indexing Strategy: Strategic B-tree / composite indexes on high-cardinality query columns.\n` +
       `3. Idempotent Operations: Migration scripts with CREATE TABLE IF NOT EXISTS and safe constraints.\n` +
       `4. Performant Queries: Avoid SELECT *; use explicit column projections and parameterized filters.`;
+  }
+
+  // Universal Fallback for any sparse creation request
+  const isCreationVerb = /\b(?:buat(?:kan)?|bikin|create|build|make|scaffold|duplikat|clone|cloning)\b/i.test(cleanPrompt);
+  if (isCreationVerb) {
+    return `[ARCHITECTED TECHNICAL SPECIFICATION: Production Web Application]\n` +
+      `User Request: "${cleanPrompt}"\n\n` +
+      `Execute complete implementation with clean, modular architecture:\n\n` +
+      `1. Modular Structure & Responsive Layout: Clean semantic HTML5, modern CSS3 Flexbox/Grid adapting to mobile and desktop.\n` +
+      `2. State Management & Persistence: Centralized reactive state with localStorage persistence and seed initial data.\n` +
+      `3. Core Functional Features: Full implementation of all requested mechanisms with interactive handlers.\n` +
+      `4. Defensive Guardrails: Input validation, error feedback, keyboard navigation, and zero stubs.`;
   }
 
   return cleanPrompt;
