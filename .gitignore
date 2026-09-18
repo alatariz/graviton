@@ -16,4 +16,6 @@ web/node_modules/
 # Private website & marketing files (kept separate from program)
 private-web/
 .private-site/
+# Root temporary test artifacts
+/index.html
 

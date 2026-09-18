@@ -43,7 +43,8 @@ const testFiles = [
   'test_v312_autonomous_router.js',
   'test_v313_model_selector.js',
   'test_v314_granular_undo_and_model_fix.js',
-  'test_v315_dashboard_ide_api.js'
+  'test_v315_dashboard_ide_api.js',
+  'test_v316_ide_features.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

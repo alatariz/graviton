@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { synthesizePrompt, readOdometer } from '../src/pipeline.js';
 import { resolveAgyExecutable, runAntigravityWithAutoAllow } from '../bin/graviton-relay.js';
@@ -147,10 +147,13 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 1b. API: GET /api/hud (Economy & Cost Metrics)
+  // 1b. API: GET /api/hud (Economy & Cost Metrics with Odometer & Telemetry Sync)
   if (req.method === 'GET' && pathname === '/api/hud') {
+    const metrics = calculateEconomyMetrics();
+    const odometer = readOdometer();
+    const telemetry = getTelemetry();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(calculateEconomyMetrics()));
+    res.end(JSON.stringify({ ...metrics, odometer, telemetry }));
     return;
   }
 
@@ -209,6 +212,72 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1f-2. API: POST /api/pick-folder (Native OS Folder Picker Dialog)
+  if (req.method === 'POST' && pathname === '/api/pick-folder') {
+    try {
+      const body = await parseJsonBody(req).catch(() => ({}));
+      if (body.mockPath || process.env.NODE_ENV === 'test') {
+        const mock = body.mockPath || activeWorkspaceDir;
+        activeWorkspaceDir = path.resolve(mock);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, cwd: activeWorkspaceDir, picked: true }));
+        return;
+      }
+
+      if (process.platform === 'win32') {
+        const initial = activeWorkspaceDir.replace(/'/g, "''");
+        const psScript = `Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = 'Select Workspace Directory for Graviton IDE'; $d.ShowNewFolderButton = $true; $d.SelectedPath = '${initial}'; if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.SelectedPath }`;
+        const psRes = spawnSync('powershell.exe', ['-NoProfile', '-Command', psScript], {
+          encoding: 'utf8',
+          timeout: 60000
+        });
+
+        const chosenPath = (psRes.stdout || '').trim();
+        if (chosenPath && fs.existsSync(chosenPath) && fs.statSync(chosenPath).isDirectory()) {
+          activeWorkspaceDir = path.resolve(chosenPath);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, cwd: activeWorkspaceDir, picked: true }));
+          return;
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, cancelled: true, cwd: activeWorkspaceDir }));
+          return;
+        }
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, message: 'Native picker is available on Windows. Use directory input.', cwd: activeWorkspaceDir }));
+        return;
+      }
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // 1f-3. API: POST /api/reveal-folder (Open directory in File Explorer)
+  if (req.method === 'POST' && pathname === '/api/reveal-folder') {
+    try {
+      const body = await parseJsonBody(req).catch(() => ({}));
+      const targetCwd = resolveCwd(body.cwd);
+      if (process.env.NODE_ENV !== 'test') {
+        if (process.platform === 'win32') {
+          spawn('explorer.exe', [targetCwd], { detached: true, stdio: 'ignore' }).unref();
+        } else if (process.platform === 'darwin') {
+          spawn('open', [targetCwd], { detached: true, stdio: 'ignore' }).unref();
+        } else {
+          spawn('xdg-open', [targetCwd], { detached: true, stdio: 'ignore' }).unref();
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, cwd: targetCwd, revealed: true }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
   // 1g. API: GET /api/conversations (Workspace Conversation History)
   if (req.method === 'GET' && pathname === '/api/conversations') {
     try {
@@ -217,7 +286,7 @@ export const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ cwd: targetCwd, activeId: data.activeId, conversations: data.conversations || [] }));
     } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: e.message, conversations: [], activeId: null }));
     }
     return;
@@ -422,7 +491,7 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 1n. API: POST /api/chat (Developer IDE Prompt Execution with Effort & Dry Run)
+  // 1n. API: POST /api/chat (Developer IDE Prompt Execution with Fast/Grav/Deep Effort & Dry Run)
   if (req.method === 'POST' && pathname === '/api/chat') {
     try {
       const body = await parseJsonBody(req);
@@ -434,15 +503,18 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const targetCwd = resolveCwd(body.cwd);
-      const effort = (body.effort || 'medium').toLowerCase();
+      const rawEffort = (body.effort || 'grav').toLowerCase();
       const dryRun = Boolean(body.dryRun);
-      const isFast = effort === 'low';
-      const isDeep = effort === 'high';
+
+      // Map Fast / Grav / Deep (and backwards compatible low / medium / high)
+      const isFast = rawEffort === 'fast' || rawEffort === 'low';
+      const isDeep = rawEffort === 'deep' || rawEffort === 'high';
+      const effortMode = (rawEffort === 'grav' || rawEffort === 'medium') ? 'medium' : (isFast ? 'low' : (isDeep ? 'high' : undefined));
 
       const modelRouting = resolveModelAndEffort({
         isFast,
         isDeep,
-        effort: (effort === 'medium' ? 'medium' : undefined),
+        effort: effortMode,
         prompt
       });
 
@@ -456,6 +528,7 @@ export const server = http.createServer(async (req, res) => {
           dryRun: true,
           cwd: targetCwd,
           prompt,
+          effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
           modelRouting,
           targetScope,
           preFlight,
@@ -504,6 +577,7 @@ export const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: executionResult.status !== 'error',
         cwd: targetCwd,
+        effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
         modelRouting,
         targetScope,
         preFlight,

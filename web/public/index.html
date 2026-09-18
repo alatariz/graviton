@@ -11,26 +11,30 @@
   <style>
     :root {
       --bg: #090a0f;
-      --bg-card: #10131a;
-      --bg-card-subtle: #141824;
-      --bg-card-hover: #181d2c;
+      --bg-panel: #0d1017;
+      --bg-card: #121622;
+      --bg-card-subtle: #161c2c;
+      --bg-card-hover: #1c2337;
       --border: rgba(255, 255, 255, 0.08);
-      --border-accent: rgba(56, 189, 248, 0.3);
+      --border-accent: rgba(56, 189, 248, 0.35);
       --border-focus: #38bdf8;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
       --cyan: #38bdf8;
-      --cyan-subtle: rgba(56, 189, 248, 0.1);
+      --cyan-subtle: rgba(56, 189, 248, 0.12);
       --green: #10b981;
       --green-subtle: rgba(16, 185, 129, 0.12);
       --purple: #818cf8;
+      --purple-subtle: rgba(129, 140, 248, 0.12);
       --amber: #f59e0b;
       --amber-subtle: rgba(245, 158, 11, 0.12);
       --red: #ef4444;
       --red-subtle: rgba(239, 68, 68, 0.12);
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', Consolas, monospace;
+      --sidebar-width: 320px;
+      --drawer-height: 220px;
     }
 
     * {
@@ -43,90 +47,159 @@
       background-color: var(--bg);
       color: var(--text-main);
       font-family: var(--font-sans);
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       font-size: 13px;
       line-height: 1.5;
-      overflow-x: hidden;
+      overflow: hidden;
+      user-select: none;
     }
 
-    /* TOP NAVIGATION */
-    .dashboard-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(9, 10, 15, 0.95);
-      backdrop-filter: blur(12px);
+    /* 1. TOP IDE MENU BAR */
+    .ide-menubar {
+      background: #08090d;
       border-bottom: 1px solid var(--border);
-      padding: 0.5rem 1.25rem;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      height: 30px;
+      font-size: 12px;
+      position: relative;
+      z-index: 200;
+    }
+
+    .brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0 0.5rem;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      border-right: 1px solid var(--border);
+      margin-right: 0.25rem;
+    }
+
+    .menu-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .menu-item {
+      position: relative;
+    }
+
+    .menu-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.25rem 0.6rem;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .menu-btn:hover, .menu-item.open .menu-btn {
+      background: var(--bg-card);
+      color: #ffffff;
+    }
+
+    .menu-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      min-width: 200px;
+      padding: 0.35rem 0;
+      display: none;
+      flex-direction: column;
+      z-index: 300;
+    }
+
+    .menu-item.open .menu-dropdown {
+      display: flex;
+    }
+
+    .menu-action {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 0.35rem 0.85rem;
+      text-align: left;
+      font-size: 12px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
     }
 
-    .brand {
+    .menu-action:hover {
+      background: var(--cyan-subtle);
+      color: var(--cyan);
+    }
+
+    .menu-action .shortcut {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .menu-separator {
+      height: 1px;
+      background: var(--border);
+      margin: 0.3rem 0;
+    }
+
+    .menubar-right {
+      margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      white-space: nowrap;
+      gap: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      padding-right: 0.5rem;
     }
 
-    .brand-icon {
-      width: 26px;
-      height: 26px;
+    /* 2. DIRECTORY & ACTION TOOLBAR */
+    .ide-toolbar {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0.4rem 0.85rem;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: var(--cyan-subtle);
-      border: 1px solid var(--border-accent);
-      border-radius: 5px;
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 12px;
+      justify-content: space-between;
+      gap: 0.75rem;
+      z-index: 90;
     }
 
-    .brand-title {
-      font-size: 0.88rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #ffffff;
-      text-transform: uppercase;
-    }
-
-    .brand-badge {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: var(--cyan);
-      background: var(--cyan-subtle);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 0.1rem 0.4rem;
-      border-radius: 3px;
-    }
-
-    /* DIRECTORY SWITCHER BAR */
-    .dir-switcher {
+    .dir-bar {
       display: flex;
       align-items: center;
       gap: 0.4rem;
       flex: 1;
-      max-width: 680px;
+      max-width: 780px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
     }
 
     .dir-label {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 11px;
       font-weight: 600;
       color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      padding-left: 0.2rem;
     }
 
     .dir-input {
@@ -135,22 +208,23 @@
       border: none;
       color: var(--text-main);
       font-family: var(--font-mono);
-      font-size: 0.76rem;
+      font-size: 12px;
       outline: none;
-      padding: 0.15rem 0.25rem;
+      padding: 0.15rem 0.3rem;
+      user-select: text;
     }
 
     .dir-input:focus {
       color: var(--cyan);
     }
 
-    .btn-action {
+    .btn-ide {
       background: var(--bg-card-subtle);
       border: 1px solid var(--border);
       color: var(--text-main);
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 0.25rem 0.6rem;
+      font-size: 11px;
+      padding: 0.25rem 0.55rem;
       border-radius: 4px;
       cursor: pointer;
       display: inline-flex;
@@ -160,131 +234,106 @@
       white-space: nowrap;
     }
 
-    .btn-action:hover {
+    .btn-ide:hover {
       background: var(--bg-card-hover);
       border-color: var(--border-accent);
       color: var(--cyan);
     }
 
-    .btn-cli {
-      background: rgba(16, 185, 129, 0.1);
+    .btn-ide.accent {
+      background: var(--cyan-subtle);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+    }
+
+    .btn-ide.accent:hover {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--cyan);
+      color: #ffffff;
+    }
+
+    .btn-ide.cli {
+      background: var(--green-subtle);
       border-color: rgba(16, 185, 129, 0.3);
       color: var(--green);
     }
 
-    .btn-cli:hover {
-      background: rgba(16, 185, 129, 0.2);
+    .btn-ide.cli:hover {
+      background: rgba(16, 185, 129, 0.22);
       border-color: var(--green);
       color: #ffffff;
     }
 
-    .nav-stats {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 0.25rem 0.55rem;
-      border-radius: 9999px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: var(--green);
-      box-shadow: 0 0 6px var(--green);
-    }
-
-    /* TOP METRICS STRIP */
+    /* 3. METRICS STRIP */
     .metrics-strip {
-      background: var(--bg-card-subtle);
+      background: #080a0f;
       border-bottom: 1px solid var(--border);
-      padding: 0.5rem 1.25rem;
+      padding: 0.35rem 1rem;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0.75rem;
     }
 
-    @media (max-width: 900px) {
-      .metrics-strip {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .metric-item {
+    .metric-box {
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
+      gap: 0.1rem;
     }
 
-    .metric-header {
-      font-size: 0.68rem;
+    .metric-box-title {
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: var(--text-dim);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .metric-val {
+    .metric-box-val {
       font-family: var(--font-mono);
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 700;
       color: #ffffff;
     }
 
-    .metric-sub {
+    .metric-box-sub {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 10px;
       color: var(--text-muted);
     }
 
-    /* MAIN IDE SPLIT WORKSPACE */
-    .ide-workspace {
+    /* 4. MAIN IDE WORKSPACE & RESIZABLE PANELS */
+    .ide-body {
       flex: 1;
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      min-height: calc(100vh - 170px);
+      display: flex;
+      position: relative;
       overflow: hidden;
     }
 
-    @media (max-width: 960px) {
-      .ide-workspace {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* LEFT SIDEBAR: CONVERSATIONS */
-    .sidebar-conversations {
-      border-right: 1px solid var(--border);
-      background: var(--bg-card);
+    /* SIDEBAR (CONVERSATIONS) */
+    .ide-sidebar {
+      width: var(--sidebar-width);
+      min-width: 220px;
+      max-width: 600px;
+      background: var(--bg-panel);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
-    .sidebar-header {
-      padding: 0.65rem 0.85rem;
+    .sidebar-top {
+      padding: 0.5rem 0.75rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--bg-card-subtle);
+      background: var(--bg-card);
     }
 
-    .sidebar-title {
-      font-size: 0.75rem;
+    .sidebar-heading {
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -295,41 +344,38 @@
       background: var(--cyan-subtle);
       border: 1px solid rgba(56, 189, 248, 0.3);
       color: var(--cyan);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
+      padding: 0.18rem 0.45rem;
+      border-radius: 3px;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 11px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
       font-weight: 600;
       transition: all 0.15s ease;
     }
 
     .btn-new-chat:hover {
-      background: rgba(56, 189, 248, 0.2);
+      background: rgba(56, 189, 248, 0.22);
       border-color: var(--cyan);
       color: #ffffff;
     }
 
-    .conversations-scroll {
+    .conversations-container {
       flex: 1;
       overflow-y: auto;
-      padding: 0.5rem;
+      padding: 0.4rem;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
     .conv-item {
       background: var(--bg-card-subtle);
       border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 0.55rem 0.65rem;
+      border-radius: 4px;
+      padding: 0.45rem 0.6rem;
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
+      gap: 0.25rem;
       cursor: pointer;
       transition: all 0.15s ease;
       position: relative;
@@ -341,8 +387,8 @@
     }
 
     .conv-item.active {
-      border-color: rgba(56, 189, 248, 0.5);
-      background: rgba(56, 189, 248, 0.05);
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(56, 189, 248, 0.06);
     }
 
     .conv-item-top {
@@ -353,7 +399,7 @@
     }
 
     .conv-item-title {
-      font-size: 0.78rem;
+      font-size: 12px;
       font-weight: 600;
       color: #ffffff;
       white-space: nowrap;
@@ -376,25 +422,25 @@
       display: flex;
     }
 
-    .btn-icon {
+    .btn-mini {
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-dim);
-      padding: 0.15rem 0.3rem;
+      padding: 0.1rem 0.25rem;
       border-radius: 3px;
       cursor: pointer;
-      font-size: 0.65rem;
+      font-size: 10px;
       font-family: var(--font-mono);
       line-height: 1;
     }
 
-    .btn-icon:hover {
+    .btn-mini:hover {
       background: var(--bg-card);
       border-color: var(--border);
       color: var(--text-main);
     }
 
-    .btn-icon.delete:hover {
+    .btn-mini.del:hover {
       color: var(--red);
       border-color: rgba(239, 68, 68, 0.3);
     }
@@ -402,54 +448,70 @@
     .conv-item-meta {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.68rem;
+      gap: 0.45rem;
+      font-size: 10px;
       color: var(--text-dim);
       font-family: var(--font-mono);
     }
 
-    .conv-badge {
-      padding: 0.05rem 0.3rem;
+    .badge-pill {
+      padding: 0.05rem 0.25rem;
       border-radius: 3px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       color: var(--text-muted);
     }
 
-    .conv-badge.active {
+    .badge-pill.active {
       background: var(--green-subtle);
       border-color: rgba(16, 185, 129, 0.3);
       color: var(--green);
     }
 
-    /* RIGHT MAIN: CHAT & COMMAND DRAWER */
-    .main-ide-content {
+    /* HORIZONTAL RESIZER GUTTER */
+    .resizer-horizontal {
+      width: 5px;
+      background: transparent;
+      cursor: col-resize;
+      transition: background 0.15s;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .resizer-horizontal:hover, .resizer-horizontal.dragging {
+      background: var(--cyan);
+    }
+
+    /* CENTER/MAIN IDE WORKSPACE */
+    .ide-main {
+      flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       background: var(--bg);
+      position: relative;
     }
 
     /* CHAT HEADER */
     .chat-view-header {
-      padding: 0.65rem 1rem;
+      padding: 0.45rem 0.85rem;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
-    .chat-header-info {
+    .chat-info-block {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
       overflow: hidden;
     }
 
     .chat-topic-title {
-      font-size: 0.85rem;
+      font-size: 13px;
       font-weight: 600;
       color: #ffffff;
       white-space: nowrap;
@@ -457,39 +519,33 @@
       text-overflow: ellipsis;
     }
 
-    .chat-model-indicator {
+    .chat-model-badge {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
-      background: rgba(56, 189, 248, 0.08);
+      font-size: 11px;
+      background: var(--cyan-subtle);
       border: 1px solid rgba(56, 189, 248, 0.25);
       color: var(--cyan);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
       white-space: nowrap;
-    }
-
-    .chat-header-tools {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
     }
 
     /* CHAT FEED CONTAINER */
     .chat-feed {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
-      min-height: 240px;
+      gap: 0.75rem;
+      user-select: text;
     }
 
     .chat-turn {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      max-width: 900px;
+      gap: 0.3rem;
+      max-width: 920px;
       width: 100%;
     }
 
@@ -504,14 +560,14 @@
     .turn-header {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 10px;
       color: var(--text-dim);
     }
 
     .turn-tag {
-      padding: 0.1rem 0.35rem;
+      padding: 0.05rem 0.3rem;
       border-radius: 3px;
       font-weight: 600;
     }
@@ -529,9 +585,9 @@
     }
 
     .turn-bubble {
-      padding: 0.75rem 0.9rem;
-      border-radius: 6px;
-      font-size: 0.82rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 5px;
+      font-size: 13px;
       line-height: 1.5;
     }
 
@@ -548,12 +604,12 @@
     }
 
     .scoper-callout {
-      margin-bottom: 0.5rem;
-      padding: 0.4rem 0.6rem;
+      margin-bottom: 0.45rem;
+      padding: 0.35rem 0.55rem;
       background: rgba(56, 189, 248, 0.05);
       border-left: 3px solid var(--cyan);
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 11px;
       color: var(--text-muted);
     }
 
@@ -561,65 +617,68 @@
       background: #06070a;
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 4px;
-      padding: 0.6rem;
+      padding: 0.5rem;
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 11px;
       color: #cbd5e1;
       max-height: 220px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
+      user-select: text;
     }
 
-    /* CHAT COMPOSER & OPTIONS */
+    /* COMPOSER & OPTIONS BAR (FAST / GRAV / DEEP) */
     .chat-composer-area {
       background: var(--bg-card);
       border-top: 1px solid var(--border);
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.45rem;
     }
 
     .composer-options-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
     }
 
-    .effort-pills {
+    .effort-controls {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
     }
 
     .effort-label {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 11px;
       color: var(--text-dim);
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .pill-opt {
+    .pill-effort {
       background: var(--bg-card-subtle);
       border: 1px solid var(--border);
       color: var(--text-muted);
       font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
+      font-size: 11px;
+      padding: 0.2rem 0.6rem;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
+      font-weight: 500;
     }
 
-    .pill-opt:hover {
+    .pill-effort:hover {
       color: var(--text-main);
       border-color: var(--border-accent);
     }
 
-    .pill-opt.active {
+    .pill-effort.active {
       background: rgba(56, 189, 248, 0.12);
       border-color: var(--cyan);
       color: var(--cyan);
@@ -629,15 +688,15 @@
     .composer-toggles {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
 
     .toggle-label {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 11px;
       color: var(--text-muted);
       cursor: pointer;
     }
@@ -649,7 +708,7 @@
 
     .composer-input-row {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.45rem;
       align-items: flex-end;
     }
 
@@ -657,16 +716,17 @@
       flex: 1;
       background: var(--bg-card-subtle);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.6rem 0.8rem;
+      border-radius: 5px;
+      padding: 0.55rem 0.75rem;
       color: var(--text-main);
       font-family: var(--font-sans);
-      font-size: 0.82rem;
+      font-size: 13px;
       resize: vertical;
-      min-height: 48px;
+      min-height: 44px;
       max-height: 160px;
       outline: none;
       line-height: 1.4;
+      user-select: text;
     }
 
     .prompt-textarea:focus {
@@ -680,16 +740,16 @@
       color: #000000;
       font-weight: 600;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.6rem 1rem;
-      border-radius: 6px;
+      font-size: 12px;
+      padding: 0.55rem 0.95rem;
+      border-radius: 5px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
       transition: opacity 0.15s;
       white-space: nowrap;
-      height: 44px;
+      height: 40px;
     }
 
     .btn-send:hover {
@@ -701,20 +761,49 @@
       cursor: not-allowed;
     }
 
-    /* COMMAND DRAWER AT BOTTOM */
-    .command-drawer {
+    /* VERTICAL RESIZER GUTTER */
+    .resizer-vertical {
+      height: 5px;
+      background: transparent;
+      cursor: row-resize;
+      transition: background 0.15s;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .resizer-vertical:hover, .resizer-vertical.dragging {
+      background: var(--cyan);
+    }
+
+    /* BOTTOM COMMAND DRAWER */
+    .ide-drawer {
+      height: var(--drawer-height);
+      min-height: 120px;
+      max-height: 550px;
+      background: #090b10;
       border-top: 1px solid var(--border);
-      background: #0c0e14;
       display: flex;
       flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .ide-drawer.collapsed {
+      display: none;
+    }
+
+    .drawer-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.5rem;
+      height: 28px;
     }
 
     .drawer-tabs {
       display: flex;
       align-items: center;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 0 0.5rem;
       overflow-x: auto;
     }
 
@@ -724,12 +813,12 @@
       border-bottom: 2px solid transparent;
       color: var(--text-muted);
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 0.5rem 0.75rem;
+      font-size: 11px;
+      padding: 0.35rem 0.65rem;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.3rem;
       transition: all 0.15s ease;
       white-space: nowrap;
     }
@@ -744,12 +833,40 @@
       font-weight: 600;
     }
 
-    .drawer-content {
-      padding: 0.75rem 1rem;
-      max-height: 220px;
+    .drawer-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn-ctrl {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .btn-ctrl:hover {
+      background: var(--bg-card-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-ctrl.close:hover {
+      color: var(--red);
+    }
+
+    .drawer-body {
+      flex: 1;
+      padding: 0.65rem 0.85rem;
       overflow-y: auto;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 12px;
+      user-select: text;
     }
 
     .drawer-toolbar {
@@ -757,21 +874,73 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .drawer-title {
-      color: var(--text-muted);
-      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    /* 5. BOTTOM STATUS BAR */
+    .ide-statusbar {
+      background: #08090d;
+      border-top: 1px solid var(--border);
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      z-index: 100;
+    }
+
+    .statusbar-left, .statusbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    .btn-toggle-panel {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .btn-toggle-panel:hover {
+      color: var(--cyan);
+      border-color: var(--border-accent);
     }
 
     .empty-state {
-      padding: 1.5rem 1rem;
+      padding: 2rem 1rem;
       text-align: center;
       color: var(--text-dim);
-      font-size: 0.75rem;
+      font-size: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -781,7 +950,7 @@
     /* TOAST NOTIFICATION */
     .toast-container {
       position: fixed;
-      bottom: 1.25rem;
+      bottom: 2rem;
       right: 1.25rem;
       z-index: 1000;
       display: flex;
@@ -792,142 +961,232 @@
     .toast {
       background: var(--bg-card);
       border: 1px solid var(--border-accent);
-      border-radius: 6px;
-      padding: 0.55rem 0.85rem;
+      border-radius: 5px;
+      padding: 0.5rem 0.85rem;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 12px;
       color: var(--text-main);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       gap: 0.4rem;
-    }
-
-    /* FOOTER */
-    .dashboard-footer {
-      background: var(--bg-card);
-      border-top: 1px solid var(--border);
-      padding: 0.35rem 1.25rem;
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP NAVIGATION -->
-  <header class="dashboard-nav">
-    <div class="brand">
-      <div class="brand-icon">G</div>
-      <span class="brand-title">Graviton Dashboard</span>
-      <span class="brand-badge">IDE ACTIVE</span>
+  <!-- 1. TOP IDE MENU BAR -->
+  <nav class="ide-menubar">
+    <div class="brand-tag">GRAVITON IDE</div>
+
+    <div class="menu-group">
+      <!-- FILE MENU -->
+      <div class="menu-item" id="menuFile">
+        <button class="menu-btn" onclick="toggleMenu('menuFile')">File</button>
+        <div class="menu-dropdown">
+          <button class="menu-action" onclick="startNewConversation(); closeMenus();">
+            <span>New Chat Session</span><span class="shortcut">Ctrl+N</span>
+          </button>
+          <button class="menu-action" onclick="browseWorkspaceFolder(); closeMenus();">
+            <span>Open Folder (Dialog)...</span><span class="shortcut">Ctrl+O</span>
+          </button>
+          <button class="menu-action" onclick="revealWorkspaceInExplorer(); closeMenus();">
+            <span>Reveal in File Explorer</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-action" onclick="focusDirInput(); closeMenus();">
+            <span>Switch Path Manually</span>
+          </button>
+          <button class="menu-action" onclick="startNewConversation(); closeMenus();">
+            <span>Clear / Reset Workspace</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- EDIT MENU -->
+      <div class="menu-item" id="menuEdit">
+        <button class="menu-btn" onclick="toggleMenu('menuEdit')">Edit</button>
+        <div class="menu-dropdown">
+          <button class="menu-action" onclick="renameCurrentChat(); closeMenus();">
+            <span>Rename Active Chat</span>
+          </button>
+          <button class="menu-action" onclick="deleteCurrentChat(); closeMenus();">
+            <span>Delete Active Chat</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-action" onclick="clearChatFeed(); closeMenus();">
+            <span>Clear Chat Feed View</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW MENU -->
+      <div class="menu-item" id="menuView">
+        <button class="menu-btn" onclick="toggleMenu('menuView')">View</button>
+        <div class="menu-dropdown">
+          <button class="menu-action" onclick="toggleSidebar(); closeMenus();">
+            <span>Toggle Sidebar</span><span class="shortcut">Ctrl+B</span>
+          </button>
+          <button class="menu-action" onclick="toggleDrawer(); closeMenus();">
+            <span>Toggle Bottom Panel</span><span class="shortcut">Ctrl+J</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-action" onclick="refreshAll(); closeMenus();">
+            <span>Refresh All Metrics</span>
+          </button>
+          <button class="menu-action" onclick="toggleDryRun(); closeMenus();">
+            <span>Toggle Dry Run Mode</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TERMINAL / CLI MENU -->
+      <div class="menu-item" id="menuTerminal">
+        <button class="menu-btn" onclick="toggleMenu('menuTerminal')">Terminal</button>
+        <div class="menu-dropdown">
+          <button class="menu-action" onclick="openActiveCli(); closeMenus();">
+            <span>Open External CLI (grav)</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('doctor'); ensureDrawerOpen(); closeMenus();">
+            <span>Run Doctor (grav doctor)</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('diff'); ensureDrawerOpen(); closeMenus();">
+            <span>Inspect Session Diff (grav diff)</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('undo'); ensureDrawerOpen(); closeMenus();">
+            <span>Safety Rollback (grav undo)</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('ports'); ensureDrawerOpen(); closeMenus();">
+            <span>Manage Dev Ports</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HELP MENU -->
+      <div class="menu-item" id="menuHelp">
+        <button class="menu-btn" onclick="toggleMenu('menuHelp')">Help</button>
+        <div class="menu-dropdown">
+          <button class="menu-action" onclick="switchDrawerTab('version'); ensureDrawerOpen(); closeMenus();">
+            <span>Graviton Version Info</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('stats'); ensureDrawerOpen(); closeMenus();">
+            <span>Odometer & Cost Telemetry</span>
+          </button>
+          <button class="menu-action" onclick="switchDrawerTab('doctor'); ensureDrawerOpen(); closeMenus();">
+            <span>Health & Diagnostics</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- DIRECTORY SWITCHER -->
-    <div class="dir-switcher">
+    <div class="menubar-right">
+      <span id="headerOdometer">Odometer: Syncing...</span>
+      <span>100% Localhost</span>
+    </div>
+  </nav>
+
+  <!-- 2. DIRECTORY & TOOLBAR -->
+  <div class="ide-toolbar">
+    <div class="dir-bar">
       <span class="dir-label">DIR:</span>
-      <input type="text" id="dirInput" class="dir-input" placeholder="Loading workspace directory..." spellcheck="false">
-      <button class="btn-action" onclick="changeWorkspaceDir()">Switch</button>
-      <button class="btn-action btn-cli" onclick="openActiveCli()">Open CLI</button>
+      <input type="text" id="dirInput" class="dir-input" placeholder="Loading active workspace folder..." spellcheck="false">
+      <button class="btn-ide" onclick="changeWorkspaceDir()">Switch</button>
+      <button class="btn-ide accent" onclick="browseWorkspaceFolder()" title="Open native OS folder selection dialog">Browse...</button>
+      <button class="btn-ide" onclick="revealWorkspaceInExplorer()" title="Open in Windows File Explorer">Explorer</button>
     </div>
 
-    <!-- NAV TELEMETRY PILL -->
-    <div class="nav-stats">
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span id="navStatus">Localhost Connected</span>
-      </div>
-      <button class="btn-action" onclick="refreshAll()">Refresh</button>
-    </div>
-  </header>
-
-  <!-- METRICS STRIP -->
-  <div class="metrics-strip">
-    <div class="metric-item">
-      <div class="metric-header">
-        <span>Lifetime Tokens Saved</span>
-        <span style="color:var(--green)">+94% Efficient</span>
-      </div>
-      <div class="metric-val" id="valTokensSaved">0</div>
-      <div class="metric-sub" id="valTokensSub">Filtered noise & smart context</div>
-    </div>
-    <div class="metric-item">
-      <div class="metric-header">
-        <span>Pro Savings (Est)</span>
-        <span style="color:var(--cyan)">$1.25 / 1M</span>
-      </div>
-      <div class="metric-val" id="valProSavings">$0.00</div>
-      <div class="metric-sub" id="valProIdr">Rp 0</div>
-    </div>
-    <div class="metric-item">
-      <div class="metric-header">
-        <span>Flash Savings (Est)</span>
-        <span style="color:var(--purple)">$0.075 / 1M</span>
-      </div>
-      <div class="metric-val" id="valFlashSavings">$0.00</div>
-      <div class="metric-sub" id="valFlashIdr">Rp 0</div>
-    </div>
-    <div class="metric-item">
-      <div class="metric-header">
-        <span>Active Dev Ports</span>
-        <span id="valPortCount" style="color:var(--amber)">0 Active</span>
-      </div>
-      <div class="metric-val" id="valPortsSummary">None</div>
-      <div class="metric-sub">Auto-protected port guard</div>
+    <div style="display:flex; align-items:center; gap:0.4rem;">
+      <button class="btn-ide cli" onclick="openActiveCli()" title="Launch native cmd.exe in this folder">Open CLI</button>
+      <button class="btn-ide" onclick="refreshAll()">Refresh</button>
     </div>
   </div>
 
-  <!-- MAIN IDE WORKSPACE -->
-  <main class="ide-workspace">
+  <!-- 3. METRICS STRIP -->
+  <div class="metrics-strip">
+    <div class="metric-box">
+      <div class="metric-box-title">
+        <span>Lifetime Tokens Saved</span>
+        <span style="color:var(--green)">CLI Synced</span>
+      </div>
+      <div class="metric-box-val" id="valTokensSaved">0</div>
+      <div class="metric-box-sub" id="valTokensSub">Filtered noise & smart context</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-box-title">
+        <span>Pro Savings (Est)</span>
+        <span style="color:var(--cyan)">$1.25 / 1M</span>
+      </div>
+      <div class="metric-box-val" id="valProSavings">$0.00</div>
+      <div class="metric-box-sub" id="valProIdr">Rp 0</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-box-title">
+        <span>Flash Savings (Est)</span>
+        <span style="color:var(--purple)">$0.075 / 1M</span>
+      </div>
+      <div class="metric-box-val" id="valFlashSavings">$0.00</div>
+      <div class="metric-box-sub" id="valFlashIdr">Rp 0</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-box-title">
+        <span>Active Dev Ports</span>
+        <span id="valPortCount" style="color:var(--amber)">0 Active</span>
+      </div>
+      <div class="metric-box-val" id="valPortsSummary">None</div>
+      <div class="metric-box-sub">Dev daemon port guard</div>
+    </div>
+  </div>
+
+  <!-- 4. RESIZABLE IDE WORKSPACE -->
+  <div class="ide-body" id="ideBody">
 
     <!-- LEFT SIDEBAR: CONVERSATIONS -->
-    <aside class="sidebar-conversations">
-      <div class="sidebar-header">
-        <span class="sidebar-title">Conversations</span>
+    <aside class="ide-sidebar" id="ideSidebar">
+      <div class="sidebar-top">
+        <span class="sidebar-heading">Conversations</span>
         <button class="btn-new-chat" onclick="startNewConversation()">+ New Chat</button>
       </div>
-      <div class="conversations-scroll" id="conversationsList">
+      <div class="conversations-container" id="conversationsList">
         <div class="empty-state">
           <div>Loading conversation history...</div>
         </div>
       </div>
     </aside>
 
-    <!-- RIGHT MAIN: CHAT VIEW & COMMANDS -->
-    <section class="main-ide-content">
+    <!-- HORIZONTAL RESIZER GUTTER -->
+    <div class="resizer-horizontal" id="sidebarResizer" title="Drag to resize sidebar"></div>
+
+    <!-- MAIN CENTER WORKSPACE -->
+    <main class="ide-main" id="ideMain">
 
       <!-- CHAT HEADER -->
       <div class="chat-view-header">
-        <div class="chat-header-info">
+        <div class="chat-info-block">
           <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
-          <span class="chat-model-indicator" id="activeChatModel">Auto-Routing: Gemini 3.1 Pro / 3.8 Flash</span>
+          <span class="chat-model-badge" id="activeChatModel">Auto-Routing: Gemini 3.1 Pro / 3.8 Flash</span>
         </div>
-        <div class="chat-header-tools">
-          <button class="btn-action" onclick="renameCurrentChat()">Edit Title</button>
-          <button class="btn-action" onclick="openCurrentInCli()">Open in CLI</button>
+        <div style="display:flex; align-items:center; gap:0.35rem;">
+          <button class="btn-ide" onclick="renameCurrentChat()">Edit Title</button>
+          <button class="btn-ide cli" onclick="openCurrentInCli()">Open in CLI</button>
         </div>
       </div>
 
       <!-- CHAT FEED -->
       <div class="chat-feed" id="chatFeed">
         <div class="empty-state" id="feedEmptyState">
-          <div style="font-weight:600; color:var(--text-main);">Welcome to Graviton Developer IDE</div>
-          <div>Choose your effort, enter any prompt, or run interactive visual commands below.</div>
+          <div style="font-weight:600; color:var(--text-main);">Graviton Autonomous Developer IDE</div>
+          <div>Choose your effort (Fast, Grav, Deep), enter a prompt, or run visual CLI tools.</div>
         </div>
       </div>
 
-      <!-- CHAT COMPOSER & OPTIONS -->
+      <!-- CHAT COMPOSER WITH FAST / GRAV / DEEP EFFORT CONTROLS -->
       <div class="chat-composer-area">
         <div class="composer-options-bar">
-          <div class="effort-pills">
+          <div class="effort-controls">
             <span class="effort-label">Effort:</span>
-            <button class="pill-opt" id="effortLow" onclick="selectEffort('low')">Low (-f)</button>
-            <button class="pill-opt active" id="effortMed" onclick="selectEffort('medium')">Medium</button>
-            <button class="pill-opt" id="effortHigh" onclick="selectEffort('high')">High (-d)</button>
+            <button class="pill-effort" id="effortFast" onclick="selectEffort('fast')">Fast</button>
+            <button class="pill-effort active" id="effortGrav" onclick="selectEffort('grav')">Grav</button>
+            <button class="pill-effort" id="effortDeep" onclick="selectEffort('deep')">Deep</button>
           </div>
 
           <div class="composer-toggles">
@@ -935,7 +1194,7 @@
               <input type="checkbox" id="dryRunToggle" class="toggle-input">
               <span>Dry Run (Simulate Only)</span>
             </label>
-            <span id="scopeBadge" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim);">Scoper: Ready</span>
+            <span id="scopeBadge" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);">Scoper: Ready</span>
           </div>
         </div>
 
@@ -945,22 +1204,33 @@
         </div>
       </div>
 
-      <!-- BOTTOM INTERACTIVE VISUAL CLI COMMANDS DRAWER -->
-      <div class="command-drawer">
-        <div class="drawer-tabs">
-          <button class="drawer-tab active" onclick="switchDrawerTab('doctor')">Doctor</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('diff')">Diff</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('graph')">AST Graph</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('ports')">Ports</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('stats')">Odometer</button>
-          <button class="drawer-tab" onclick="switchDrawerTab('version')">Version</button>
+      <!-- VERTICAL RESIZER GUTTER -->
+      <div class="resizer-vertical" id="bottomDrawerResizer" title="Drag to resize command drawer"></div>
+
+      <!-- BOTTOM COMMAND & DIAGNOSTICS DRAWER (RESIZABLE & COLLAPSIBLE) -->
+      <div class="ide-drawer" id="ideDrawer">
+        <div class="drawer-header">
+          <div class="drawer-tabs">
+            <button class="drawer-tab active" onclick="switchDrawerTab('doctor')">Doctor</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('diff')">Diff</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('graph')">AST Graph</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('ports')">Ports</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('stats')">Odometer</button>
+            <button class="drawer-tab" onclick="switchDrawerTab('version')">Version</button>
+          </div>
+
+          <div class="drawer-controls">
+            <button class="btn-ctrl" onclick="toggleDrawerCollapse()" title="Collapse/Minimize Panel">_</button>
+            <button class="btn-ctrl" onclick="toggleDrawerMaximize()" title="Maximize Panel">▲</button>
+            <button class="btn-ctrl close" onclick="closeDrawer()" title="Close Panel">×</button>
+          </div>
         </div>
 
-        <div class="drawer-content" id="drawerContent">
+        <div class="drawer-body" id="drawerBodyContainer">
           <div class="drawer-toolbar">
             <span class="drawer-title" id="drawerTitle">SYSTEM HEALTH DIAGNOSTICS</span>
-            <button class="btn-action" onclick="runCurrentDrawerCommand()">Run Command</button>
+            <button class="btn-ide" onclick="runCurrentDrawerCommand()">Run Command</button>
           </div>
           <div id="drawerBody" class="terminal-output-box">
             Click 'Run Command' to inspect diagnostics.
@@ -968,26 +1238,38 @@
         </div>
       </div>
 
-    </section>
+    </main>
+  </div>
 
-  </main>
+  <!-- 5. BOTTOM STATUS BAR -->
+  <footer class="ide-statusbar">
+    <div class="statusbar-left">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="navStatus">Localhost Connected</span>
+      </div>
+      <span id="statusbarCwd">Workspace: ~</span>
+    </div>
+
+    <div class="statusbar-right">
+      <span id="statusbarEffort">Effort: Grav</span>
+      <button class="btn-toggle-panel" id="btnTogglePanel" onclick="toggleDrawer()">Panel</button>
+    </div>
+  </footer>
 
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- FOOTER -->
-  <footer class="dashboard-footer">
-    <div>GRAVITON DEVELOPER DASHBOARD &bull; 100% Localhost &bull; Zero Emojis</div>
-    <div>CLI: <code style="color:var(--cyan)">grav "prompt"</code> | Help: <code style="color:var(--cyan)">grav -h</code></div>
-  </footer>
-
   <script>
-    // Global Dashboard State
+    // Global State
     let activeCwd = '';
     let currentConversationId = null;
-    let selectedEffort = 'medium';
+    let selectedEffort = 'grav';
     let currentDrawerTab = 'doctor';
     let conversationsData = [];
+    let isDrawerCollapsed = false;
+    let isDrawerMaximized = false;
+    let preMaximizeHeight = 220;
 
     function showToast(message) {
       const container = document.getElementById('toastContainer');
@@ -1011,13 +1293,172 @@
         .replace(/"/g, '&quot;');
     }
 
-    // 1. WORKSPACE DIRECTORY MANAGEMENT
+    // 1. TOP MENU BAR INTERACTION
+    function toggleMenu(menuId) {
+      const el = document.getElementById(menuId);
+      const wasOpen = el.classList.contains('open');
+      closeMenus();
+      if (!wasOpen) {
+        el.classList.add('open');
+      }
+    }
+
+    function closeMenus() {
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+    }
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('.menu-item')) {
+        closeMenus();
+      }
+    });
+
+    function focusDirInput() {
+      const input = document.getElementById('dirInput');
+      input.focus();
+      input.select();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('ideSidebar');
+      const resizer = document.getElementById('sidebarResizer');
+      if (sidebar.style.display === 'none') {
+        sidebar.style.display = 'flex';
+        resizer.style.display = 'block';
+        showToast('Sidebar opened');
+      } else {
+        sidebar.style.display = 'none';
+        resizer.style.display = 'none';
+        showToast('Sidebar hidden');
+      }
+    }
+
+    function toggleDryRun() {
+      const t = document.getElementById('dryRunToggle');
+      t.checked = !t.checked;
+      showToast(`Dry Run mode: ${t.checked ? 'Enabled' : 'Disabled'}`);
+    }
+
+    function clearChatFeed() {
+      renderChatTurns([]);
+      showToast('Chat feed cleared');
+    }
+
+    // 2. RESIZABLE COMPARTMENTS (DRAG SPLITTERS)
+    function setupResizers() {
+      const sidebar = document.getElementById('ideSidebar');
+      const sResizer = document.getElementById('sidebarResizer');
+      const drawer = document.getElementById('ideDrawer');
+      const dResizer = document.getElementById('bottomDrawerResizer');
+
+      // Horizontal Sidebar Resizing
+      let isResizingSidebar = false;
+      sResizer.addEventListener('mousedown', (e) => {
+        isResizingSidebar = true;
+        sResizer.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+      });
+
+      // Vertical Bottom Drawer Resizing
+      let isResizingDrawer = false;
+      dResizer.addEventListener('mousedown', (e) => {
+        if (isDrawerCollapsed) return;
+        isResizingDrawer = true;
+        dResizer.classList.add('dragging');
+        document.body.style.cursor = 'row-resize';
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (isResizingSidebar) {
+          const newWidth = Math.max(220, Math.min(600, e.clientX));
+          sidebar.style.width = `${newWidth}px`;
+          document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+        }
+        if (isResizingDrawer) {
+          const windowHeight = window.innerHeight;
+          const statusbarHeight = 24;
+          const newHeight = Math.max(120, Math.min(550, windowHeight - e.clientY - statusbarHeight));
+          drawer.style.height = `${newHeight}px`;
+          document.documentElement.style.setProperty('--drawer-height', `${newHeight}px`);
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isResizingSidebar) {
+          isResizingSidebar = false;
+          sResizer.classList.remove('dragging');
+          document.body.style.cursor = '';
+        }
+        if (isResizingDrawer) {
+          isResizingDrawer = false;
+          dResizer.classList.remove('dragging');
+          document.body.style.cursor = '';
+        }
+      });
+    }
+
+    // DRAWER CONTROLS (COLLAPSE / MAXIMIZE / CLOSE)
+    function toggleDrawerCollapse() {
+      const drawer = document.getElementById('ideDrawer');
+      const resizer = document.getElementById('bottomDrawerResizer');
+      isDrawerCollapsed = !isDrawerCollapsed;
+      if (isDrawerCollapsed) {
+        drawer.classList.add('collapsed');
+        resizer.style.display = 'none';
+        showToast('Panel collapsed');
+      } else {
+        drawer.classList.remove('collapsed');
+        resizer.style.display = 'block';
+        showToast('Panel restored');
+      }
+    }
+
+    function toggleDrawerMaximize() {
+      const drawer = document.getElementById('ideDrawer');
+      isDrawerMaximized = !isDrawerMaximized;
+      if (isDrawerMaximized) {
+        preMaximizeHeight = drawer.offsetHeight || 220;
+        drawer.style.height = '480px';
+        showToast('Panel expanded');
+      } else {
+        drawer.style.height = `${preMaximizeHeight}px`;
+        showToast('Panel restored');
+      }
+    }
+
+    function closeDrawer() {
+      const drawer = document.getElementById('ideDrawer');
+      const resizer = document.getElementById('bottomDrawerResizer');
+      drawer.classList.add('collapsed');
+      resizer.style.display = 'none';
+      isDrawerCollapsed = true;
+      showToast('Panel closed (Click "Panel" on statusbar to reopen)');
+    }
+
+    function ensureDrawerOpen() {
+      const drawer = document.getElementById('ideDrawer');
+      const resizer = document.getElementById('bottomDrawerResizer');
+      drawer.classList.remove('collapsed');
+      resizer.style.display = 'block';
+      isDrawerCollapsed = false;
+    }
+
+    function toggleDrawer() {
+      if (isDrawerCollapsed) {
+        ensureDrawerOpen();
+      } else {
+        closeDrawer();
+      }
+    }
+
+    // 3. WORKSPACE DIRECTORY & EXPLORER
     async function fetchWorkspace() {
       try {
         const res = await fetch('/api/workspace').then(r => r.json());
         if (res && res.cwd) {
           activeCwd = res.cwd;
           document.getElementById('dirInput').value = activeCwd;
+          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
         }
       } catch (err) {
         console.error('Failed to fetch workspace:', err);
@@ -1037,11 +1478,50 @@
         if (res.success) {
           activeCwd = res.cwd;
           document.getElementById('dirInput').value = activeCwd;
-          showToast(`Workspace switched to: ${activeCwd}`);
+          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
+          showToast(`Switched: ${activeCwd}`);
           refreshAll();
         } else {
           showToast(`Error: ${res.error || 'Invalid directory'}`);
         }
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    async function browseWorkspaceFolder() {
+      showToast('Opening native folder picker dialog...');
+      try {
+        const res = await fetch('/api/pick-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd })
+        }).then(r => r.json());
+
+        if (res.success && res.picked) {
+          activeCwd = res.cwd;
+          document.getElementById('dirInput').value = activeCwd;
+          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
+          showToast(`Folder selected: ${activeCwd}`);
+          refreshAll();
+        } else if (res.cancelled) {
+          showToast('Folder selection cancelled');
+        } else if (res.message) {
+          showToast(res.message);
+        }
+      } catch (err) {
+        showToast(`Picker error: ${err.message}`);
+      }
+    }
+
+    async function revealWorkspaceInExplorer() {
+      try {
+        await fetch('/api/reveal-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd })
+        });
+        showToast('Opened in File Explorer');
       } catch (err) {
         showToast(`Failed: ${err.message}`);
       }
@@ -1077,7 +1557,7 @@
       }
     }
 
-    // 2. CONVERSATIONS MANAGEMENT
+    // 4. CONVERSATIONS MANAGEMENT (FULL CRUD & SYNC)
     async function fetchConversations() {
       const listEl = document.getElementById('conversationsList');
       try {
@@ -1089,7 +1569,7 @@
           listEl.innerHTML = `
             <div class="empty-state">
               <div>No conversations in this workspace.</div>
-              <div style="font-size:0.68rem; color:var(--text-dim)">Click "+ New Chat" or run prompt.</div>
+              <div style="font-size:10px; color:var(--text-dim)">Click "+ New Chat" or run prompt.</div>
             </div>
           `;
           updateChatViewHeader(null);
@@ -1109,13 +1589,13 @@
               <div class="conv-item-top">
                 <span class="conv-item-title">${escapeHtml(displayTitle)}</span>
                 <div class="conv-item-actions" onclick="event.stopPropagation()">
-                  <button class="btn-icon" title="Rename" onclick="renameConversationItem('${escapeHtml(conv.id)}')">Edit</button>
-                  <button class="btn-icon delete" title="Delete" onclick="deleteConversationItem('${escapeHtml(conv.id)}')">Del</button>
+                  <button class="btn-mini" title="Rename" onclick="renameConversationItem('${escapeHtml(conv.id)}')">Edit</button>
+                  <button class="btn-mini del" title="Delete" onclick="deleteConversationItem('${escapeHtml(conv.id)}')">Del</button>
                 </div>
               </div>
               <div class="conv-item-meta">
-                ${isActive ? '<span class="conv-badge active">ACTIVE</span>' : ''}
-                <span class="conv-badge">${turns} turns</span>
+                ${isActive ? '<span class="badge-pill active">ACTIVE</span>' : ''}
+                <span class="badge-pill">${turns} turns</span>
                 <span>${shortId}</span>
               </div>
             </div>
@@ -1163,7 +1643,7 @@
     }
 
     async function deleteConversationItem(id) {
-      if (!confirm('Are you sure you want to delete this conversation?')) return;
+      if (!confirm('Delete this conversation session from workspace?')) return;
       try {
         const res = await fetch('/api/conversations/delete', {
           method: 'POST',
@@ -1182,8 +1662,16 @@
       }
     }
 
+    function deleteCurrentChat() {
+      if (!currentConversationId) {
+        showToast('No active conversation to delete');
+        return;
+      }
+      deleteConversationItem(currentConversationId);
+    }
+
     async function renameConversationItem(id) {
-      const newTitle = prompt('Enter new conversation title:');
+      const newTitle = prompt('Enter new title for conversation:');
       if (!newTitle || !newTitle.trim()) return;
       try {
         const res = await fetch('/api/conversations/rename', {
@@ -1223,7 +1711,7 @@
       }
     }
 
-    // 3. CONVERSATION TURNS & HISTORY
+    // 5. CHAT TURNS & EXECUTION
     async function loadConversationHistory(convId) {
       if (!convId) return;
       try {
@@ -1306,13 +1794,17 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    // 4. EFFORT SELECTOR & CHAT EXECUTION
+    // EFFORT CONTROLS: FAST / GRAV / DEEP
     function selectEffort(level) {
       selectedEffort = level;
-      document.getElementById('effortLow').classList.toggle('active', level === 'low');
-      document.getElementById('effortMed').classList.toggle('active', level === 'medium');
-      document.getElementById('effortHigh').classList.toggle('active', level === 'high');
-      showToast(`Effort set to: ${level.toUpperCase()}`);
+      document.getElementById('effortFast').classList.toggle('active', level === 'fast');
+      document.getElementById('effortGrav').classList.toggle('active', level === 'grav');
+      document.getElementById('effortDeep').classList.toggle('active', level === 'deep');
+
+      const nameMap = { fast: 'Fast', grav: 'Grav', deep: 'Deep' };
+      const displayName = nameMap[level] || 'Grav';
+      document.getElementById('statusbarEffort').textContent = `Effort: ${displayName}`;
+      showToast(`Effort: ${displayName}`);
     }
 
     async function executePrompt() {
@@ -1323,7 +1815,6 @@
       const dryRun = document.getElementById('dryRunToggle').checked;
       const btnSend = document.getElementById('btnSend');
 
-      // Append user turn immediately
       appendTurnToFeed('user', promptText);
       promptInput.value = '';
       btnSend.disabled = true;
@@ -1371,7 +1862,6 @@
       }
     }
 
-    // Enter shortcut
     document.getElementById('promptInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -1379,7 +1869,7 @@
       }
     });
 
-    // 5. INTERACTIVE VISUAL CLI COMMANDS DRAWER
+    // 6. BOTTOM DRAWER COMMAND RUNNER
     function switchDrawerTab(tab) {
       currentDrawerTab = tab;
       const tabs = document.querySelectorAll('.drawer-tab');
@@ -1438,8 +1928,8 @@
             });
             html += `
               <div style="margin-top:0.6rem; display:flex; gap:0.5rem; align-items:center;">
-                <input type="text" id="undoIndicesInput" placeholder="Indices e.g. 1, 2 (or leave empty for all)" style="flex:1; background:#10131a; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; font-family:var(--font-mono); font-size:0.75rem; border-radius:4px;">
-                <button class="btn-action" style="color:var(--red); border-color:rgba(239,68,68,0.3);" onclick="executeRollbackAction()">Rollback Now</button>
+                <input type="text" id="undoIndicesInput" placeholder="Indices e.g. 1, 2 (or leave empty for all)" style="flex:1; background:#10131a; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; font-family:var(--font-mono); font-size:11px; border-radius:4px;">
+                <button class="btn-ide" style="color:var(--red); border-color:rgba(239,68,68,0.3);" onclick="executeRollbackAction()">Rollback Now</button>
               </div>
             `;
             bodyEl.innerHTML = html;
@@ -1457,7 +1947,7 @@
             ports.forEach(p => {
               html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
                 <span>:${p.port} (${escapeHtml(p.processName || 'node')}, PID ${p.pid})</span>
-                <button class="btn-action" style="color:var(--red);" onclick="killPortAction(${p.port})">Release</button>
+                <button class="btn-ide" style="color:var(--red);" onclick="killPortAction(${p.port})">Release</button>
               </div>`;
             });
             bodyEl.innerHTML = html;
@@ -1516,18 +2006,19 @@
       }
     }
 
-    // 6. METRICS & POLLING
+    // 7. METRICS & TELEMETRY SYNC
     async function fetchStats() {
       try {
-        const [resHud, resStats] = await Promise.all([
-          fetch('/api/hud').then(r => r.json()).catch(() => null),
-          fetch('/api/stats').then(r => r.json()).catch(() => null)
-        ]);
+        const resHud = await fetch('/api/hud').then(r => r.json()).catch(() => null);
 
         if (resHud) {
-          if (resHud.tokensSaved !== undefined) {
-            document.getElementById('valTokensSaved').textContent = Number(resHud.tokensSaved).toLocaleString();
+          const tokensSaved = resHud.tokensSaved || (resHud.odometer ? resHud.odometer.totalTokens : 0);
+          document.getElementById('valTokensSaved').textContent = Number(tokensSaved).toLocaleString();
+
+          if (resHud.odometer && resHud.odometer.totalTokens !== undefined) {
+            document.getElementById('headerOdometer').textContent = `Lifetime: ${Number(resHud.odometer.totalTokens).toLocaleString()} tokens`;
           }
+
           if (resHud.proSavingsUsd !== undefined) {
             document.getElementById('valProSavings').textContent = `$${Number(resHud.proSavingsUsd).toFixed(2)}`;
           }
@@ -1566,11 +2057,35 @@
       fetchConversations();
       fetchStats();
       fetchPorts();
-      showToast('Dashboard synced');
+      showToast('IDE synced with CLI');
     }
 
-    // Initialization
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'j') {
+        e.preventDefault();
+        toggleDrawer();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        startNewConversation();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+        e.preventDefault();
+        browseWorkspaceFolder();
+      }
+      if (e.key === 'Escape') {
+        closeMenus();
+      }
+    });
+
+    // Startup
     window.addEventListener('DOMContentLoaded', () => {
+      setupResizers();
       fetchWorkspace().then(() => {
         fetchConversations();
         fetchStats();
@@ -1578,11 +2093,11 @@
         runCurrentDrawerCommand();
       });
 
-      // Poll stats every 10s
+      // Polling every 8s
       setInterval(() => {
         fetchPorts();
         fetchStats();
-      }, 10000);
+      }, 8000);
     });
   </script>
 </body>
