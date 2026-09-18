@@ -11,6 +11,7 @@ import { buildDependencyGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
 import { selfHealFile } from '../src/self-healer.js';
 import { listActivePorts, killProcessOnPort } from '../src/port-guard.js';
+import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -161,6 +162,22 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1h. API: POST /api/scaffold (Zero-Token Project Scaffolder)
+  if (req.method === 'POST' && pathname === '/api/scaffold') {
+    try {
+      const body = await parseJsonBody(req);
+      const domain = body.domain || (body.prompt ? detectDomainFromPrompt(body.prompt) : 'voxel_minecraft');
+      const targetDir = body.targetDir ? path.resolve(process.cwd(), body.targetDir) : process.cwd();
+      const result = scaffoldProject(domain, targetDir);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(result));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
   // 2. API: POST /api/synthesize
   if (req.method === 'POST' && pathname === '/api/synthesize') {
     try {
@@ -277,14 +294,12 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   ⚡ GRAVITON V3.8.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
+      console.log(`   ⚡ GRAVITON V3.9.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
       console.log(`  Cockpit URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {
         console.log(`  Port Note   : \x1b[90mRunning on fallback port ${port} (preferred port ${preferredPort} in use)\x1b[0m`);
       }
-      console.log(`  Landing URL : \x1b[36mhttp://localhost:${port}/landing.html\x1b[0m`);
-      console.log(`  Docs URL    : \x1b[36mhttp://localhost:${port}/docs.html\x1b[0m`);
       console.log(`\x1b[90m  Press Ctrl+C to terminate cockpit.\x1b[0m\n`);
     });
   }

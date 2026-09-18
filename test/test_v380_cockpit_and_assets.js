@@ -71,18 +71,22 @@ async function runTests() {
     assert(resDash.body.includes('GRAVITON COCKPIT'), '/dashboard must serve the Cockpit');
     console.log('  ✔ PASS: / and /dashboard successfully serve the Developer Cockpit\n');
 
-    // [TEST 2] Installation & Docs pages are preserved and accessible
-    console.log('[TEST 2] Testing /landing.html and /docs.html routes...');
-    const resLanding = await httpGet(TEST_PORT, '/landing.html');
-    assert.strictEqual(resLanding.status, 200, '/landing.html must return HTTP 200');
-    assert(resLanding.body.includes('Install Graviton'), '/landing.html must contain installation content');
-    assert(resLanding.body.includes('Cockpit HUD'), '/landing.html must contain link back to Cockpit');
+    // [TEST 2] Private Website Separation & Git Exclusion
+    console.log('[TEST 2] Testing private website separation from program...');
+    const privateDir = path.join(path.dirname(__dirname), 'private-web');
+    assert(fs.existsSync(path.join(privateDir, 'landing.html')), 'private-web/landing.html must be preserved locally');
+    assert(fs.existsSync(path.join(privateDir, 'docs.html')), 'private-web/docs.html must be preserved locally');
 
-    const resDocs = await httpGet(TEST_PORT, '/docs.html');
-    assert.strictEqual(resDocs.status, 200, '/docs.html must return HTTP 200');
-    assert(resDocs.body.includes('Documentation'), '/docs.html must contain documentation content');
-    assert(resDocs.body.includes('Cockpit HUD'), '/docs.html must contain link back to Cockpit');
-    console.log('  ✔ PASS: /landing.html and /docs.html fully accessible with bidirectional links\n');
+    const gitignoreContent = fs.readFileSync(path.join(path.dirname(__dirname), '.gitignore'), 'utf8');
+    assert(gitignoreContent.includes('private-web/'), '.gitignore must ignore private-web/');
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(path.dirname(__dirname), 'package.json'), 'utf8'));
+    assert(!pkg.files.includes('private-web'), 'package.json must not package private-web');
+
+    // Cockpit must NOT link to marketing landing page
+    assert(!resRoot.body.includes('/landing.html'), 'Cockpit must not link to private landing page');
+    assert(!resRoot.body.includes('/docs.html'), 'Cockpit must not link to private docs page');
+    console.log('  ✔ PASS: Private website completely isolated, gitignored, and stripped from Cockpit\n');
 
     // [TEST 3] Developer Cockpit REST APIs (HUD, Ports, Graph, Heal)
     console.log('[TEST 3] Testing Cockpit REST APIs...');

@@ -46,6 +46,7 @@ import { buildDependencyGraph, formatAsciiGraph } from '../src/dependency-graph.
 import { bundleWebApplication } from '../src/bundler.js';
 import { renderAsciiHud } from '../src/hud.js';
 import { selfHealFile } from '../src/self-healer.js';
+import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,6 +133,7 @@ async function main() {
   let conversationTarget = null;
   let isDryRun = false;
   let budgetLimit = null;
+  let isScaffold = false;
   const filteredArgs = [];
 
   for (let i = 0; i < effectiveArgs.length; i++) {
@@ -172,6 +174,8 @@ async function main() {
       }
     } else if (arg === '--dry-run') {
       isDryRun = true;
+    } else if (arg === '--scaffold') {
+      isScaffold = true;
     } else if (arg === '--budget' || arg === '-b') {
       const next = effectiveArgs[i + 1];
       if (next && !next.startsWith('-')) {
@@ -362,7 +366,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.8.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.9.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 
@@ -462,6 +466,24 @@ async function main() {
       console.log(`\x1b[90mDouble-click the file to run offline anywhere with zero dependencies.\x1b[0m\n`);
     } else {
       console.error(`\x1b[31m[!] Bundle error: ${res.error}\x1b[0m`);
+    }
+    process.exit(res.success ? 0 : 1);
+  }
+
+  // 4f. ZERO-TOKEN PROJECT SCAFFOLDER
+  if (command === 'scaffold' || command === '--scaffold') {
+    const rawTarget = filteredArgs[1] || 'minecraft';
+    const targetDir = filteredArgs[2] ? path.resolve(process.cwd(), filteredArgs[2]) : process.cwd();
+    const domain = detectDomainFromPrompt(rawTarget);
+    console.log(`\x1b[36m[GRAVITON SCAFFOLDER]\x1b[0m Initializing runnable \x1b[1m${domain}\x1b[0m boilerplate in \x1b[1m${targetDir}\x1b[0m...`);
+    const res = scaffoldProject(domain, targetDir);
+    if (res.success) {
+      console.log(`\x1b[1;32m✔ Scaffolded successfully!\x1b[0m \x1b[90m(${(res.templateSizeBytes / 1024).toFixed(1)} KB boilerplate)\x1b[0m`);
+      console.log(`  Target Directory : \x1b[1;36m${res.targetDir}\x1b[0m`);
+      console.log(`  Files Created    : \x1b[90m${res.filesCreated.join(', ')}\x1b[0m (with procedural 16x16 canvas textures & Web Audio)`);
+      console.log(`\x1b[90mOpen index.html in any browser or launch Antigravity to build further.\x1b[0m\n`);
+    } else {
+      console.error(`\x1b[31m[!] Scaffold error: ${res.error}\x1b[0m`);
     }
     process.exit(res.success ? 0 : 1);
   }
@@ -792,6 +814,14 @@ async function main() {
   saveStats(stats);
 
   copyToClipboard(superPrompt);
+
+  if (isScaffold) {
+    const domain = detectDomainFromPrompt(input);
+    const scaffoldRes = scaffoldProject(domain, currentCwd);
+    if (scaffoldRes.success) {
+      console.log(`\x1b[32m✔ [SCAFFOLD]: Initialized ${domain} runnable boilerplate on disk (${scaffoldRes.filesCreated.join(', ')}).\x1b[0m`);
+    }
+  }
 
   // Port Conflict Auto-Healer & Dev Server Pre-Interceptor
   const isDevServerPrompt = /\b(jalankan|start|nyalakan|run|serve|host)\b/i.test(input) && /\b(dev|server|web|vite|next|app|localhost|port)(?:nya)?\b/i.test(input);

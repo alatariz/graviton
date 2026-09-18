@@ -374,7 +374,7 @@
       gap: 0.4rem;
     }
 
-    .text-input, .text-area {
+    .text-input, .text-area, select.text-input {
       background: rgba(4, 7, 17, 0.85);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -387,7 +387,7 @@
       width: 100%;
     }
 
-    .text-input:focus, .text-area:focus {
+    .text-input:focus, .text-area:focus, select.text-input:focus {
       border-color: var(--aqua-bright);
       box-shadow: 0 0 10px var(--aqua-glow);
     }
@@ -516,7 +516,7 @@
       </div>
       <div class="brand-title">
         GRAVITON COCKPIT
-        <span class="version-badge">v3.8.0</span>
+        <span class="version-badge">v3.9.0</span>
       </div>
       <div class="status-indicator">
         <div class="pulse-dot"></div>
@@ -526,8 +526,7 @@
 
     <nav class="nav-actions">
       <button class="nav-btn primary" onclick="refreshAllData()">🔄 Refresh HUD</button>
-      <a href="/landing.html" class="nav-btn" target="_blank">🌐 Landing & Install</a>
-      <a href="/docs.html" class="nav-btn" target="_blank">📖 Documentation</a>
+      <button class="nav-btn" onclick="document.getElementById('scaffold-section').scrollIntoView({behavior: 'smooth'})">⚡ Scaffold Engine</button>
     </nav>
   </header>
 
@@ -585,6 +584,7 @@
 
     <div class="dashboard-layout">
 
+      <!-- LEFT COLUMN -->
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
         <section class="panel">
@@ -619,8 +619,35 @@
           </div>
         </section>
 
+        <!-- ZERO-TOKEN PROJECT SCAFFOLDER -->
+        <section class="panel" id="scaffold-section">
+          <div class="panel-header">
+            <div class="panel-title">
+              🏗️ Zero-Token Project Scaffolder
+              <span class="panel-badge">grav scaffold</span>
+            </div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim);">
+            Lays down 100% runnable boilerplate with procedural canvas textures & Web Audio before prompting.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <select id="scaffold-domain" class="text-input">
+              <option value="voxel_minecraft">🎮 3D Voxel World (Minecraft Clone)</option>
+              <option value="fps_arena">🎯 3D FPS Arena (CS2 Clone)</option>
+              <option value="arcade_2d">🕹️ 2D Arcade Game (Flappy / Snake / Canvas)</option>
+              <option value="fullstack_saas">📊 Full-Stack SaaS Application</option>
+            </select>
+            <div style="display: flex; gap: 0.75rem;">
+              <input type="text" id="scaffold-dir" value="." placeholder="Target directory (e.g. ./my-app)" class="text-input">
+              <button class="btn-action" onclick="runScaffolder()">Scaffold Files</button>
+            </div>
+          </div>
+          <div class="result-box" id="scaffold-result" style="display: none;"></div>
+        </section>
+
       </div>
 
+      <!-- RIGHT COLUMN -->
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
         <section class="panel">
@@ -820,6 +847,39 @@
         if (k.toLowerCase().includes(q)) filtered[k] = v;
       }
       renderGraphFiles(filtered);
+    }
+
+    async function runScaffolder() {
+      const domain = document.getElementById('scaffold-domain').value;
+      const targetDir = document.getElementById('scaffold-dir').value.trim() || '.';
+      const resultBox = document.getElementById('scaffold-result');
+      resultBox.style.display = 'block';
+      resultBox.innerText = `Scaffolding ${domain} boilerplate in ${targetDir}...`;
+
+      try {
+        const res = await fetch('/api/scaffold', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain, targetDir })
+        });
+        const data = await res.json();
+        if (data.success) {
+          resultBox.innerHTML = `
+✔ Scaffolding Complete!
+Domain        : ${data.domain}
+Target Dir    : ${data.targetDir}
+Files Created : ${data.filesCreated.join(', ')}
+Template Size : ${(data.templateSizeBytes / 1024).toFixed(1)} KB
+<br><span style="color:#10b981;">👉 Ready for Antigravity with zero token waste!</span>
+          `;
+          showToast(`Scaffolded ${domain} successfully!`);
+          fetchGraph();
+        } else {
+          resultBox.innerText = `✖ Error: ${data.error}`;
+        }
+      } catch (e) {
+        resultBox.innerText = `✖ Network Error: ${e.message}`;
+      }
     }
 
     async function runBundler() {

@@ -13,5 +13,7 @@ web/node_modules/
 .graviton-session
 .graviton-conversations.json
 .graviton-manifest.json
-.graviton-compact-memory.json
+# Private website & marketing files (kept separate from program)
+private-web/
+.private-site/
 
