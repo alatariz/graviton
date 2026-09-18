@@ -57,19 +57,18 @@ async function runTests() {
   });
 
   try {
-    // [TEST 1] Root Route serves Developer Cockpit, not installation page
-    console.log('[TEST 1] Testing / and /dashboard routes serve Developer Cockpit...');
+    // [TEST 1] Root Route serves Developer Dashboard, not installation page
+    console.log('[TEST 1] Testing / and /dashboard routes serve Developer Dashboard...');
     const resRoot = await httpGet(TEST_PORT, '/');
     assert.strictEqual(resRoot.status, 200, 'Root must return HTTP 200');
-    assert(resRoot.body.includes('GRAVITON COCKPIT'), 'Root must be the Developer Cockpit');
-    assert(resRoot.body.includes('Active Port Guard'), 'Cockpit must include Port Guard');
-    assert(resRoot.body.includes('Zero-Setup Single-File Bundler'), 'Cockpit must include Bundler');
-    assert(resRoot.body.includes('Autonomous Dependency Graph'), 'Cockpit must include Graph');
+    assert(resRoot.body.includes('GRAVITON DASHBOARD'), 'Root must be the Developer Dashboard');
+    assert(resRoot.body.includes('Active Dev Ports'), 'Dashboard must include Dev Ports');
+    assert(resRoot.body.includes('Lifetime Tokens Saved'), 'Dashboard must include Tokens Saved');
 
     const resDash = await httpGet(TEST_PORT, '/dashboard');
     assert.strictEqual(resDash.status, 200, '/dashboard must return HTTP 200');
-    assert(resDash.body.includes('GRAVITON COCKPIT'), '/dashboard must serve the Cockpit');
-    console.log('  ✔ PASS: / and /dashboard successfully serve the Developer Cockpit\n');
+    assert(resDash.body.includes('GRAVITON DASHBOARD'), '/dashboard must serve the Dashboard');
+    console.log('  ✔ PASS: / and /dashboard successfully serve the Developer Dashboard\n');
 
     // [TEST 2] Private Website Separation & Git Exclusion
     console.log('[TEST 2] Testing private website separation from program...');

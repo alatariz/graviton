@@ -249,7 +249,7 @@ async function main() {
   stats, hud                     Display lifetime token & dollar savings dashboard + active ports
   graph                          Render ASCII/Unicode multi-file dependency graph of project
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
-  dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
+  dashboard, web, ui             Launch localhost-only visual developer dashboard (http://localhost:3000)
   chat, repl                     Launch interactive REPL chat session
   stop [port|all]                Terminate background dev daemon or free blocked development port
   version, -v                    Display Graviton CLI version
@@ -362,12 +362,12 @@ async function main() {
     process.exit(0);
   }
 
-  // 4b. LOCALHOST COCKPIT & DASHBOARD
+  // 4b. LOCALHOST DASHBOARD
   if (command === 'web' || command === 'studio' || command === 'ui' || command === 'dashboard' || command === '--dashboard') {
     const webDir = path.join(__dirname, '..', 'web');
     const serverPath = path.join(webDir, 'server.js');
     if (fs.existsSync(serverPath)) {
-      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON LOCALHOST COCKPIT & DASHBOARD ===\x1b[0m`);
+      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON LOCALHOST DASHBOARD ===\x1b[0m`);
       console.log(`\x1b[90mStarting 100% private localhost dashboard from ${webDir}...\x1b[0m\n`);
       const proc = spawn('node', [serverPath], { cwd: webDir, stdio: 'inherit' });
       proc.on('close', code => process.exit(code || 0));

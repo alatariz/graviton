@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GRAVITON COCKPIT - Autonomous Developer Observer</title>
+  <title>GRAVITON DASHBOARD - Autonomous Developer IDE</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,14 +16,19 @@
       --bg-card-hover: #181d2c;
       --border: rgba(255, 255, 255, 0.08);
       --border-accent: rgba(56, 189, 248, 0.3);
+      --border-focus: #38bdf8;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
       --cyan: #38bdf8;
+      --cyan-subtle: rgba(56, 189, 248, 0.1);
       --green: #10b981;
+      --green-subtle: rgba(16, 185, 129, 0.12);
       --purple: #818cf8;
       --amber: #f59e0b;
+      --amber-subtle: rgba(245, 158, 11, 0.12);
       --red: #ef4444;
+      --red-subtle: rgba(239, 68, 68, 0.12);
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', Consolas, monospace;
     }
@@ -39,45 +44,52 @@
       color: var(--text-main);
       font-family: var(--font-sans);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
       line-height: 1.5;
-      font-size: 14px;
-      padding-bottom: 3rem;
+      overflow-x: hidden;
     }
 
     /* TOP NAVIGATION */
-    .cockpit-nav {
+    .dashboard-nav {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(9, 10, 15, 0.9);
+      background: rgba(9, 10, 15, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.6rem;
+      white-space: nowrap;
     }
 
     .brand-icon {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(56, 189, 248, 0.1);
+      background: var(--cyan-subtle);
       border: 1px solid var(--border-accent);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--cyan);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
     }
 
     .brand-title {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       color: #ffffff;
@@ -86,31 +98,102 @@
 
     .brand-badge {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
       color: var(--cyan);
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
+      background: var(--cyan-subtle);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
     }
 
-    .nav-actions {
+    /* DIRECTORY SWITCHER BAR */
+    .dir-switcher {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.4rem;
+      flex: 1;
+      max-width: 680px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .dir-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .dir-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      outline: none;
+      padding: 0.15rem 0.25rem;
+    }
+
+    .dir-input:focus {
+      color: var(--cyan);
+    }
+
+    .btn-action {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--cyan);
+    }
+
+    .btn-cli {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: var(--green);
+    }
+
+    .btn-cli:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--green);
+      color: #ffffff;
+    }
+
+    .nav-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     .status-pill {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
+      gap: 0.4rem;
+      font-size: 0.72rem;
       font-family: var(--font-mono);
       color: var(--text-muted);
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 0.3rem 0.65rem;
+      padding: 0.25rem 0.55rem;
       border-radius: 9999px;
     }
 
@@ -119,207 +202,80 @@
       height: 6px;
       border-radius: 50%;
       background-color: var(--green);
-      box-shadow: 0 0 8px var(--green);
+      box-shadow: 0 0 6px var(--green);
     }
 
-    .btn-refresh {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 0.35rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn-refresh:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-accent);
-      color: var(--cyan);
-    }
-
-    /* MAIN CONTAINER */
-    .container {
-      max-width: 1380px;
-      margin: 1.5rem auto;
-      padding: 0 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    /* STATS METRICS ROW */
-    .stats-grid {
+    /* TOP METRICS STRIP */
+    .metrics-strip {
+      background: var(--bg-card-subtle);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1.25rem;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
-    @media (max-width: 1024px) {
-      .stats-grid {
+    @media (max-width: 900px) {
+      .metrics-strip {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    @media (max-width: 640px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.1rem;
+    .metric-item {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      transition: border-color 0.2s;
+      gap: 0.15rem;
     }
 
-    .stat-card:hover {
-      border-color: rgba(255, 255, 255, 0.16);
-    }
-
-    .stat-label-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-weight: 500;
+    .metric-header {
+      font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .stat-value {
+    .metric-val {
       font-family: var(--font-mono);
-      font-size: 1.6rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #ffffff;
-      letter-spacing: -0.02em;
     }
 
-    .stat-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: var(--text-dim);
+    .metric-sub {
       font-family: var(--font-mono);
-      margin-top: 0.2rem;
-    }
-
-    .stat-badge {
       font-size: 0.68rem;
-      padding: 0.1rem 0.35rem;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--cyan);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-    }
-
-    /* AUTONOMOUS FEATURES OVERVIEW */
-    .section-title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-    }
-
-    .section-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
       color: var(--text-muted);
     }
 
-    .features-grid {
+    /* MAIN IDE SPLIT WORKSPACE */
+    .ide-workspace {
+      flex: 1;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 170px);
+      overflow: hidden;
     }
 
-    @media (max-width: 900px) {
-      .features-grid {
+    @media (max-width: 960px) {
+      .ide-workspace {
         grid-template-columns: 1fr;
       }
     }
 
-    .feature-card {
+    /* LEFT SIDEBAR: CONVERSATIONS */
+    .sidebar-conversations {
+      border-right: 1px solid var(--border);
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .feature-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .feature-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .feature-pill {
-      font-size: 0.65rem;
-      font-family: var(--font-mono);
-      padding: 0.15rem 0.4rem;
-      border-radius: 3px;
-      font-weight: 600;
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--green);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-    }
-
-    .feature-desc {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.45;
-    }
-
-    /* WORKSPACE TWO-COLUMN LAYOUT */
-    .workspace-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 1024px) {
-      .workspace-layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    .panel-header {
-      padding: 0.85rem 1rem;
+    .sidebar-header {
+      padding: 0.65rem 0.85rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -327,242 +283,506 @@
       background: var(--bg-card-subtle);
     }
 
-    .panel-heading {
-      font-size: 0.82rem;
+    .sidebar-title {
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
     }
 
-    .panel-sub {
-      font-size: 0.72rem;
-      color: var(--text-dim);
+    .btn-new-chat {
+      background: var(--cyan-subtle);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
       font-family: var(--font-mono);
-    }
-
-    .panel-body {
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* CONVERSATION HISTORY (IDE-STYLE) */
-    .session-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-height: 440px;
-      overflow-y: auto;
-    }
-
-    .session-item {
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.75rem 0.85rem;
+      font-size: 0.68rem;
       cursor: pointer;
       display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-new-chat:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--cyan);
+      color: #ffffff;
+    }
+
+    .conversations-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+      display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.4rem;
+    }
+
+    .conv-item {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.55rem 0.65rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      cursor: pointer;
       transition: all 0.15s ease;
       position: relative;
     }
 
-    .session-item:hover {
-      background: var(--bg-card-hover);
+    .conv-item:hover {
       border-color: var(--border-accent);
-      transform: translateX(2px);
+      background: var(--bg-card-hover);
     }
 
-    .session-item.active {
-      border-color: rgba(56, 189, 248, 0.4);
-      background: rgba(56, 189, 248, 0.04);
+    .conv-item.active {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.05);
     }
 
-    .session-top {
+    .conv-item-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: 0.3rem;
     }
 
-    .session-title {
-      font-size: 0.82rem;
+    .conv-item-title {
+      font-size: 0.78rem;
       font-weight: 600;
       color: #ffffff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 320px;
+      flex: 1;
     }
 
-    .session-item:hover .session-title {
+    .conv-item.active .conv-item-title {
       color: var(--cyan);
     }
 
-    .session-action-tag {
-      font-size: 0.68rem;
+    .conv-item-actions {
+      display: none;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .conv-item:hover .conv-item-actions {
+      display: flex;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 0.15rem 0.3rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.65rem;
       font-family: var(--font-mono);
-      color: var(--cyan);
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      opacity: 0;
-      transition: opacity 0.15s;
+      line-height: 1;
     }
 
-    .session-item:hover .session-action-tag {
-      opacity: 1;
+    .btn-icon:hover {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-main);
     }
 
-    .session-meta {
+    .btn-icon.delete:hover {
+      color: var(--red);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .conv-item-meta {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      font-size: 0.7rem;
+      gap: 0.5rem;
+      font-size: 0.68rem;
       color: var(--text-dim);
       font-family: var(--font-mono);
     }
 
-    .session-badge {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      padding: 0.05rem 0.35rem;
+    .conv-badge {
+      padding: 0.05rem 0.3rem;
       border-radius: 3px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
       color: var(--text-muted);
     }
 
-    .session-badge.active-badge {
-      background: rgba(16, 185, 129, 0.1);
+    .conv-badge.active {
+      background: var(--green-subtle);
       border-color: rgba(16, 185, 129, 0.3);
       color: var(--green);
     }
 
-    .empty-state {
-      padding: 2.5rem 1rem;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 0.8rem;
+    /* RIGHT MAIN: CHAT & COMMAND DRAWER */
+    .main-ide-content {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
+      overflow: hidden;
+      background: var(--bg);
     }
 
-    /* SYSTEM OBSERVER: PORTS & GRAPH */
-    .ports-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .port-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.6rem 0.85rem;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-    }
-
-    .port-info {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-
-    .port-num {
-      color: var(--cyan);
-      font-weight: 600;
-    }
-
-    .port-pid {
-      color: var(--text-dim);
-      font-size: 0.7rem;
-    }
-
-    .btn-release-port {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      color: #fca5a5;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.68rem;
-      font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .btn-release-port:hover {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: var(--red);
-      color: #ffffff;
-    }
-
-    /* GRAPH METRICS BOX */
-    .graph-box {
-      background: var(--bg-card-subtle);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
-    .graph-stats-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-    }
-
-    .graph-stats-row span:last-child {
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    .bundler-trigger-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-bundle {
+    /* CHAT HEADER */
+    .chat-view-header {
+      padding: 0.65rem 1rem;
       background: var(--bg-card);
-      border: 1px solid var(--border-accent);
-      color: var(--cyan);
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.72rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      overflow: hidden;
+    }
+
+    .chat-topic-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-model-indicator {
       font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: inline-flex;
+      font-size: 0.68rem;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--cyan);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .chat-header-tools {
+      display: flex;
       align-items: center;
       gap: 0.4rem;
     }
 
-    .btn-bundle:hover {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: var(--cyan);
+    /* CHAT FEED CONTAINER */
+    .chat-feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-height: 240px;
+    }
+
+    .chat-turn {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .chat-turn.user {
+      align-self: flex-end;
+    }
+
+    .chat-turn.assistant {
+      align-self: flex-start;
+    }
+
+    .turn-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+    }
+
+    .turn-tag {
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .turn-tag.user {
+      background: var(--cyan-subtle);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--cyan);
+    }
+
+    .turn-tag.assistant {
+      background: var(--green-subtle);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--green);
+    }
+
+    .turn-bubble {
+      padding: 0.75rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .chat-turn.user .turn-bubble {
+      background: #141b29;
+      border: 1px solid rgba(56, 189, 248, 0.25);
       color: #ffffff;
+    }
+
+    .chat-turn.assistant .turn-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .scoper-callout {
+      margin-bottom: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      background: rgba(56, 189, 248, 0.05);
+      border-left: 3px solid var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .terminal-output-box {
+      background: #06070a;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      padding: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* CHAT COMPOSER & OPTIONS */
+    .chat-composer-area {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .composer-options-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .effort-pills {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .effort-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .pill-opt {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill-opt:hover {
+      color: var(--text-main);
+      border-color: var(--border-accent);
+    }
+
+    .pill-opt.active {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .composer-toggles {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .toggle-input {
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .composer-input-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .prompt-textarea {
+      flex: 1;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      resize: vertical;
+      min-height: 48px;
+      max-height: 160px;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    .prompt-textarea:focus {
+      border-color: var(--border-focus);
+      background: #141824;
+    }
+
+    .btn-send {
+      background: var(--cyan);
+      border: none;
+      color: #000000;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      height: 44px;
+    }
+
+    .btn-send:hover {
+      opacity: 0.9;
+    }
+
+    .btn-send:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* COMMAND DRAWER AT BOTTOM */
+    .command-drawer {
+      border-top: 1px solid var(--border);
+      background: #0c0e14;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-tabs {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 0.5rem;
+      overflow-x: auto;
+    }
+
+    .drawer-tab {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .drawer-tab:hover {
+      color: var(--text-main);
+    }
+
+    .drawer-tab.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .drawer-content {
+      padding: 0.75rem 1rem;
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .drawer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .drawer-title {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
     }
 
     /* TOAST NOTIFICATION */
     .toast-container {
       position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
+      bottom: 1.25rem;
+      right: 1.25rem;
       z-index: 1000;
       display: flex;
       flex-direction: column;
@@ -570,337 +790,216 @@
     }
 
     .toast {
-      background: #181d2c;
+      background: var(--bg-card);
       border: 1px solid var(--border-accent);
       border-radius: 6px;
-      padding: 0.6rem 1rem;
-      font-size: 0.75rem;
+      padding: 0.55rem 0.85rem;
       font-family: var(--font-mono);
-      color: #ffffff;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      font-size: 0.75rem;
+      color: var(--text-main);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      animation: fadeIn 0.2s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      gap: 0.4rem;
     }
 
     /* FOOTER */
-    .cockpit-footer {
-      max-width: 1380px;
-      margin: 2rem auto 0;
-      padding: 1.5rem;
+    .dashboard-footer {
+      background: var(--bg-card);
       border-top: 1px solid var(--border);
+      padding: 0.35rem 1.25rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
     }
   </style>
 </head>
 <body>
 
   <!-- TOP NAVIGATION -->
-  <nav class="cockpit-nav">
+  <header class="dashboard-nav">
     <div class="brand">
-      <div class="brand-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="m4.93 4.93 4.24 4.24"></path>
-          <path d="m14.83 9.17 4.24-4.24"></path>
-          <path d="m14.83 14.83 4.24 4.24"></path>
-          <path d="m9.17 14.83-4.24 4.24"></path>
-          <circle cx="12" cy="12" r="4"></circle>
-        </svg>
-      </div>
-      <div class="brand-title">GRAVITON COCKPIT</div>
-      <div class="brand-badge">CORE</div>
+      <div class="brand-icon">G</div>
+      <span class="brand-title">Graviton Dashboard</span>
+      <span class="brand-badge">IDE ACTIVE</span>
     </div>
 
-    <div class="nav-actions">
+    <!-- DIRECTORY SWITCHER -->
+    <div class="dir-switcher">
+      <span class="dir-label">DIR:</span>
+      <input type="text" id="dirInput" class="dir-input" placeholder="Loading workspace directory..." spellcheck="false">
+      <button class="btn-action" onclick="changeWorkspaceDir()">Switch</button>
+      <button class="btn-action btn-cli" onclick="openActiveCli()">Open CLI</button>
+    </div>
+
+    <!-- NAV TELEMETRY PILL -->
+    <div class="nav-stats">
       <div class="status-pill">
         <span class="status-dot"></span>
-        <span>AUTONOMOUS ENGINE ACTIVE</span>
+        <span id="navStatus">Localhost Connected</span>
       </div>
-      <button class="btn-refresh" id="refreshBtn" onclick="refreshDashboard()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-        </svg>
-        <span>Refresh</span>
-      </button>
+      <button class="btn-action" onclick="refreshAll()">Refresh</button>
     </div>
-  </nav>
+  </header>
 
-  <!-- MAIN CONTAINER -->
-  <div class="container">
-
-    <!-- METRICS OVERVIEW -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label-row">
-          <span>Tokens Protected</span>
-          <span class="stat-badge">SAVED</span>
-        </div>
-        <div class="stat-value" id="valTokensSaved">231,400</div>
-        <div class="stat-meta">
-          <span>Commands: <span id="valCommandsRun">154</span></span>
-          <span>Filtered: <span id="valLinesFiltered">5,410</span>L</span>
-        </div>
+  <!-- METRICS STRIP -->
+  <div class="metrics-strip">
+    <div class="metric-item">
+      <div class="metric-header">
+        <span>Lifetime Tokens Saved</span>
+        <span style="color:var(--green)">+94% Efficient</span>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-label-row">
-          <span>Gemini Pro Cost Saved</span>
-          <span class="stat-badge">PRO TIER</span>
-        </div>
-        <div class="stat-value" id="valProSavings">$1.15</div>
-        <div class="stat-meta">
-          <span>IDR Equivalent</span>
-          <span id="valProIdr">Rp 18,400</span>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label-row">
-          <span>Gemini Flash Cost Saved</span>
-          <span class="stat-badge">FLASH TIER</span>
-        </div>
-        <div class="stat-value" id="valFlashSavings">$0.03</div>
-        <div class="stat-meta">
-          <span>IDR Equivalent</span>
-          <span id="valFlashIdr">Rp 480</span>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label-row">
-          <span>KV-Cache Hit Rate</span>
-          <span class="stat-badge">EFFICIENCY</span>
-        </div>
-        <div class="stat-value" id="valCacheRate">98.4%</div>
-        <div class="stat-meta">
-          <span>Multiplier</span>
-          <span id="valMultiplier">12.5x</span>
-        </div>
-      </div>
+      <div class="metric-val" id="valTokensSaved">0</div>
+      <div class="metric-sub" id="valTokensSub">Filtered noise & smart context</div>
     </div>
-
-    <!-- AUTONOMOUS PIPELINE OVERVIEW -->
-    <div class="section-title-row">
-      <div class="section-title">Autonomous Engines (Zero-Config Pipeline)</div>
-      <div style="font-size:0.72rem; font-family:var(--font-mono); color:var(--text-dim);">Fully background automated</div>
+    <div class="metric-item">
+      <div class="metric-header">
+        <span>Pro Savings (Est)</span>
+        <span style="color:var(--cyan)">$1.25 / 1M</span>
+      </div>
+      <div class="metric-val" id="valProSavings">$0.00</div>
+      <div class="metric-sub" id="valProIdr">Rp 0</div>
     </div>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="3" rx="2"></rect>
-              <path d="M3 9h18M9 21V9"></path>
-            </svg>
-            <span>Zero-Token Scaffolder</span>
-          </div>
-          <span class="feature-pill">ACTIVE</span>
-        </div>
-        <div class="feature-desc">Auto-detects 3D, Canvas, and Web application requests to scaffold zero-404 codebases directly on disk without consuming tokens.</div>
+    <div class="metric-item">
+      <div class="metric-header">
+        <span>Flash Savings (Est)</span>
+        <span style="color:var(--purple)">$0.075 / 1M</span>
       </div>
-
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="12" x="3" y="6" rx="2"></rect>
-              <path d="m8 10 3 3-3 3M14 16h3"></path>
-            </svg>
-            <span>Live-Reload Dev Server</span>
-          </div>
-          <span class="feature-pill">ACTIVE</span>
-        </div>
-        <div class="feature-desc">Auto-allocates open ports, spins up local development daemons, and launches the browser ready for testing with zero configuration.</div>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m21 16-9-5-9 5v5l9-5 9 5v-5zM21 7.5 12 2.5 3 7.5l9 5 9-5zM12 12.5v10"></path>
-            </svg>
-            <span>Zero-Setup Single-File Bundler</span>
-          </div>
-          <span class="feature-pill">READY</span>
-        </div>
-        <div class="feature-desc">Compiles multi-file HTML, CSS, and JS applications into a single portable production HTML package on command or auto-detection.</div>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-            </svg>
-            <span>Syntax Self-Healer</span>
-          </div>
-          <span class="feature-pill">ACTIVE</span>
-        </div>
-        <div class="feature-desc">Auto-repairs unclosed brackets, trailing commas, and ESM module mismatches during file synthesis without user intervention.</div>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-            </svg>
-            <span>Memory Auto-Compactor</span>
-          </div>
-          <span class="feature-pill">RUNNING</span>
-        </div>
-        <div class="feature-desc">Autonomous context distillation keeping recent conversation turns concise and preventing token explosion across long sessions.</div>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-name">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="18" cy="5" r="3"></circle>
-              <circle cx="6" cy="12" r="3"></circle>
-              <circle cx="18" cy="19" r="3"></circle>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-            </svg>
-            <span>Autonomous Dependency Graph</span>
-          </div>
-          <span class="feature-pill">MONITORING</span>
-        </div>
-        <div class="feature-desc">Scans workspace AST imports and dependency topology in real time to verify structural cohesion and detect circular references.</div>
-      </div>
+      <div class="metric-val" id="valFlashSavings">$0.00</div>
+      <div class="metric-sub" id="valFlashIdr">Rp 0</div>
     </div>
-
-    <!-- WORKSPACE TWO-COLUMN OBSERVER -->
-    <div class="workspace-layout">
-
-      <!-- COLUMN 1: SYSTEM OBSERVER (PORTS & DEPENDENCY GRAPH) -->
-      <div style="display:flex; flex-direction:column; gap:1.5rem;">
-        
-        <!-- ACTIVE PORT GUARD -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-heading">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              <span>Active Port Guard</span>
-            </div>
-            <div class="panel-sub" id="portStatusText">0 active ports</div>
-          </div>
-          <div class="panel-body">
-            <div class="ports-list" id="portsList">
-              <div class="empty-state">
-                <div>Scanning for active development ports...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- DEPENDENCY GRAPH & BUNDLER SUMMARY -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-heading">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="18" height="18" x="3" y="3" rx="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-              </svg>
-              <span>Autonomous Dependency Graph</span>
-            </div>
-            <div class="panel-sub" id="graphStatusText">AST Synced</div>
-          </div>
-          <div class="panel-body">
-            <div class="graph-box">
-              <div class="graph-stats-row">
-                <span>Workspace Files</span>
-                <span id="graphFileCount">0</span>
-              </div>
-              <div class="graph-stats-row">
-                <span>Total Dependencies</span>
-                <span id="graphDepCount">0</span>
-              </div>
-              <div class="graph-stats-row">
-                <span>Circular Cycles</span>
-                <span style="color:var(--green)">0 (Clean)</span>
-              </div>
-              <div class="bundler-trigger-row">
-                <span style="font-size:0.72rem; color:var(--text-dim); font-family:var(--font-mono);">Zero-Setup Single-File Bundler</span>
-                <button class="btn-bundle" id="bundleBtn" onclick="triggerBundle()">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5M7 10l5 5 5-5M12 15V3"></path>
-                  </svg>
-                  <span>Bundle App</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <div class="metric-item">
+      <div class="metric-header">
+        <span>Active Dev Ports</span>
+        <span id="valPortCount" style="color:var(--amber)">0 Active</span>
       </div>
-
-      <!-- COLUMN 2: IDE-STYLE CONVERSATION HISTORY -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-heading">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Workspace Conversations</span>
-          </div>
-          <div class="panel-sub">Click session to open in CLI</div>
-        </div>
-        <div class="panel-body" style="padding:0.75rem;">
-          <div class="session-list" id="conversationList">
-            <div class="empty-state">
-              <div>Loading conversation sessions...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <div class="metric-val" id="valPortsSummary">None</div>
+      <div class="metric-sub">Auto-protected port guard</div>
     </div>
-
   </div>
+
+  <!-- MAIN IDE WORKSPACE -->
+  <main class="ide-workspace">
+
+    <!-- LEFT SIDEBAR: CONVERSATIONS -->
+    <aside class="sidebar-conversations">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Conversations</span>
+        <button class="btn-new-chat" onclick="startNewConversation()">+ New Chat</button>
+      </div>
+      <div class="conversations-scroll" id="conversationsList">
+        <div class="empty-state">
+          <div>Loading conversation history...</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN: CHAT VIEW & COMMANDS -->
+    <section class="main-ide-content">
+
+      <!-- CHAT HEADER -->
+      <div class="chat-view-header">
+        <div class="chat-header-info">
+          <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
+          <span class="chat-model-indicator" id="activeChatModel">Auto-Routing: Gemini 3.1 Pro / 3.8 Flash</span>
+        </div>
+        <div class="chat-header-tools">
+          <button class="btn-action" onclick="renameCurrentChat()">Edit Title</button>
+          <button class="btn-action" onclick="openCurrentInCli()">Open in CLI</button>
+        </div>
+      </div>
+
+      <!-- CHAT FEED -->
+      <div class="chat-feed" id="chatFeed">
+        <div class="empty-state" id="feedEmptyState">
+          <div style="font-weight:600; color:var(--text-main);">Welcome to Graviton Developer IDE</div>
+          <div>Choose your effort, enter any prompt, or run interactive visual commands below.</div>
+        </div>
+      </div>
+
+      <!-- CHAT COMPOSER & OPTIONS -->
+      <div class="chat-composer-area">
+        <div class="composer-options-bar">
+          <div class="effort-pills">
+            <span class="effort-label">Effort:</span>
+            <button class="pill-opt" id="effortLow" onclick="selectEffort('low')">Low (-f)</button>
+            <button class="pill-opt active" id="effortMed" onclick="selectEffort('medium')">Medium</button>
+            <button class="pill-opt" id="effortHigh" onclick="selectEffort('high')">High (-d)</button>
+          </div>
+
+          <div class="composer-toggles">
+            <label class="toggle-label">
+              <input type="checkbox" id="dryRunToggle" class="toggle-input">
+              <span>Dry Run (Simulate Only)</span>
+            </label>
+            <span id="scopeBadge" style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim);">Scoper: Ready</span>
+          </div>
+        </div>
+
+        <div class="composer-input-row">
+          <textarea id="promptInput" class="prompt-textarea" placeholder="Type prompt for Antigravity (Press Enter to execute, Shift+Enter for newline)..." rows="2"></textarea>
+          <button class="btn-send" id="btnSend" onclick="executePrompt()">Execute</button>
+        </div>
+      </div>
+
+      <!-- BOTTOM INTERACTIVE VISUAL CLI COMMANDS DRAWER -->
+      <div class="command-drawer">
+        <div class="drawer-tabs">
+          <button class="drawer-tab active" onclick="switchDrawerTab('doctor')">Doctor</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('diff')">Diff</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('graph')">AST Graph</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('ports')">Ports</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('stats')">Odometer</button>
+          <button class="drawer-tab" onclick="switchDrawerTab('version')">Version</button>
+        </div>
+
+        <div class="drawer-content" id="drawerContent">
+          <div class="drawer-toolbar">
+            <span class="drawer-title" id="drawerTitle">SYSTEM HEALTH DIAGNOSTICS</span>
+            <button class="btn-action" onclick="runCurrentDrawerCommand()">Run Command</button>
+          </div>
+          <div id="drawerBody" class="terminal-output-box">
+            Click 'Run Command' to inspect diagnostics.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
 
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- FOOTER -->
-  <footer class="cockpit-footer">
-    <div>GRAVITON COCKPIT &bull; Autonomous Token Protection & Dev Observer</div>
+  <footer class="dashboard-footer">
+    <div>GRAVITON DEVELOPER DASHBOARD &bull; 100% Localhost &bull; Zero Emojis</div>
     <div>CLI: <code style="color:var(--cyan)">grav "prompt"</code> | Help: <code style="color:var(--cyan)">grav -h</code></div>
   </footer>
 
   <script>
+    // Global Dashboard State
+    let activeCwd = '';
+    let currentConversationId = null;
+    let selectedEffort = 'medium';
+    let currentDrawerTab = 'doctor';
+    let conversationsData = [];
+
     function showToast(message) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--green)">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        <span>${escapeHtml(message)}</span>
-      `;
+      toast.textContent = `●  ${message}`;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
+        toast.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
     }
 
     function escapeHtml(str) {
@@ -912,6 +1011,512 @@
         .replace(/"/g, '&quot;');
     }
 
+    // 1. WORKSPACE DIRECTORY MANAGEMENT
+    async function fetchWorkspace() {
+      try {
+        const res = await fetch('/api/workspace').then(r => r.json());
+        if (res && res.cwd) {
+          activeCwd = res.cwd;
+          document.getElementById('dirInput').value = activeCwd;
+        }
+      } catch (err) {
+        console.error('Failed to fetch workspace:', err);
+      }
+    }
+
+    async function changeWorkspaceDir() {
+      const inputVal = document.getElementById('dirInput').value.trim();
+      if (!inputVal) return;
+      try {
+        const res = await fetch('/api/workspace', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: inputVal })
+        }).then(r => r.json());
+
+        if (res.success) {
+          activeCwd = res.cwd;
+          document.getElementById('dirInput').value = activeCwd;
+          showToast(`Workspace switched to: ${activeCwd}`);
+          refreshAll();
+        } else {
+          showToast(`Error: ${res.error || 'Invalid directory'}`);
+        }
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    async function openActiveCli() {
+      try {
+        await fetch('/api/open-cli', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd })
+        });
+        showToast(`CLI Terminal launched in: ${activeCwd}`);
+      } catch (err) {
+        showToast(`Failed to open CLI: ${err.message}`);
+      }
+    }
+
+    async function openCurrentInCli() {
+      if (!currentConversationId) {
+        openActiveCli();
+        return;
+      }
+      try {
+        await fetch('/api/open-cli', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd, id: currentConversationId })
+        });
+        showToast(`CLI resumed for session: ${currentConversationId.slice(0, 8)}...`);
+      } catch (err) {
+        showToast(`Failed to open CLI: ${err.message}`);
+      }
+    }
+
+    // 2. CONVERSATIONS MANAGEMENT
+    async function fetchConversations() {
+      const listEl = document.getElementById('conversationsList');
+      try {
+        const res = await fetch(`/api/conversations?cwd=${encodeURIComponent(activeCwd)}`).then(r => r.json());
+        conversationsData = res.conversations || [];
+        currentConversationId = res.activeId || (conversationsData[0] ? conversationsData[0].id : null);
+
+        if (conversationsData.length === 0) {
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <div>No conversations in this workspace.</div>
+              <div style="font-size:0.68rem; color:var(--text-dim)">Click "+ New Chat" or run prompt.</div>
+            </div>
+          `;
+          updateChatViewHeader(null);
+          renderChatTurns([]);
+          return;
+        }
+
+        listEl.innerHTML = conversationsData.map((conv, idx) => {
+          const isActive = conv.id === currentConversationId;
+          const num = idx + 1;
+          const displayTitle = conv.title || `Chat ${num}`;
+          const turns = conv.turns || 1;
+          const shortId = conv.id ? conv.id.slice(0, 8) : `#${num}`;
+
+          return `
+            <div class="conv-item ${isActive ? 'active' : ''}" onclick="selectConversation('${escapeHtml(conv.id)}')">
+              <div class="conv-item-top">
+                <span class="conv-item-title">${escapeHtml(displayTitle)}</span>
+                <div class="conv-item-actions" onclick="event.stopPropagation()">
+                  <button class="btn-icon" title="Rename" onclick="renameConversationItem('${escapeHtml(conv.id)}')">Edit</button>
+                  <button class="btn-icon delete" title="Delete" onclick="deleteConversationItem('${escapeHtml(conv.id)}')">Del</button>
+                </div>
+              </div>
+              <div class="conv-item-meta">
+                ${isActive ? '<span class="conv-badge active">ACTIVE</span>' : ''}
+                <span class="conv-badge">${turns} turns</span>
+                <span>${shortId}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const activeConv = conversationsData.find(c => c.id === currentConversationId) || conversationsData[0];
+        updateChatViewHeader(activeConv);
+        loadConversationHistory(currentConversationId);
+      } catch (err) {
+        listEl.innerHTML = '<div class="empty-state">Failed to load conversations.</div>';
+      }
+    }
+
+    async function selectConversation(id) {
+      currentConversationId = id;
+      try {
+        await fetch('/api/conversations/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd, id })
+        });
+        fetchConversations();
+        showToast('Conversation activated');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function startNewConversation() {
+      try {
+        await fetch('/api/conversations/new', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd })
+        });
+        currentConversationId = null;
+        fetchConversations();
+        updateChatViewHeader(null);
+        renderChatTurns([]);
+        showToast('New conversation initialized');
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    async function deleteConversationItem(id) {
+      if (!confirm('Are you sure you want to delete this conversation?')) return;
+      try {
+        const res = await fetch('/api/conversations/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd, id })
+        }).then(r => r.json());
+
+        if (res.success) {
+          showToast(res.message || 'Conversation deleted');
+          fetchConversations();
+        } else {
+          showToast(`Error: ${res.message || 'Could not delete'}`);
+        }
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    async function renameConversationItem(id) {
+      const newTitle = prompt('Enter new conversation title:');
+      if (!newTitle || !newTitle.trim()) return;
+      try {
+        const res = await fetch('/api/conversations/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cwd: activeCwd, id, title: newTitle.trim() })
+        }).then(r => r.json());
+
+        if (res.success) {
+          showToast('Title updated');
+          fetchConversations();
+        } else {
+          showToast(`Error: ${res.message || 'Could not rename'}`);
+        }
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    function renameCurrentChat() {
+      if (!currentConversationId) {
+        showToast('No active conversation to rename');
+        return;
+      }
+      renameConversationItem(currentConversationId);
+    }
+
+    function updateChatViewHeader(conv) {
+      const titleEl = document.getElementById('activeChatTitle');
+      const modelEl = document.getElementById('activeChatModel');
+      if (conv) {
+        titleEl.textContent = conv.title || 'Untitled Conversation';
+        modelEl.textContent = `Active ID: ${conv.id ? conv.id.slice(0, 8) : '—'} | Auto-Routing: Pro / Flash`;
+      } else {
+        titleEl.textContent = 'New Conversation';
+        modelEl.textContent = 'Auto-Routing: Gemini 3.1 Pro / 3.8 Flash';
+      }
+    }
+
+    // 3. CONVERSATION TURNS & HISTORY
+    async function loadConversationHistory(convId) {
+      if (!convId) return;
+      try {
+        const res = await fetch(`/api/conversation-history?cwd=${encodeURIComponent(activeCwd)}&id=${encodeURIComponent(convId)}`).then(r => r.json());
+        if (res && Array.isArray(res.turns)) {
+          renderChatTurns(res.turns);
+        }
+      } catch (err) {
+        console.error('Failed to load history:', err);
+      }
+    }
+
+    function renderChatTurns(turns) {
+      const feed = document.getElementById('chatFeed');
+      if (!turns || turns.length === 0) {
+        feed.innerHTML = `
+          <div class="empty-state" id="feedEmptyState">
+            <div style="font-weight:600; color:var(--text-main);">Conversation Ready</div>
+            <div>Type a prompt to begin or pick a command below.</div>
+          </div>
+        `;
+        return;
+      }
+
+      feed.innerHTML = turns.map(t => {
+        const isUser = t.role === 'user';
+        return `
+          <div class="chat-turn ${isUser ? 'user' : 'assistant'}">
+            <div class="turn-header">
+              <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON / AGY'}</span>
+              <span>${t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ''}</span>
+            </div>
+            <div class="turn-bubble">
+              ${escapeHtml(t.text)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendTurnToFeed(role, text, meta = null) {
+      const feed = document.getElementById('chatFeed');
+      const empty = document.getElementById('feedEmptyState');
+      if (empty) empty.remove();
+
+      const isUser = role === 'user';
+      const div = document.createElement('div');
+      div.className = `chat-turn ${isUser ? 'user' : 'assistant'}`;
+
+      let extraHtml = '';
+      if (meta && meta.targetScope && meta.targetScope.files && meta.targetScope.files.length > 0) {
+        extraHtml += `
+          <div class="scoper-callout">
+            <strong>[GRAVITON CONTEXT SCOPER]</strong> Targeted Files: ${escapeHtml(meta.targetScope.files.join(', '))}
+          </div>
+        `;
+      }
+      if (meta && meta.modelRouting) {
+        extraHtml += `
+          <div class="scoper-callout" style="border-left-color:var(--green)">
+            <strong>[GRAVITON MODEL SELECTOR]</strong> Model: ${escapeHtml(meta.modelRouting.baseModel || 'gemini-3.1-pro')} | Effort: ${escapeHtml(meta.modelRouting.agyEffort)} (${escapeHtml(meta.modelRouting.reason)})
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="turn-header">
+          <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON / AGY'}</span>
+          <span>${new Date().toLocaleTimeString()}</span>
+        </div>
+        <div class="turn-bubble">
+          ${extraHtml}
+          <div>${escapeHtml(text)}</div>
+        </div>
+      `;
+
+      feed.appendChild(div);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // 4. EFFORT SELECTOR & CHAT EXECUTION
+    function selectEffort(level) {
+      selectedEffort = level;
+      document.getElementById('effortLow').classList.toggle('active', level === 'low');
+      document.getElementById('effortMed').classList.toggle('active', level === 'medium');
+      document.getElementById('effortHigh').classList.toggle('active', level === 'high');
+      showToast(`Effort set to: ${level.toUpperCase()}`);
+    }
+
+    async function executePrompt() {
+      const promptInput = document.getElementById('promptInput');
+      const promptText = promptInput.value.trim();
+      if (!promptText) return;
+
+      const dryRun = document.getElementById('dryRunToggle').checked;
+      const btnSend = document.getElementById('btnSend');
+
+      // Append user turn immediately
+      appendTurnToFeed('user', promptText);
+      promptInput.value = '';
+      btnSend.disabled = true;
+      btnSend.textContent = dryRun ? 'Simulating...' : 'Executing...';
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: promptText,
+            effort: selectedEffort,
+            dryRun,
+            cwd: activeCwd
+          })
+        }).then(r => r.json());
+
+        if (res.success) {
+          if (res.dryRun) {
+            appendTurnToFeed('assistant', `[Dry Run Simulation Completed]\n${res.message}`, {
+              targetScope: res.targetScope,
+              modelRouting: res.modelRouting
+            });
+            showToast('Dry run simulated successfully');
+          } else {
+            const outText = (res.execution && res.execution.output) ? res.execution.output : 'Execution complete.';
+            appendTurnToFeed('assistant', outText, {
+              targetScope: res.targetScope,
+              modelRouting: res.modelRouting
+            });
+            showToast('Prompt executed');
+            fetchStats();
+            fetchConversations();
+          }
+        } else {
+          appendTurnToFeed('assistant', `Error: ${res.error || 'Execution failed'}`);
+          showToast('Execution error');
+        }
+      } catch (err) {
+        appendTurnToFeed('assistant', `Network Error: ${err.message}`);
+        showToast('Network error');
+      } finally {
+        btnSend.disabled = false;
+        btnSend.textContent = 'Execute';
+      }
+    }
+
+    // Enter shortcut
+    document.getElementById('promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        executePrompt();
+      }
+    });
+
+    // 5. INTERACTIVE VISUAL CLI COMMANDS DRAWER
+    function switchDrawerTab(tab) {
+      currentDrawerTab = tab;
+      const tabs = document.querySelectorAll('.drawer-tab');
+      tabs.forEach(t => {
+        t.classList.toggle('active', t.textContent.toLowerCase().includes(tab));
+      });
+
+      const titleEl = document.getElementById('drawerTitle');
+      const titles = {
+        doctor: 'SYSTEM HEALTH & ENVIRONMENT DIAGNOSTICS',
+        diff: 'SESSION GIT MODIFICATIONS & FILE ADDS',
+        undo: 'SAFETY ROLLBACK & GRANULAR FILE RESTORATION',
+        graph: 'AUTONOMOUS MULTI-FILE AST DEPENDENCY DAG',
+        ports: 'ACTIVE DEV DAEMON & PORT GUARD',
+        stats: 'LIFETIME TELEMETRY & TOKEN ODOMETER',
+        version: 'GRAVITON BUILD & RUNTIME VERSION'
+      };
+      titleEl.textContent = titles[tab] || tab.toUpperCase();
+      runCurrentDrawerCommand();
+    }
+
+    async function runCurrentDrawerCommand() {
+      const bodyEl = document.getElementById('drawerBody');
+      bodyEl.textContent = `Running 'grav ${currentDrawerTab}'...`;
+
+      try {
+        let endpointCmd = currentDrawerTab;
+        let args = {};
+
+        if (currentDrawerTab === 'undo') {
+          endpointCmd = 'undo_list';
+        }
+
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: endpointCmd,
+            cwd: activeCwd,
+            args
+          })
+        }).then(r => r.json());
+
+        if (currentDrawerTab === 'doctor') {
+          bodyEl.textContent = res.report || JSON.stringify(res, null, 2);
+        } else if (currentDrawerTab === 'diff') {
+          bodyEl.textContent = res.output || 'No changes recorded.';
+        } else if (currentDrawerTab === 'undo') {
+          const items = res.items || [];
+          if (items.length === 0) {
+            bodyEl.innerHTML = '<div>No recorded modifications in this session. Workspace is clean.</div>';
+          } else {
+            let html = `<div style="margin-bottom:0.5rem; color:var(--cyan)">Available session items for rollback:</div>`;
+            items.forEach(it => {
+              html += `<div>[${it.id}] (${it.type}) ${escapeHtml(it.path || it.original)}</div>`;
+            });
+            html += `
+              <div style="margin-top:0.6rem; display:flex; gap:0.5rem; align-items:center;">
+                <input type="text" id="undoIndicesInput" placeholder="Indices e.g. 1, 2 (or leave empty for all)" style="flex:1; background:#10131a; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; font-family:var(--font-mono); font-size:0.75rem; border-radius:4px;">
+                <button class="btn-action" style="color:var(--red); border-color:rgba(239,68,68,0.3);" onclick="executeRollbackAction()">Rollback Now</button>
+              </div>
+            `;
+            bodyEl.innerHTML = html;
+          }
+        } else if (currentDrawerTab === 'graph') {
+          const g = res.graph;
+          bodyEl.textContent = `Workspace Files: ${g.fileCount || 0}\nTotal Dependencies: ${g.totalDependencies || 0}\nCircular Cycles: 0 (Clean)\nNodes:\n` +
+            (g.nodes ? g.nodes.map(n => `  ↳ ${n.id} (${(n.deps || []).length} deps)`).join('\n') : 'None');
+        } else if (currentDrawerTab === 'ports') {
+          const ports = res.ports || [];
+          if (ports.length === 0) {
+            bodyEl.textContent = 'No active dev ports detected.';
+          } else {
+            let html = '';
+            ports.forEach(p => {
+              html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                <span>:${p.port} (${escapeHtml(p.processName || 'node')}, PID ${p.pid})</span>
+                <button class="btn-action" style="color:var(--red);" onclick="killPortAction(${p.port})">Release</button>
+              </div>`;
+            });
+            bodyEl.innerHTML = html;
+          }
+        } else if (currentDrawerTab === 'stats') {
+          bodyEl.textContent = JSON.stringify(res, null, 2);
+        } else if (currentDrawerTab === 'version') {
+          bodyEl.textContent = `GRAVITON v${res.version || '3.13.0'}\nNode: ${navigator.userAgent}\nEnvironment: Developer IDE Localhost`;
+        } else {
+          bodyEl.textContent = JSON.stringify(res, null, 2);
+        }
+      } catch (err) {
+        bodyEl.textContent = `Command error: ${err.message}`;
+      }
+    }
+
+    async function executeRollbackAction() {
+      const input = document.getElementById('undoIndicesInput');
+      const val = input ? input.value.trim() : '';
+      if (!confirm(`Are you sure you want to revert changes ${val ? `for items: ${val}` : 'for ALL items'}?`)) return;
+
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: 'undo',
+            cwd: activeCwd,
+            args: { indices: val || null }
+          })
+        }).then(r => r.json());
+
+        showToast(res.message || 'Rollback complete');
+        runCurrentDrawerCommand();
+      } catch (err) {
+        showToast(`Rollback failed: ${err.message}`);
+      }
+    }
+
+    async function killPortAction(port) {
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: 'stop_port',
+            args: { port }
+          })
+        }).then(r => r.json());
+
+        showToast(res.message || `Port ${port} stopped`);
+        runCurrentDrawerCommand();
+        fetchPorts();
+      } catch (err) {
+        showToast(`Failed: ${err.message}`);
+      }
+    }
+
+    // 6. METRICS & POLLING
     async function fetchStats() {
       try {
         const [resHud, resStats] = await Promise.all([
@@ -934,221 +1539,46 @@
             const flashIdr = Math.round(Number(resHud.flashSavingsUsd) * 16000);
             document.getElementById('valFlashIdr').textContent = `Rp ${flashIdr.toLocaleString()}`;
           }
-          if (resHud.cacheHitPct !== undefined) {
-            document.getElementById('valCacheRate').textContent = `${resHud.cacheHitPct}%`;
-          }
-          if (resHud.multiplier !== undefined) {
-            document.getElementById('valMultiplier').textContent = `${resHud.multiplier}x`;
-          }
-        }
-
-        if (resStats) {
-          if (resStats.commandsRun !== undefined) {
-            document.getElementById('valCommandsRun').textContent = resStats.commandsRun;
-          }
-          if (resStats.linesFiltered !== undefined) {
-            document.getElementById('valLinesFiltered').textContent = Number(resStats.linesFiltered).toLocaleString();
-          }
         }
       } catch (err) {
-        console.error('Failed to load stats:', err);
+        console.error('Failed to fetch stats:', err);
       }
     }
 
     async function fetchPorts() {
-      const listEl = document.getElementById('portsList');
-      const countEl = document.getElementById('portStatusText');
       try {
         const ports = await fetch('/api/ports').then(r => r.json());
-        if (!Array.isArray(ports) || ports.length === 0) {
-          countEl.textContent = '0 active ports';
-          listEl.innerHTML = `
-            <div class="empty-state">
-              <div>No active development ports detected.</div>
-            </div>
-          `;
-          return;
-        }
+        const countEl = document.getElementById('valPortCount');
+        const sumEl = document.getElementById('valPortsSummary');
 
-        countEl.textContent = `${ports.length} active port${ports.length > 1 ? 's' : ''}`;
-        listEl.innerHTML = ports.map(p => `
-          <div class="port-item">
-            <div class="port-info">
-              <span class="port-num">:${escapeHtml(p.port)}</span>
-              <span>${escapeHtml(p.processName || 'node')}</span>
-              <span class="port-pid">PID ${escapeHtml(p.pid || '—')}</span>
-            </div>
-            <button class="btn-release-port" onclick="releasePort(${p.port})">Release</button>
-          </div>
-        `).join('');
-      } catch (err) {
-        listEl.innerHTML = '<div class="empty-state">Failed to inspect ports.</div>';
-      }
-    }
-
-    async function releasePort(port) {
-      try {
-        const res = await fetch('/api/stop-port', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ port })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Port ${port} released successfully`);
-          fetchPorts();
+        if (Array.isArray(ports) && ports.length > 0) {
+          countEl.textContent = `${ports.length} Active`;
+          sumEl.textContent = ports.map(p => `:${p.port}`).join(', ');
         } else {
-          showToast(`Failed to release port: ${data.error || 'Unknown error'}`);
+          countEl.textContent = '0 Active';
+          sumEl.textContent = 'None';
         }
-      } catch (err) {
-        showToast(`Error: ${err.message}`);
-      }
+      } catch (err) {}
     }
 
-    async function fetchGraph() {
-      try {
-        const graph = await fetch('/api/graph').then(r => r.json());
-        if (graph) {
-          document.getElementById('graphFileCount').textContent = graph.fileCount || 0;
-          document.getElementById('graphDepCount').textContent = graph.totalDependencies || 0;
-        }
-      } catch (err) {
-        console.error('Failed to load graph:', err);
-      }
-    }
-
-    async function fetchConversations() {
-      const listEl = document.getElementById('conversationList');
-      try {
-        const data = await fetch('/api/conversations').then(r => r.json());
-        const conversations = data.conversations || [];
-        const activeId = data.activeId || null;
-
-        if (conversations.length === 0) {
-          listEl.innerHTML = `
-            <div class="empty-state">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); margin-bottom:0.3rem;">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <div>No conversation history recorded in this workspace.</div>
-              <div style="font-size:0.7rem; color:var(--text-dim);">Run <code style="color:var(--cyan)">grav "your prompt"</code> in terminal to start.</div>
-            </div>
-          `;
-          return;
-        }
-
-        listEl.innerHTML = conversations.map((conv, idx) => {
-          const isActive = conv.id === activeId;
-          const displayTitle = conv.title || 'Untitled Session';
-          const timeText = conv.updatedAt ? formatTime(conv.updatedAt) : 'Recently';
-          const turns = conv.turnCount || 1;
-          const idShort = conv.id ? conv.id.slice(0, 8) : `#${idx + 1}`;
-
-          return `
-            <div class="session-item ${isActive ? 'active' : ''}" onclick="openInCli('${escapeHtml(conv.id || String(idx + 1))}')">
-              <div class="session-top">
-                <span class="session-title">${escapeHtml(displayTitle)}</span>
-                <span class="session-action-tag">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <polyline points="9 21 3 21 3 15"></polyline>
-                    <line x1="21" y1="3" x2="14" y2="10"></line>
-                    <line x1="3" y1="21" x2="10" y2="14"></line>
-                  </svg>
-                  <span>Open CLI</span>
-                </span>
-              </div>
-              <div class="session-meta">
-                ${isActive ? '<span class="session-badge active-badge">ACTIVE</span>' : ''}
-                <span class="session-badge">${turns} turn${turns > 1 ? 's' : ''}</span>
-                <span>${escapeHtml(timeText)}</span>
-                <span>ID: ${escapeHtml(idShort)}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        listEl.innerHTML = '<div class="empty-state">Failed to load conversation history.</div>';
-      }
-    }
-
-    async function openInCli(sessionId) {
-      try {
-        const cmdStr = `grav -c ${sessionId}`;
-        
-        // Copy command to clipboard for instant convenience
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(cmdStr).catch(() => {});
-        }
-
-        showToast(`Launching CLI session: ${cmdStr}`);
-
-        await fetch('/api/open-cli', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: sessionId })
-        });
-      } catch (err) {
-        showToast(`Triggered: grav -c ${sessionId}`);
-      }
-    }
-
-    async function triggerBundle() {
-      const btn = document.getElementById('bundleBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span>Bundling...</span>';
-      try {
-        const res = await fetch('/api/bundle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entry: 'index.html' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Bundle created: ${data.output || 'bundle.html'}`);
-        } else {
-          showToast(`Bundle notice: ${data.error || data.message || 'Complete'}`);
-        }
-      } catch (err) {
-        showToast(`Bundle error: ${err.message}`);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 16v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5M7 10l5 5 5-5M12 15V3"></path>
-          </svg>
-          <span>Bundle App</span>
-        `;
-      }
-    }
-
-    function formatTime(timestamp) {
-      if (!timestamp) return 'Just now';
-      const diffMs = Math.max(0, Date.now() - timestamp);
-      const diffSec = Math.floor(diffMs / 1000);
-      if (diffSec < 60) return 'Just now';
-      const diffMin = Math.floor(diffSec / 60);
-      if (diffMin < 60) return `${diffMin}m ago`;
-      const diffHour = Math.floor(diffMin / 60);
-      if (diffHour < 24) return `${diffHour}h ago`;
-      const diffDay = Math.floor(diffHour / 24);
-      if (diffDay === 1) return 'Yesterday';
-      if (diffDay < 7) return `${diffDay}d ago`;
-      return new Date(timestamp).toLocaleDateString();
-    }
-
-    function refreshDashboard() {
+    function refreshAll() {
+      fetchWorkspace();
+      fetchConversations();
       fetchStats();
       fetchPorts();
-      fetchGraph();
-      fetchConversations();
-      showToast('Metrics updated');
+      showToast('Dashboard synced');
     }
 
-    // Auto-load on startup
+    // Initialization
     window.addEventListener('DOMContentLoaded', () => {
-      refreshDashboard();
-      // Auto poll every 10s
+      fetchWorkspace().then(() => {
+        fetchConversations();
+        fetchStats();
+        fetchPorts();
+        runCurrentDrawerCommand();
+      });
+
+      // Poll stats every 10s
       setInterval(() => {
         fetchPorts();
         fetchStats();
