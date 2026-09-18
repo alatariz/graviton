@@ -77,7 +77,7 @@ export function renderAsciiHud(metrics = null) {
 
   const lines = [
     '===============================================================',
-    '   GRAVITON V3.7.0 DEVELOPER COCKPIT & ECONOMY HUD',
+    '   GRAVITON V3.12.0 DEVELOPER COCKPIT & ECONOMY HUD',
     '===============================================================',
     `  All-Time Tokens Protected : \x1b[1;32m~${data.tokensSaved.toLocaleString()} tokens\x1b[0m`,
     `  Total Prompts Accelerated : \x1b[1;36m${data.promptsOptimized} prompts\x1b[0m`,

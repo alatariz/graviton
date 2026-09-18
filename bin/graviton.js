@@ -243,22 +243,14 @@ async function main() {
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
-  graph                          Render ASCII/Unicode multi-file dependency graph of project
-  hud                            Display real-time token savings, cost calculator & port HUD
   diff                           Review colorized line-by-line diff of recent modifications made by AI
-  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   undo, rollback, rb             Revert files modified or created during the most recent AI session
-  index <file>                   Inspect AST function map and line ranges for any file
-  chat, repl                     Launch interactive REPL chat session
-  start <cmd...>                 Launch dev server cleanly as background daemon (non-hanging)
-  stop [port|all]                Terminate background dev daemon or free blocked development port
-  ports, port                    Scan and display active listening development ports (3000, 5173, etc.)
-  map                            Display workspace directory tree and detected dependencies
-  stats, gain                    Display lifetime telemetry dashboard & token savings
-  clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
+  stats, hud                     Display lifetime token & dollar savings dashboard + active ports
+  graph                          Render ASCII/Unicode multi-file dependency graph of project
+  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
-  init [--global]                Initialize ~/.graviton directory and local Skill Vault
-  run <cmd...>                   Execute CLI command with streamlined terminal output filtering
+  chat, repl                     Launch interactive REPL chat session
+  stop [port|all]                Terminate background dev daemon or free blocked development port
   version, -v                    Display Graviton CLI version
 `);
     process.exit(0);
@@ -363,10 +355,9 @@ async function main() {
     process.exit(0);
   }
 
-  // 4. TELEMETRY & STATS DASHBOARD
-  if (command === 'gain' || command === 'stats' || command === 'status' || command === '--gain' || command === '--stats' || command === '--status') {
-    const dashboard = formatTelemetryDashboard();
-    console.log(dashboard);
+  // 4. UNIFIED TELEMETRY, SAVINGS & ECONOMY HUD
+  if (command === 'gain' || command === 'stats' || command === 'hud' || command === 'status' || command === '--gain' || command === '--stats' || command === '--hud' || command === '--status') {
+    console.log(renderAsciiHud());
     process.exit(0);
   }
 
@@ -383,12 +374,6 @@ async function main() {
     } else {
       console.log(`\x1b[33mGraviton Web Dashboard is located in the repository at ./web\x1b[0m`);
     }
-    process.exit(0);
-  }
-
-  // 4c. LIVE SAVINGS & ECONOMY HUD
-  if (command === 'hud' || command === '--hud') {
-    console.log(renderAsciiHud());
     process.exit(0);
   }
 
