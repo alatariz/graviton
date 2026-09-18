@@ -158,10 +158,49 @@ async function runTests() {
     // Zero Emojis
     const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
     assert.strictEqual(emojiRegex.test(html), false, 'index.html must not contain any emojis');
-    console.log('  ✔ PASS: IDE layout, resizers, effort controls, and zero emojis verified\n');
+    // [TEST 5] Multi-Turn Chat Continuation in /api/chat
+    console.log('[TEST 5] Testing conversation continuity and token metrics in /api/chat...');
+    const firstChat = await httpPost(TEST_PORT, '/api/chat', {
+      prompt: 'First prompt in session',
+      cwd: tmpBase,
+      testMode: true
+    });
+    assert.strictEqual(firstChat.status, 200);
+    assert.ok(firstChat.body.conversationId, 'Initial chat must return a conversationId');
+    assert.ok(typeof firstChat.body.sessionTokens === 'number', 'Must return sessionTokens');
+    assert.ok(typeof firstChat.body.lifetimeTokens === 'number', 'Must return lifetimeTokens');
+    const assignedConvId = firstChat.body.conversationId;
+
+    // Send reply specifying the active conversationId
+    const replyChat = await httpPost(TEST_PORT, '/api/chat', {
+      prompt: 'Replying to the same conversation',
+      conversationId: assignedConvId,
+      cwd: tmpBase,
+      testMode: true
+    });
+    assert.strictEqual(replyChat.status, 200);
+    assert.strictEqual(replyChat.body.conversationId, assignedConvId, 'Replying must retain the exact same conversationId and NOT create a new chat');
+    assert.ok(replyChat.body.sessionTokens >= firstChat.body.sessionTokens, 'Session tokens must accumulate');
+
+    // Verify /api/conversation-history returns both turns (user + assistant)
+    const historyRes = await httpGet(TEST_PORT, `/api/conversation-history?cwd=${encodeURIComponent(tmpBase)}&id=${encodeURIComponent(assignedConvId)}`);
+    assert.strictEqual(historyRes.status, 200);
+    assert.ok(historyRes.body.turns.length >= 2, 'History must contain user and assistant turns');
+    const roles = historyRes.body.turns.map(t => t.role);
+    assert.ok(roles.includes('user'), 'Must contain user turns');
+    assert.ok(roles.includes('assistant'), 'Must contain assistant turns');
+    console.log('  ✔ PASS: Multi-turn conversation continuity and two-way turns verified\n');
+
+    // [TEST 6] Verification of Browse button and Token Badge UI elements
+    console.log('[TEST 6] Testing Browse button and token badges in index.html...');
+    assert.ok(html.includes('browseWorkspaceFolder()'), 'Browse button must call browseWorkspaceFolder()');
+    assert.ok(html.includes('id="activeChatTokens"'), 'Chat header must contain activeChatTokens badge');
+    assert.ok(html.includes('id="statusbarTokens"'), 'Status bar must contain statusbarTokens');
+    assert.ok(html.includes('.turn-token-footer'), 'turn-token-footer CSS class must exist');
+    console.log('  ✔ PASS: Browse button and token odometer UI elements verified\n');
 
     console.log('===============================================================');
-    console.log('  ✔  ALL 4 TESTS IN DEVELOPER IDE SUITE PASSED (100%)');
+    console.log('  ✔  ALL 6 TESTS IN DEVELOPER IDE SUITE PASSED (100%)');
     console.log('===============================================================\n');
   } finally {
     await new Promise((resolve) => server.close(resolve));

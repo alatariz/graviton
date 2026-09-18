@@ -306,7 +306,7 @@ export function setActiveConversation(cwd = process.cwd(), indexOrId) {
  * @param {number} maxTurns
  * @returns {{ id: string|null, title: string, turns: Array<{ role: string, text: string, timestamp?: number|string }>, totalTurns: number, activeFiles: string[] }}
  */
-export function getConversationHistory(cwd = process.cwd(), indexOrId = null, maxTurns = 5) {
+export function getConversationHistory(cwd = process.cwd(), indexOrId = null, maxTurns = 50) {
   const normalizedCwd = path.resolve(cwd);
   const state = getWorkspaceConversations(normalizedCwd);
 
@@ -322,7 +322,7 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
 
   const convId = targetConv ? targetConv.id : (typeof indexOrId === 'string' && indexOrId.length > 10 ? indexOrId : null);
   if (!convId) {
-    return { id: null, title: 'No Conversation', turns: [], totalTurns: 0, activeFiles: [] };
+    return { id: null, title: 'No Conversation', turns: [], totalTurns: 0, cumulativeTokens: 0, activeFiles: [] };
   }
 
   const title = targetConv ? targetConv.title : 'Conversation';
@@ -341,11 +341,30 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
     try {
       const content = fs.readFileSync(transcriptFile, 'utf8');
       const lines = content.trim().split(/\r?\n/);
+      let currentAssistantBuffer = [];
+
+      const flushAssistant = () => {
+        if (currentAssistantBuffer.length > 0) {
+          const combinedText = currentAssistantBuffer.map(b => b.text).join('\n\n').trim();
+          const lastTimestamp = currentAssistantBuffer[currentAssistantBuffer.length - 1].timestamp;
+          if (combinedText) {
+            parsedTurns.push({
+              role: 'assistant',
+              text: combinedText,
+              timestamp: lastTimestamp || null
+            });
+          }
+          currentAssistantBuffer = [];
+        }
+      };
+
       for (const line of lines) {
         if (!line.trim()) continue;
         try {
           const entry = JSON.parse(line);
           if (entry.type === 'USER_INPUT' && entry.content) {
+            flushAssistant();
+
             let text = entry.content;
             const reqMatch = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
             if (reqMatch) text = reqMatch[1].trim();
@@ -371,9 +390,21 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
                 timestamp: entry.created_at || null
               });
             }
+          } else if (entry.type === 'PLANNER_RESPONSE') {
+            if (entry.content && typeof entry.content === 'string') {
+              const cleaned = entry.content.trim();
+              if (cleaned) {
+                currentAssistantBuffer.push({
+                  text: cleaned,
+                  timestamp: entry.created_at || null
+                });
+              }
+            }
           }
         } catch {}
       }
+
+      flushAssistant();
     } catch {}
   }
 
@@ -398,6 +429,7 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
     title,
     turns: recentTurns,
     totalTurns,
+    cumulativeTokens: targetConv ? (targetConv.cumulativeTokens || 0) : 0,
     activeFiles: targetConv ? targetConv.activeFiles || [] : []
   };
 }
@@ -476,12 +508,21 @@ export function saveWorkspaceConversation(cwd = process.cwd(), conversationId, p
       existing.history = existing.history || [];
       existing.history.push({
         role: 'user',
-        text: prompt.slice(0, 300),
+        text: prompt.slice(0, 500),
         timestamp: Date.now()
       });
-      if (existing.history.length > 20) {
-        existing.history = existing.history.slice(-20);
-      }
+    }
+    if (metadata.assistantText) {
+      existing.history = existing.history || [];
+      existing.history.push({
+        role: 'assistant',
+        text: String(metadata.assistantText).slice(0, 3000),
+        tokens: metadata.tokens || 0,
+        timestamp: Date.now()
+      });
+    }
+    if (existing.history && existing.history.length > 50) {
+      existing.history = existing.history.slice(-50);
     }
     if (metadata.title) {
       existing.title = metadata.title;
@@ -493,6 +534,19 @@ export function saveWorkspaceConversation(cwd = process.cwd(), conversationId, p
     }
   } else {
     const title = metadata.title || generateConversationTitle(prompt);
+    const initialHistory = [];
+    if (prompt) {
+      initialHistory.push({ role: 'user', text: prompt.slice(0, 500), timestamp: Date.now() });
+    }
+    if (metadata.assistantText) {
+      initialHistory.push({
+        role: 'assistant',
+        text: String(metadata.assistantText).slice(0, 3000),
+        tokens: metadata.tokens || 0,
+        timestamp: Date.now()
+      });
+    }
+
     existing = {
       id: conversationId,
       title,
@@ -502,7 +556,7 @@ export function saveWorkspaceConversation(cwd = process.cwd(), conversationId, p
       cumulativeTokens: metadata.tokens || 0,
       lastPrompt: (prompt || '').slice(0, 200),
       activeFiles: metadata.activeFiles || [],
-      history: prompt ? [{ role: 'user', text: prompt.slice(0, 300), timestamp: Date.now() }] : []
+      history: initialHistory
     };
     state.conversations.unshift(existing);
   }

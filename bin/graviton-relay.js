@@ -440,7 +440,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     });
 
     try {
-      const latestConvId = getLatestConversationId();
+      const latestConvId = options.conversationId || getLatestConversationId();
       if (latestConvId) {
         const promptToSave = options.userPrompt || promptText;
         saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
@@ -699,7 +699,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       processStreamChunk('', true);
 
       try {
-        const latestConvId = getLatestConversationId();
+        const latestConvId = options.conversationId || getLatestConversationId();
         if (latestConvId) {
           const promptToSave = options.userPrompt || promptText;
           saveWorkspaceSession(executionCwd, latestConvId, promptToSave);

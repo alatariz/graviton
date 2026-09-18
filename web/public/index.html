@@ -530,6 +530,29 @@
       white-space: nowrap;
     }
 
+    .chat-token-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--green);
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .turn-token-footer {
+      margin-top: 0.45rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
     /* CHAT FEED CONTAINER */
     .chat-feed {
       flex: 1;
@@ -1089,9 +1112,8 @@
   <div class="ide-toolbar">
     <div class="dir-bar">
       <span class="dir-label">DIR:</span>
-      <input type="text" id="dirInput" class="dir-input" placeholder="Loading active workspace folder..." spellcheck="false">
-      <button class="btn-ide" onclick="changeWorkspaceDir()">Switch</button>
-      <button class="btn-ide accent" onclick="browseWorkspaceFolder()" title="Open native OS folder selection dialog">Browse...</button>
+      <input type="text" id="dirInput" class="dir-input" placeholder="Select workspace directory..." spellcheck="false" onkeydown="if(event.key==='Enter')changeWorkspaceDir()">
+      <button class="btn-ide accent" onclick="browseWorkspaceFolder()" title="Open native OS folder selection dialog">Browse</button>
       <button class="btn-ide" onclick="revealWorkspaceInExplorer()" title="Open in Windows File Explorer">Explorer</button>
     </div>
 
@@ -1162,7 +1184,10 @@
       <!-- CHAT HEADER -->
       <div class="chat-view-header">
         <div class="chat-info-block">
-          <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
+          <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+            <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
+            <span class="chat-token-badge" id="activeChatTokens">Session: ~0 tokens | Lifetime Odometer: 0 tokens</span>
+          </div>
           <span class="chat-model-badge" id="activeChatModel">Auto-Routing: Gemini 3.1 Pro / 3.8 Flash</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.35rem;">
@@ -1252,6 +1277,7 @@
     </div>
 
     <div class="statusbar-right">
+      <span id="statusbarTokens">Session: ~0 tokens | Odometer: 0 tokens</span>
       <span id="statusbarEffort">Effort: Grav</span>
       <button class="btn-toggle-panel" id="btnTogglePanel" onclick="toggleDrawer()">Panel</button>
     </div>
@@ -1270,6 +1296,28 @@
     let isDrawerCollapsed = false;
     let isDrawerMaximized = false;
     let preMaximizeHeight = 220;
+    let latestSessionTokens = 0;
+    let latestLifetimeTokens = 0;
+
+    function updateTokenDisplay(sessionTokens = null, lifetimeTokens = null) {
+      if (sessionTokens !== null && sessionTokens !== undefined) latestSessionTokens = Number(sessionTokens) || 0;
+      if (lifetimeTokens !== null && lifetimeTokens !== undefined) latestLifetimeTokens = Number(lifetimeTokens) || 0;
+
+      const tokenEl = document.getElementById('activeChatTokens');
+      if (tokenEl) {
+        tokenEl.textContent = `Session: ~${latestSessionTokens.toLocaleString()} tokens | Lifetime Odometer: ${latestLifetimeTokens.toLocaleString()} tokens`;
+      }
+
+      const headerOdo = document.getElementById('headerOdometer');
+      if (headerOdo) {
+        headerOdo.textContent = `Lifetime: ${latestLifetimeTokens.toLocaleString()} tokens`;
+      }
+
+      const statusbarTokens = document.getElementById('statusbarTokens');
+      if (statusbarTokens) {
+        statusbarTokens.textContent = `Session: ~${latestSessionTokens.toLocaleString()} tokens | Odometer: ${latestLifetimeTokens.toLocaleString()} tokens`;
+      }
+    }
 
     function showToast(message) {
       const container = document.getElementById('toastContainer');
@@ -1563,7 +1611,9 @@
       try {
         const res = await fetch(`/api/conversations?cwd=${encodeURIComponent(activeCwd)}`).then(r => r.json());
         conversationsData = res.conversations || [];
-        currentConversationId = res.activeId || (conversationsData[0] ? conversationsData[0].id : null);
+        if (!currentConversationId || !conversationsData.some(c => c.id === currentConversationId)) {
+          currentConversationId = res.activeId || (conversationsData[0] ? conversationsData[0].id : null);
+        }
 
         if (conversationsData.length === 0) {
           listEl.innerHTML = `
@@ -1583,6 +1633,7 @@
           const displayTitle = conv.title || `Chat ${num}`;
           const turns = conv.turns || 1;
           const shortId = conv.id ? conv.id.slice(0, 8) : `#${num}`;
+          const tokensK = conv.cumulativeTokens ? `~${Math.round(conv.cumulativeTokens / 100) / 10}k` : '0';
 
           return `
             <div class="conv-item ${isActive ? 'active' : ''}" onclick="selectConversation('${escapeHtml(conv.id)}')">
@@ -1596,6 +1647,7 @@
               <div class="conv-item-meta">
                 ${isActive ? '<span class="badge-pill active">ACTIVE</span>' : ''}
                 <span class="badge-pill">${turns} turns</span>
+                <span class="badge-pill">${tokensK} tokens</span>
                 <span>${shortId}</span>
               </div>
             </div>
@@ -1705,9 +1757,12 @@
       if (conv) {
         titleEl.textContent = conv.title || 'Untitled Conversation';
         modelEl.textContent = `Active ID: ${conv.id ? conv.id.slice(0, 8) : '—'} | Auto-Routing: Pro / Flash`;
+        const sTokens = conv.cumulativeTokens !== undefined ? conv.cumulativeTokens : latestSessionTokens;
+        updateTokenDisplay(sTokens, latestLifetimeTokens);
       } else {
         titleEl.textContent = 'New Conversation';
         modelEl.textContent = 'Auto-Routing: Gemini 3.1 Pro / 3.8 Flash';
+        updateTokenDisplay(0, latestLifetimeTokens);
       }
     }
 
@@ -1715,16 +1770,25 @@
     async function loadConversationHistory(convId) {
       if (!convId) return;
       try {
-        const res = await fetch(`/api/conversation-history?cwd=${encodeURIComponent(activeCwd)}&id=${encodeURIComponent(convId)}`).then(r => r.json());
-        if (res && Array.isArray(res.turns)) {
-          renderChatTurns(res.turns);
+        const res = await fetch(`/api/conversation-history?cwd=${encodeURIComponent(activeCwd)}&id=${encodeURIComponent(convId)}&limit=50`).then(r => r.json());
+        if (res) {
+          if (res.odometer && res.odometer.totalTokens !== undefined) {
+            latestLifetimeTokens = res.odometer.totalTokens;
+          }
+          const activeConv = conversationsData.find(c => c.id === convId);
+          const sessionTokens = (activeConv && activeConv.cumulativeTokens !== undefined) ? activeConv.cumulativeTokens : (res.cumulativeTokens || 0);
+          updateTokenDisplay(sessionTokens, latestLifetimeTokens);
+
+          if (Array.isArray(res.turns)) {
+            renderChatTurns(res.turns, sessionTokens, latestLifetimeTokens);
+          }
         }
       } catch (err) {
         console.error('Failed to load history:', err);
       }
     }
 
-    function renderChatTurns(turns) {
+    function renderChatTurns(turns, sessionTokens = 0, lifetimeTokens = 0) {
       const feed = document.getElementById('chatFeed');
       if (!turns || turns.length === 0) {
         feed.innerHTML = `
@@ -1736,8 +1800,22 @@
         return;
       }
 
-      feed.innerHTML = turns.map(t => {
+      feed.innerHTML = turns.map((t, idx) => {
         const isUser = t.role === 'user';
+        const isLastAssistant = !isUser && (idx === turns.length - 1 || turns.slice(idx + 1).every(x => x.role === 'user'));
+        const turnTokens = t.tokens || (isLastAssistant ? (sessionTokens || latestSessionTokens) : null);
+
+        let tokenHtml = '';
+        if (!isUser && (turnTokens || lifetimeTokens || latestLifetimeTokens)) {
+          const sTok = turnTokens || sessionTokens || latestSessionTokens || 0;
+          const lTok = lifetimeTokens || latestLifetimeTokens || 0;
+          tokenHtml = `
+            <div class="turn-token-footer">
+              Session: ~${Number(sTok).toLocaleString()} tokens | Lifetime Odometer: ${Number(lTok).toLocaleString()} tokens
+            </div>
+          `;
+        }
+
         return `
           <div class="chat-turn ${isUser ? 'user' : 'assistant'}">
             <div class="turn-header">
@@ -1745,7 +1823,8 @@
               <span>${t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ''}</span>
             </div>
             <div class="turn-bubble">
-              ${escapeHtml(t.text)}
+              <div style="white-space: pre-wrap;">${escapeHtml(t.text)}</div>
+              ${tokenHtml}
             </div>
           </div>
         `;
@@ -1779,6 +1858,17 @@
         `;
       }
 
+      let tokenHtml = '';
+      if (!isUser && meta && (meta.sessionTokens !== undefined || meta.lifetimeTokens !== undefined)) {
+        const sTok = meta.sessionTokens || latestSessionTokens || 0;
+        const lTok = meta.lifetimeTokens || latestLifetimeTokens || 0;
+        tokenHtml = `
+          <div class="turn-token-footer">
+            Session: ~${Number(sTok).toLocaleString()} tokens | Lifetime Odometer: ${Number(lTok).toLocaleString()} tokens
+          </div>
+        `;
+      }
+
       div.innerHTML = `
         <div class="turn-header">
           <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON / AGY'}</span>
@@ -1786,7 +1876,8 @@
         </div>
         <div class="turn-bubble">
           ${extraHtml}
-          <div>${escapeHtml(text)}</div>
+          <div style="white-space: pre-wrap;">${escapeHtml(text)}</div>
+          ${tokenHtml}
         </div>
       `;
 
@@ -1828,22 +1919,36 @@
             prompt: promptText,
             effort: selectedEffort,
             dryRun,
-            cwd: activeCwd
+            cwd: activeCwd,
+            conversationId: currentConversationId || undefined
           })
         }).then(r => r.json());
 
         if (res.success) {
+          if (res.conversationId) {
+            currentConversationId = res.conversationId;
+          }
+          if (res.sessionTokens !== undefined && res.lifetimeTokens !== undefined) {
+            latestSessionTokens = res.sessionTokens;
+            latestLifetimeTokens = res.lifetimeTokens;
+            updateTokenDisplay(res.sessionTokens, res.lifetimeTokens);
+          }
+
           if (res.dryRun) {
             appendTurnToFeed('assistant', `[Dry Run Simulation Completed]\n${res.message}`, {
               targetScope: res.targetScope,
-              modelRouting: res.modelRouting
+              modelRouting: res.modelRouting,
+              sessionTokens: res.sessionTokens || 0,
+              lifetimeTokens: latestLifetimeTokens
             });
             showToast('Dry run simulated successfully');
           } else {
             const outText = (res.execution && res.execution.output) ? res.execution.output : 'Execution complete.';
             appendTurnToFeed('assistant', outText, {
               targetScope: res.targetScope,
-              modelRouting: res.modelRouting
+              modelRouting: res.modelRouting,
+              sessionTokens: res.sessionTokens || 0,
+              lifetimeTokens: res.lifetimeTokens || latestLifetimeTokens
             });
             showToast('Prompt executed');
             fetchStats();

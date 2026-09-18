@@ -419,7 +419,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
 
       // Post-execution: Syntax Sanity Check & Autonomous Compaction
       inspectSessionFiles(cwd);
-      const autoComp = autoCompactSessionIfExceeded(cwd, activeConversationId);
+      const autoComp = autoCompactSessionIfExceeded(cwd, targetConvId);
       if (autoComp && autoComp.autoCompacted && autoComp.message) {
         console.log(`\n${autoComp.message}`);
       }

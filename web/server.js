@@ -19,7 +19,10 @@ import {
   clearWorkspaceSession,
   deleteWorkspaceConversation,
   renameWorkspaceConversation,
-  getConversationHistory
+  getConversationHistory,
+  saveWorkspaceConversation,
+  getActiveConversation,
+  getLatestConversationId
 } from '../src/session-manager.js';
 import { resolveModelAndEffort } from '../src/model-selector.js';
 import { listRollbackItems, executeRollback } from '../src/rollback-manager.js';
@@ -226,7 +229,7 @@ export const server = http.createServer(async (req, res) => {
 
       if (process.platform === 'win32') {
         const initial = activeWorkspaceDir.replace(/'/g, "''");
-        const psScript = `Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = 'Select Workspace Directory for Graviton IDE'; $d.ShowNewFolderButton = $true; $d.SelectedPath = '${initial}'; if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.SelectedPath }`;
+        const psScript = `Add-Type -AssemblyName System.Windows.Forms; $form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = 'Select Workspace Directory for Graviton IDE'; $d.ShowNewFolderButton = $true; $d.SelectedPath = '${initial}'; if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.SelectedPath }`;
         const psRes = spawnSync('powershell.exe', ['-NoProfile', '-Command', psScript], {
           encoding: 'utf8',
           timeout: 60000
@@ -376,10 +379,11 @@ export const server = http.createServer(async (req, res) => {
     try {
       const targetCwd = resolveCwd(parsedUrl.searchParams.get('cwd'));
       const id = parsedUrl.searchParams.get('id') || null;
-      const limit = parseInt(parsedUrl.searchParams.get('limit') || '20', 10);
+      const limit = parseInt(parsedUrl.searchParams.get('limit') || '50', 10);
       const history = getConversationHistory(targetCwd, id, limit);
+      const odo = readOdometer();
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: true, cwd: targetCwd, ...history }));
+      res.end(JSON.stringify({ success: true, cwd: targetCwd, odometer: odo, ...history }));
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: e.message }));
@@ -505,6 +509,7 @@ export const server = http.createServer(async (req, res) => {
       const targetCwd = resolveCwd(body.cwd);
       const rawEffort = (body.effort || 'grav').toLowerCase();
       const dryRun = Boolean(body.dryRun);
+      const requestedConvId = body.conversationId || null;
 
       // Map Fast / Grav / Deep (and backwards compatible low / medium / high)
       const isFast = rawEffort === 'fast' || rawEffort === 'low';
@@ -528,6 +533,7 @@ export const server = http.createServer(async (req, res) => {
           dryRun: true,
           cwd: targetCwd,
           prompt,
+          conversationId: requestedConvId,
           effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
           modelRouting,
           targetScope,
@@ -546,7 +552,10 @@ export const server = http.createServer(async (req, res) => {
       saveStats(stats);
 
       let executionResult = { status: 'completed', output: '' };
+      let effectiveConvId = requestedConvId;
+
       if (process.env.NODE_ENV === 'test' || body.testMode) {
+        effectiveConvId = requestedConvId || 'conv-sim-' + Date.now();
         executionResult = {
           status: 'completed',
           output: `Simulated Antigravity execution for: "${prompt.slice(0, 60)}..." in ${targetCwd}`
@@ -555,12 +564,15 @@ export const server = http.createServer(async (req, res) => {
         try {
           const runRes = runAntigravityWithAutoAllow(prompt, {
             cwd: targetCwd,
+            conversationId: requestedConvId || undefined,
+            userPrompt: prompt,
             effort: modelRouting.agyEffort,
             model: modelRouting.baseModel,
             sync: true,
             stdio: 'pipe',
             rejectOnError: false
           });
+          effectiveConvId = requestedConvId || getLatestConversationId();
           executionResult = {
             status: 'completed',
             output: runRes && runRes.stdout ? runRes.stdout.toString('utf8') : 'Session executed successfully.'
@@ -573,10 +585,26 @@ export const server = http.createServer(async (req, res) => {
         }
       }
 
+      const odo = readOdometer();
+      const lastTokens = odo.lastSessionTokens || 1200;
+      let savedConv = null;
+
+      if (effectiveConvId) {
+        savedConv = saveWorkspaceConversation(targetCwd, effectiveConvId, prompt, {
+          tokens: lastTokens,
+          assistantText: executionResult.output,
+          activeFiles: targetScope.files || []
+        });
+        setActiveConversation(targetCwd, effectiveConvId);
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({
         success: executionResult.status !== 'error',
         cwd: targetCwd,
+        conversationId: effectiveConvId,
+        sessionTokens: (savedConv && savedConv.cumulativeTokens) || lastTokens,
+        lifetimeTokens: odo.totalTokens,
         effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
         modelRouting,
         targetScope,
