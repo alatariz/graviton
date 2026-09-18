@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "3.7.0",
-  "description": "Graviton V3.7.0 - Developer Cockpit, Localhost Dashboard, Self-Healing & App Bundler for Antigravity",
+  "version": "3.8.0",
+  "description": "Graviton V3.8.0 - Localhost Developer Cockpit, Real-Time HUD, Port Guard & Procedural Asset Engine for Antigravity",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "repository": {

@@ -221,7 +221,7 @@ export const server = http.createServer(async (req, res) => {
   }
 
   // 4. STATIC FILE SERVING
-  let relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  let relativePath = (pathname === '/' || pathname === '/dashboard') ? 'index.html' : pathname.replace(/^\/+/, '');
   let filePath = path.join(PUBLIC_DIR, relativePath);
 
   // Security: prevent directory traversal outside of PUBLIC_DIR
@@ -277,14 +277,15 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   ⚡ GRAVITON V3.0.0 WEB STUDIO ONLINE (Zero-Dependency)`);
+      console.log(`   ⚡ GRAVITON V3.8.0 DEVELOPER COCKPIT ONLINE (100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
-      console.log(`  Local URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
+      console.log(`  Cockpit URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {
-        console.log(`  Port Note : \x1b[90mRunning on fallback port ${port} (preferred port ${preferredPort} in use)\x1b[0m`);
+        console.log(`  Port Note   : \x1b[90mRunning on fallback port ${port} (preferred port ${preferredPort} in use)\x1b[0m`);
       }
-      console.log(`  Docs URL  : \x1b[36mhttp://localhost:${port}/docs.html\x1b[0m`);
-      console.log(`\x1b[90m  Press Ctrl+C to terminate studio.\x1b[0m\n`);
+      console.log(`  Landing URL : \x1b[36mhttp://localhost:${port}/landing.html\x1b[0m`);
+      console.log(`  Docs URL    : \x1b[36mhttp://localhost:${port}/docs.html\x1b[0m`);
+      console.log(`\x1b[90m  Press Ctrl+C to terminate cockpit.\x1b[0m\n`);
     });
   }
 

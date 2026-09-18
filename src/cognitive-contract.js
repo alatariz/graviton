@@ -9,11 +9,14 @@ export const DOMAIN_EDGE_CASES = {
     'Collision & Tunneling: Clamp player velocity and use AABB voxel collision so the player never falls through the floor or glitches through block corners.',
     'Pointer Lock Lifecycle: Handle pointerlockchange and pointerlockerror events gracefully; show a click-to-play overlay when pointer lock is lost.',
     'Voxel Face Normal Raycasting: Ensure right-click placement uses the intersection face normal (intersection.face.normal) so blocks attach to the correct exterior surface.',
+    'Procedural Canvas Textures (Zero 404s): Generate 16x16 pixel-art canvas textures for Grass, Dirt, Stone, and Wood procedurally; never rely on missing external texture PNG files.',
     'Canvas Resizing: Dynamically update camera aspect ratio and renderer size on window resize events to eliminate aspect distortion.',
-    'Audio Synthesis Fallback: Unlock Web Audio AudioContext on first user gesture to prevent browser autoplay policy blocks.'
+    'Audio Synthesis Fallback: Unlock Web Audio AudioContext on first user gesture to prevent browser autoplay policy blocks, synthesizing sound clicks procedurally.'
   ],
   game_dev: [
     'Frame-rate Independence: Multiply all movement, physics, and animations by delta time (clock.getDelta()) to guarantee consistent gameplay across 60Hz, 120Hz, and 144Hz displays.',
+    'Procedural Assets (Zero 404s): Use HTML5 Canvas pixel-art or procedural vector shapes for sprites; never rely on external image/audio files that trigger 404 errors.',
+    'Procedural Web Audio: Generate sound effects (pew, jump, hit, explosion) using Web Audio API oscillators and gain envelopes with zero external audio assets.',
     'Memory Leak Prevention: Dispose unused geometries, materials, and textures when removing entities from the scene.',
     'Input Key Tracking: Use a Set or map of currently pressed keys to handle simultaneous multi-key presses (e.g. W + Space for running jump) without stutter.',
     'Canvas Boundary Clamping: Prevent entities or player camera from moving outside the playable arena boundaries.'

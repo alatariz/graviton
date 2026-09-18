@@ -362,7 +362,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.7.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.8.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 

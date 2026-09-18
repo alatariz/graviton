@@ -44,6 +44,8 @@ export function calculateEconomyMetrics(customStats = null) {
 
   // Estimated average KV-cache reuse efficiency rate
   const cacheHitPct = promptsOptimized > 0 ? Math.min(94, 75 + Math.round(promptsOptimized * 1.5)) : 0;
+  const flashSavingsIdr = Math.round(flashSavingsUsd * USD_TO_IDR);
+  const proSavingsIdr = idrSavings;
 
   return {
     tokensSaved,
@@ -51,9 +53,16 @@ export function calculateEconomyMetrics(customStats = null) {
     promptsOptimized,
     linesFiltered,
     flashSavingsUsd: Number(flashSavingsUsd.toFixed(4)),
+    flashCostSavedUsd: Number(flashSavingsUsd.toFixed(4)),
+    flashSavingsIdr,
+    flashCostSavedIdr: flashSavingsIdr,
     proSavingsUsd: Number(proSavingsUsd.toFixed(3)),
+    proCostSavedUsd: Number(proSavingsUsd.toFixed(3)),
     idrSavings,
+    proSavingsIdr,
+    proCostSavedIdr: proSavingsIdr,
     cacheHitPct,
+    kvCacheReuseRate: cacheHitPct,
     activePorts
   };
 }
