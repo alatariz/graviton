@@ -308,7 +308,11 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   }
 
   if (!options.args && !options.silent) {
-    console.log(`\x1b[36m[GRAVITON]\x1b[0m AI reasoning in progress... \x1b[90m(Tip: run 'grav -h' for help & options)\x1b[0m`);
+    const modelTag = options.model ? `Model: \x1b[1m${options.model}\x1b[0m | ` : '';
+    const resolvedEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
+    const effortTag = `Effort: \x1b[1m${resolvedEffort}\x1b[0m`;
+    const reasonTag = options.modelReason ? ` \x1b[90m(${options.modelReason})\x1b[0m` : '';
+    console.log(`\x1b[36m[GRAVITON]\x1b[0m ${modelTag}${effortTag}${reasonTag}`);
   }
 
   const executionCwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
@@ -319,13 +323,19 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   if (options.args) {
     args = [...options.args];
   } else {
+    const resolvedEffort = options.effort || (options.isFast ? 'low' : (options.isDeep ? 'high' : 'medium'));
+    const resolvedMode = options.mode || (options.isDeep ? 'plan' : 'accept-edits');
     args = [
       '--dangerously-skip-permissions',
-      '--effort', options.effort || (options.isDeep ? 'high' : 'high'),
-      '--mode', options.mode || (options.isDeep ? 'plan' : 'accept-edits'),
+      '--effort', resolvedEffort,
+      '--mode', resolvedMode,
       '--print-timeout', options.printTimeout || '20m',
       '--output-format', 'stream-json'
     ];
+
+    if (options.model) {
+      args.push('--model', options.model);
+    }
 
     if (options.addDir !== false) {
       args.push('--add-dir', executionCwd);

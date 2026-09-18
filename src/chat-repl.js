@@ -25,6 +25,7 @@ import { resolveTargetScope } from './context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from './clipboard.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
 import { listSessionSnapshots, clearSessionSnapshots } from './delta-compressor.js';
+import { resolveModelAndEffort } from './model-selector.js';
 
 /**
  * Starts an interactive REPL shell for Graviton.
@@ -388,11 +389,23 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
       }
 
+      const modelInfo = resolveModelAndEffort({
+        isDeep: options.isDeep || false,
+        prompt: executionPrompt,
+        context: {
+          targetFiles: targetScope?.targets || []
+        }
+      });
+
       const result = await runAntigravityWithAutoAllow(superPrompt, {
         conversationId: targetConvId,
         continueSession,
         cwd,
-        isDeep: options.isDeep || false
+        isDeep: options.isDeep || false,
+        effort: modelInfo.effort,
+        model: modelInfo.modelName,
+        modelTier: modelInfo.tier,
+        modelReason: modelInfo.reason
       });
 
       const odo = readOdometer();

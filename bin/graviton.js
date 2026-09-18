@@ -49,6 +49,7 @@ import { selfHealFile } from '../src/self-healer.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 import { launchLiveRunner, openBrowser } from '../src/live-runner.js';
 import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from '../src/autonomous-router.js';
+import { resolveModelAndEffort } from '../src/model-selector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -235,14 +236,14 @@ async function main() {
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Fast execution mode without planning (effort: low)
-  -d, --deep                     Deep architecture mode with full planning
+  -d, --deep                     Deep architecture mode with full planning (effort: high)
   -p, --paste                    Attach clipboard content (images, files, text)
   -c, --conversation [number]    Open conversation history or resume topic
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
 
 \x1b[1mCOMMANDS\x1b[0m
-  "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
+  "<raw_text>"                   [DEFAULT] Synthesize prompt & execute (effort: medium)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
   undo, rollback, rb             Revert files modified or created during the most recent AI session
   stats, hud                     Display lifetime token & dollar savings dashboard + active ports
@@ -867,8 +868,21 @@ async function main() {
     targetFiles: targetScope?.targets || []
   });
 
+  const modelInfo = resolveModelAndEffort({
+    isFast,
+    isDeep,
+    prompt: input,
+    context: {
+      targetFiles: targetScope?.targets || []
+    }
+  });
+
   if (isDryRun) {
     console.log('\n' + formatPreFlightReport(preFlightWeight));
+    console.log(`  Autonomous Model      : \x1b[1m${modelInfo.modelName}\x1b[0m \x1b[90m(Tier: ${modelInfo.tier.toUpperCase()})\x1b[0m`);
+    console.log(`  Reasoning Effort      : \x1b[1m${modelInfo.effort}\x1b[0m`);
+    console.log(`  Selection Reason      : \x1b[90m${modelInfo.reason}\x1b[0m`);
+    console.log(`---------------------------------------------------------------`);
     console.log(`\x1b[1;32m[Graviton Dry-Run]\x1b[0m Pre-flight inspection complete. 0 tokens consumed. Antigravity was not invoked.\n`);
     process.exit(0);
   }
@@ -885,7 +899,10 @@ async function main() {
     isDeep,
     isFast,
     userPrompt: input,
-    effort: isFast ? 'low' : (isDeep ? 'high' : 'high'),
+    effort: modelInfo.effort,
+    model: modelInfo.modelName,
+    modelTier: modelInfo.tier,
+    modelReason: modelInfo.reason,
     mode: isFast ? 'accept-edits' : (isDeep ? 'plan' : 'accept-edits')
   });
 

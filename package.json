@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "3.12.0",
-  "description": "Graviton V3.12.0 - Autonomous Zero-Option Intent Engine, Auto-Scaffolder, Auto-Bundler & Pre-Flight Self-Healer for Antigravity",
+  "version": "3.13.0",
+  "description": "Graviton V3.13.0 - Autonomous Prompt-Aware Model Selector (Flash vs Pro) & Decoupled Effort Routing for Antigravity",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "repository": {
