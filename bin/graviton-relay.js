@@ -45,6 +45,48 @@ export function isGuiExecutable(filePath) {
 }
 
 /**
+ * Safely and cleanly terminates a child process and its entire process tree.
+ * On Windows, leverages taskkill /T /F to eliminate all orphaned subprocesses.
+ */
+export function terminateProcess(child) {
+  if (!child || !child.pid) return;
+  try {
+    if (process.platform === 'win32') {
+      execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: 'ignore' });
+    } else {
+      child.kill('SIGKILL');
+    }
+  } catch {}
+}
+
+/**
+ * Inspects a string for known fatal error patterns from Google Antigravity, gRPC, or CLI limits.
+ * Returns the human-readable error reason if detected, or null otherwise.
+ */
+export function detectFatalErrorPattern(text) {
+  if (!text || typeof text !== 'string') return null;
+  if (/RESOURCE_EXHAUSTED/i.test(text)) {
+    return 'API Quota Exhausted (RESOURCE_EXHAUSTED / 429)';
+  }
+  if (/quota\s+exceeded/i.test(text)) {
+    return 'API Quota Exceeded';
+  }
+  if (/rate\s*limit\s*exceeded|too\s+many\s+requests/i.test(text)) {
+    return 'Rate Limit Exceeded (429)';
+  }
+  if (/UNAUTHENTICATED|invalid_grant/i.test(text)) {
+    return 'Authentication Failed (UNAUTHENTICATED / invalid_grant)';
+  }
+  if (/\[agy\]\s*print\s+timeout/i.test(text)) {
+    return 'Antigravity Internal Turn Timeout';
+  }
+  if (/model\s+is\s+overloaded/i.test(text)) {
+    return 'Model Overloaded (503)';
+  }
+  return null;
+}
+
+/**
  * Dynamically resolves the antigravity / agy executable path across Windows, macOS, and Linux
  * by searching through ~/.gemini/bin, AppData/Local/agy/bin, system PATH, and system discovery (where/which).
  * Strictly filters out GUI desktop apps (Antigravity.exe) to ensure only the CLI runner (agy) is selected.
@@ -376,68 +418,122 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let hasReceivedResponse = false;
     let turnTokens = 0;
     const startTime = Date.now();
-    let receivedFirstEvent = false;
+    let currentActiveTool = null;
+    let toolStartTime = null;
 
-    const thinkTimer = setInterval(() => {
-      if (!receivedFirstEvent && process.stderr.isTTY) {
-        const sec = Math.floor((Date.now() - startTime) / 1000);
-        process.stderr.write(`\r\x1b[90m[GRAVITON] AI reasoning & analyzing context... (${sec}s)\x1b[0m`);
+    // Watchdog and Fail-Fast state
+    // Default idle timeout is 180s (3 minutes) as requested by the user, with a warning at 90s.
+    const IDLE_TIMEOUT_SEC = Number(process.env.GRAVITON_IDLE_TIMEOUT) || (options.idleTimeout || 180);
+    const IDLE_WARN_SEC = Math.floor(IDLE_TIMEOUT_SEC / 2);
+    let lastActivityTime = Date.now();
+    let hasWarnedIdle = false;
+    let aborted = false;
+    let failReason = null;
+
+    const recordActivity = () => {
+      lastActivityTime = Date.now();
+      hasWarnedIdle = false;
+    };
+
+    const triggerFailFast = (reason) => {
+      if (aborted) return;
+      aborted = true;
+      failReason = reason;
+      terminateProcess(child);
+    };
+
+    const watchdog = setInterval(() => {
+      if (aborted) return;
+      const now = Date.now();
+      const idleSec = Math.floor((now - lastActivityTime) / 1000);
+      const totalElapsedSec = Math.floor((now - startTime) / 1000);
+
+      // Periodic reasoning update when waiting (every 5 seconds when idleSec >= 5, no active tool, and no text streaming)
+      if (!hasReceivedResponse && !currentActiveTool && idleSec >= 5 && idleSec % 5 === 0) {
+        console.log(`\x1b[90m[GRAVITON] AI analyzing context & thinking... (${totalElapsedSec}s elapsed)\x1b[0m`);
+      }
+
+      // Gentle warning when quiet for half the idle timeout (90s)
+      if (idleSec >= IDLE_WARN_SEC && !hasWarnedIdle) {
+        hasWarnedIdle = true;
+        console.log(`\x1b[33m[!] Antigravity is quiet (no activity for ${idleSec}s). Still waiting (limit: ${IDLE_TIMEOUT_SEC}s), or press Ctrl+C to cancel.\x1b[0m`);
+      }
+
+      // Inactivity timeout abort at 3 minutes (180s)
+      if (idleSec >= IDLE_TIMEOUT_SEC) {
+        console.error(`\n\x1b[1;31m[🚨 GRAVITON FAIL-FAST]\x1b[0m Antigravity stalled with no activity for ${IDLE_TIMEOUT_SEC}s (3 minutes).`);
+        console.error(`\x1b[90mTerminated stalled process. No tokens or time wasted waiting blindly.\x1b[0m`);
+        triggerFailFast(`Inactivity timeout: Antigravity stopped responding (no activity for ${IDLE_TIMEOUT_SEC}s / 3m)`);
       }
     }, 1000);
 
-    const clearHeartbeat = () => {
-      if (!receivedFirstEvent) {
-        receivedFirstEvent = true;
-        clearInterval(thinkTimer);
-        if (process.stderr.isTTY) {
-          process.stderr.write('\r\x1b[K');
-        }
+    const checkFatal = (text) => {
+      const fatal = detectFatalErrorPattern(text);
+      if (fatal && !aborted) {
+        console.error(`\n\x1b[1;31m[🚨 GRAVITON FAIL-FAST]\x1b[0m Fatal error detected: \x1b[1m${fatal}\x1b[0m`);
+        console.error(`\x1b[90mTerminated immediately to prevent waiting or wasting tokens.\x1b[0m`);
+        triggerFailFast(fatal);
       }
     };
 
     child.stdout.on('data', chunk => {
+      recordActivity();
       stdoutBuffer += chunk.toString();
       const lines = stdoutBuffer.split(/\r?\n/);
       stdoutBuffer = lines.pop();
 
       for (const line of lines) {
         if (!line.trim()) continue;
+        checkFatal(line);
+        if (aborted) break;
+
         try {
           const data = JSON.parse(line);
           if (data.event === 'step_update' && data.step_update) {
             const step = data.step_update;
 
             // Real-time tool updates with clear icons and filenames
-            if (step.step_type === 'tool' && step.state === 'ACTIVE') {
-              clearHeartbeat();
-              const toolName = step.tool_name;
-              const params = step.tool_info?.parameters || {};
-              let toolDesc = '';
+            if (step.step_type === 'tool') {
+              if (step.state === 'ACTIVE') {
+                const toolName = step.tool_name;
+                const params = step.tool_info?.parameters || {};
+                currentActiveTool = toolName;
+                toolStartTime = Date.now();
+                let toolDesc = '';
 
-              if (toolName === 'view_file') {
-                const file = params.AbsolutePath || params.TargetFile || '';
-                toolDesc = `\x1b[36m⚙  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
-              } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
-                const file = params.TargetFile || params.AbsolutePath || '';
-                toolDesc = `\x1b[33m✍  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
-              } else if (toolName === 'run_command') {
-                const cmd = (params.CommandLine || '').slice(0, 45);
-                toolDesc = `\x1b[35m▶  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
-              } else if (toolName === 'grep_search' || toolName === 'find_by_name') {
-                toolDesc = `\x1b[34m🔍 [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;
-              } else {
-                toolDesc = `\x1b[36m⚙  [AI Tool]\x1b[0m Executing \x1b[1m${toolName}\x1b[0m...`;
-              }
+                if (toolName === 'view_file') {
+                  const file = params.AbsolutePath || params.TargetFile || '';
+                  toolDesc = `\x1b[36m⚙  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+                } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
+                  const file = params.TargetFile || params.AbsolutePath || '';
+                  toolDesc = `\x1b[33m✍  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
+                } else if (toolName === 'run_command') {
+                  const cmd = (params.CommandLine || '').slice(0, 45);
+                  toolDesc = `\x1b[35m▶  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
+                } else if (toolName === 'grep_search' || toolName === 'find_by_name') {
+                  toolDesc = `\x1b[34m🔍 [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;
+                } else {
+                  toolDesc = `\x1b[36m⚙  [AI Tool]\x1b[0m Executing \x1b[1m${toolName}\x1b[0m...`;
+                }
 
-              if (toolDesc && toolDesc !== lastReportedTool) {
-                lastReportedTool = toolDesc;
-                console.log(toolDesc);
+                if (toolDesc && toolDesc !== lastReportedTool) {
+                  lastReportedTool = toolDesc;
+                  console.log(toolDesc);
+                }
+              } else if (step.state === 'DONE') {
+                const dur = step.duration_seconds
+                  ? `${step.duration_seconds.toFixed(1)}s`
+                  : (toolStartTime ? `${((Date.now() - toolStartTime) / 1000).toFixed(1)}s` : '');
+                const durStr = dur ? ` \x1b[90m(${dur})\x1b[0m` : '';
+                console.log(`   \x1b[32m✔\x1b[0m Done${durStr}`);
+                currentActiveTool = null;
+                toolStartTime = null;
               }
             }
 
             // Stream agent response text live as it arrives
             if (step.step_type === 'agent_response' && step.text_delta) {
-              clearHeartbeat();
+              currentActiveTool = null;
               hasReceivedResponse = true;
               process.stdout.write(step.text_delta);
             }
@@ -447,42 +543,40 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
               turnTokens = step.usage.total_tokens;
             }
           } else if (data.event === 'result' && data.result) {
-            clearHeartbeat();
             if (data.result.usage && data.result.usage.total_tokens) {
               turnTokens = data.result.usage.total_tokens;
             }
             if (!hasReceivedResponse && data.result.response) {
               process.stdout.write(data.result.response);
             }
+            if (data.result.status && data.result.status !== 'SUCCESS') {
+              triggerFailFast(`Antigravity result status: ${data.result.status}`);
+            }
           }
         } catch {
           // If non-JSON text line, output directly
-          clearHeartbeat();
           process.stdout.write(line + '\n');
         }
       }
     });
 
     child.stderr.on('data', chunk => {
-      clearHeartbeat();
+      recordActivity();
       const text = chunk.toString();
-      if (text.includes('[agy] print timeout')) {
-        console.error(`\x1b[31m${text}\x1b[0m`);
-      } else {
+      checkFatal(text);
+      if (!aborted) {
         process.stderr.write(text);
       }
     });
 
     child.on('error', err => {
-      clearInterval(thinkTimer);
-      clearHeartbeat();
+      clearInterval(watchdog);
       if (options.rejectOnError) return reject(err);
-      resolve({ status: 1, error: err });
+      resolve({ status: 1, error: err, aborted: false, timedOut: false });
     });
 
     child.on('close', code => {
-      clearInterval(thinkTimer);
-      clearHeartbeat();
+      clearInterval(watchdog);
 
       try {
         const latestConvId = getLatestConversationId();
@@ -503,13 +597,21 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
         }
       } catch {}
 
-      if (code !== 0 && code !== null) {
-        if (options.rejectOnError) {
-          return reject(new Error(`[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
-        }
+      const isOk = !aborted && code === 0 && !failReason;
+      const finalStatus = isOk ? 0 : (code !== 0 && code !== null ? code : 1);
+      const isTimedOut = Boolean(aborted || (failReason && /timeout/i.test(failReason)));
+
+      if (!isOk && options.rejectOnError) {
+        return reject(new Error(failReason || `[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
       }
 
-      resolve({ status: code || 0, error: null });
+      resolve({
+        status: finalStatus,
+        aborted,
+        timedOut: isTimedOut,
+        failReason,
+        error: isOk ? null : new Error(failReason || `Antigravity exited with code ${code}`)
+      });
     });
   });
 }

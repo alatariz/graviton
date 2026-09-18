@@ -384,7 +384,7 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
       }
 
-      await runAntigravityWithAutoAllow(superPrompt, {
+      const result = await runAntigravityWithAutoAllow(superPrompt, {
         conversationId: targetConvId,
         continueSession,
         cwd,
@@ -392,7 +392,13 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
       });
 
       const odo = readOdometer();
-      console.log(`\x1b[32m✔  Execution complete. (Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
+      if (result && (result.error || (result.status !== 0 && result.status !== null) || result.aborted || result.timedOut)) {
+        const reason = result.failReason || (result.error && result.error.message) || `Process exited with code ${result.status}`;
+        console.log(`\n\x1b[1;31m✖  Execution incomplete: ${reason}\x1b[0m`);
+        console.log(`\x1b[90m(Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
+      } else {
+        console.log(`\x1b[32m✔  Execution complete. (Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
+      }
 
       // Post-execution: Syntax Sanity Check & Compaction advisory
       inspectSessionFiles(cwd);

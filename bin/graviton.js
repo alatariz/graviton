@@ -748,13 +748,17 @@ async function main() {
     mode: isFast ? 'accept-edits' : (isDeep ? 'plan' : 'accept-edits')
   });
 
-  if (result && result.error) {
-    console.error('Spawn Error:', result.error);
-    process.exit(1);
-  }
+  const odo = readOdometer();
+  const activeSession = getActiveConversation(currentCwd);
+  const sessionTag = activeSession && activeSession.id
+    ? `Topic: "${activeSession.title}" (${activeSession.id.slice(0, 8)}...) | `
+    : '';
 
-  if (result && result.status !== 0 && result.status !== null) {
-    process.exit(result.status);
+  if (result && (result.error || (result.status !== 0 && result.status !== null) || result.aborted || result.timedOut)) {
+    const reason = result.failReason || (result.error && result.error.message) || `Process exited with code ${result.status}`;
+    console.log(`\n\x1b[1;31m✖  Execution incomplete: ${reason}\x1b[0m`);
+    console.log(`\x1b[90m(${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m\n`);
+    process.exit(result.status || 1);
   }
 
   // Post-Execution Dev Server Daemonizer:
@@ -773,11 +777,6 @@ async function main() {
     }
   }
 
-  const odo = readOdometer();
-  const activeSession = getActiveConversation(currentCwd);
-  const sessionTag = activeSession && activeSession.id
-    ? `Topic: "${activeSession.title}" (${activeSession.id.slice(0, 8)}...) | `
-    : '';
   console.log(`\x1b[32m✔  Execution complete. (${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
   process.exit(0);
 }
