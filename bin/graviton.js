@@ -261,22 +261,6 @@ async function main() {
   web, studio                    Launch Graviton Web Studio, live playground & visualizer (http://localhost:3000)
   run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
-
-\x1b[1mCONVERSATION MANAGEMENT EXAMPLES (Using 'grav' shorthand)\x1b[0m
-  # Open interactive conversation history picker:
-  grav -c
-
-  # Resume conversation #1 in interactive chat:
-  grav -c 1
-
-  # Execute instruction directly within conversation #1:
-  grav -c 1 "add email validation in auth.js"
-
-  # Delete conversation #2 from history:
-  grav -c del 2
-
-  # Explicitly start a fresh conversation:
-  grav -n "create a new REST API endpoint"
 `);
     process.exit(0);
   }
