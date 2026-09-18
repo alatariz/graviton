@@ -17,7 +17,7 @@ import {
 } from './session-manager.js';
 import { executeRollback } from './rollback-manager.js';
 import { listActivePorts, stopDaemonOrPort } from './port-guard.js';
-import { compactWorkspaceSession, checkCompactionStatus } from './session-compactor.js';
+import { compactWorkspaceSession, checkCompactionStatus, checkAndApplySlidingWindow } from './session-compactor.js';
 import { inspectSessionFiles } from './sanity-guard.js';
 import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
@@ -356,6 +356,10 @@ Commands: \x1b[33m/c\x1b[90m (history), \x1b[33m/n\x1b[90m (new chat), \x1b[33m/
         continueSession = true;
         activeTitle = existingSession.title;
         console.log(`\x1b[36m[GRAVITON]\x1b[0m Continuing topic: "\x1b[1m${activeTitle}\x1b[0m" (${targetConvId.slice(0, 8)}...)`);
+        const autoComp = checkAndApplySlidingWindow(cwd, targetConvId);
+        if (autoComp.autoCompacted) {
+          console.log(`\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Distilled ${autoComp.turnsCompacted} earlier turns into working memory (Estimated ~${autoComp.tokensSavedEstimate.toLocaleString()} tokens saved).`);
+        }
       }
 
       const superPrompt = constructSuperPrompt(executionPrompt, cwd, {

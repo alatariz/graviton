@@ -33,7 +33,7 @@ import {
 import { executeRollback } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort, detectWorkspaceDevServer } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
-import { compactWorkspaceSession } from '../src/session-compactor.js';
+import { compactWorkspaceSession, checkAndApplySlidingWindow } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
@@ -555,7 +555,7 @@ async function main() {
 
   // 6c. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    console.log('GRAVITON v3.1.0 (Graviton V3.1.0 Production-Ready Autonomous Engine)');
+    console.log('GRAVITON v3.2.0 (Graviton V3.2.0 Production-Ready Autonomous Engine)');
     process.exit(0);
   }
 
@@ -687,6 +687,13 @@ async function main() {
     continueSession = false;
     targetConversationId = null;
     activeTitle = null;
+  }
+
+  if (continueSession) {
+    const autoComp = checkAndApplySlidingWindow(currentCwd, targetConversationId);
+    if (autoComp.autoCompacted) {
+      console.log(`\x1b[36m[GRAVITON AUTO-COMPACTOR]\x1b[0m Distilled ${autoComp.turnsCompacted} earlier turns into working memory (Estimated ~${autoComp.tokensSavedEstimate.toLocaleString()} tokens saved). Rolling context refreshed!`);
+    }
   }
 
   const superPrompt = constructSuperPrompt(input, currentCwd, {
