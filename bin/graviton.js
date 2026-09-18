@@ -40,7 +40,7 @@ import { resolveTargetScope } from '../src/context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdown.js';
 import { sanitizeArgsWithTypoGuard } from '../src/typo-guard.js';
-import { calculatePreFlightWeight, formatPreFlightReport, checkBudgetViolation } from '../src/budget-guard.js';
+import { calculatePreFlightWeight, formatPreFlightReport } from '../src/budget-guard.js';
 import { generateAstFunctionIndex, formatAstFunctionIndex } from '../src/code-outliner.js';
 import { buildDependencyGraph, formatAsciiGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
@@ -132,7 +132,6 @@ async function main() {
   let conversationAction = null;
   let conversationTarget = null;
   let isDryRun = false;
-  let budgetLimit = null;
   let isScaffold = false;
   const filteredArgs = [];
 
@@ -176,12 +175,6 @@ async function main() {
       isDryRun = true;
     } else if (arg === '--scaffold') {
       isScaffold = true;
-    } else if (arg === '--budget' || arg === '-b') {
-      const next = effectiveArgs[i + 1];
-      if (next && !next.startsWith('-')) {
-        budgetLimit = next;
-        i++;
-      }
     } else {
       filteredArgs.push(arg);
     }
@@ -231,34 +224,6 @@ async function main() {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity \x1b[90m(CLI: \x1b[33mgraviton\x1b[90m or \x1b[33mgrav\x1b[90m)\x1b[0m
 
-\x1b[1mAUTONOMOUS ENGINES\x1b[0m
-  Autonomous Prompt Architect    Expands sparse requests into full technical specs or de-rambles filler
-  Gemini Cognitive Overclock     Zero-stub enforcement, domain edge-case synthesis & KV-cache optimization
-  Autonomous Dependency Graph    In-memory DAG mapping callers & callees for surgical context pruning
-  Pre-Flight Self-Healing Guard  Sub-millisecond AST validator auto-closing braces & repairing imports
-  Zero-Setup App Bundler         Inlines CSS, JS, and local assets into standalone double-clickable HTML
-  Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
-  Brevity Protocol Enforcer      Enforces zero-fluff technical directives & strips AI preambles
-  Surgical Diff Enforcer         Restricts code mutations to minimal blast radius & diff hunks
-  Patch Response Economizer      Enforces Search/Replace patch responses instead of full rewrites
-  Terminal & Test Runner Squeezer Collapses test & compiler chatter, isolating failures and diffs
-  Runtime Trace Squeezer         Prunes internal vendor & framework frames from error logs
-  Selective Context Scoper       Targeted workspace mapping & referenced file extraction
-  Static Import Resolver         Shallow dependency graph tracing across JS, TS, Py, Go, Rust
-  Lockfile & Asset Shield        Blocks bulky dependency lockfiles and minified bundles
-  Delta Diff Compressor          Sends only line-level diff hunks across conversational turns
-  Structural Code Outliner       Collapses function bodies (>120 lines) & shrinks SVG paths
-  AST Function Indexer           Shields 1000+ line files with line-range function maps (saves >80% tokens)
-  Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
-  Content-Addressable Cache      Instant 0ms retrieval of transpiled documents via SHA-256 hashing
-  JSON Schema Compactor          Squashes oversized JSON arrays into structural summaries
-  Tabular Data Sampler           Smart tabular compaction for CSV, TSV, and large datasets
-  Memory Distillation Engine     Compacts long multi-turn sessions into distilled memory blocks
-  Syntax Sanity Validator        Pre/post-flight syntax checks with automated shadow rollback
-  Noise & Secret Redactor        Prunes prompt filler noise and automatically redacts exposed keys
-  Daemon & Port Guard            Automated background dev server management & conflict resolution
-  Hierarchical Ignore Engine     Enforces recursive .gitignore and .gravignore exclusions
-
 \x1b[1mUSAGE\x1b[0m \x1b[90m(Run with 'graviton' or shorthand 'grav')\x1b[0m
   graviton "<prompt>"            (or: grav "<prompt>")
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
@@ -273,7 +238,6 @@ async function main() {
   -c, --conversation [number]    Open conversation history, select topic, or resume
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
-  -b, --budget <tokens>          Enforce maximum context token ceiling (e.g. --budget 15k)
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
@@ -852,11 +816,10 @@ async function main() {
     }
   }
 
-  // Pre-Flight Context Weight & Budget Inspection
+  // Pre-Flight Context Weight Inspection
   const preFlightWeight = calculatePreFlightWeight(input, currentCwd, {
     superPrompt,
-    targetFiles: targetScope?.targets || [],
-    budgetLimit
+    targetFiles: targetScope?.targets || []
   });
 
   if (isDryRun) {
@@ -865,17 +828,9 @@ async function main() {
     process.exit(0);
   }
 
-  if (budgetLimit) {
-    const violation = checkBudgetViolation(preFlightWeight.totalEstimatedTokens, budgetLimit);
-    if (violation.violated) {
-      console.log('\n' + formatPreFlightReport(preFlightWeight));
-      console.error(`\n\x1b[1;31m[🚨 GRAVITON BUDGET EXCEEDED]\x1b[0m ${violation.message}`);
-      console.error(`\x1b[90mTip: Run with '-f' (fast mode), target specific files, or increase budget limit via '--budget <tokens>'.\x1b[0m\n`);
-      process.exit(1);
-    }
-  } else if (preFlightWeight.totalEstimatedTokens > 25000 && !isFast) {
+  if (preFlightWeight.totalEstimatedTokens > 25000 && !isFast) {
     console.log(`\x1b[33m[⚠️ GRAVITON TOKEN ALERT]\x1b[0m High context load detected: \x1b[1m~${preFlightWeight.totalEstimatedTokens.toLocaleString()} tokens\x1b[0m across ${preFlightWeight.targetFiles.length} files.`);
-    console.log(`\x1b[90mTip: To conserve tokens, you can run with '-f' (fast mode) or use '--budget 20k'.\x1b[0m`);
+    console.log(`\x1b[90mTip: Graviton is automatically pruning and compressing context for optimal efficiency.\x1b[0m`);
   }
 
   const result = await runAntigravityWithAutoAllow(superPrompt, {

@@ -101,7 +101,7 @@ const cliHelp = spawnSync(process.execPath, [path.join(projectRoot, 'bin', 'grav
 });
 assert.strictEqual(cliHelp.status, 0);
 assert.ok(cliHelp.stdout.includes('[GRAVITON TYPO GUARD]'), 'Must display typo guard notice');
-assert.ok(cliHelp.stdout.includes('AUTONOMOUS ENGINES'), 'Must display help screen');
+assert.ok(cliHelp.stdout.includes('USAGE'), 'Must display help screen');
 console.log('  ✔ grav =h prints help with 0 tokens spent');
 
 // 8b. `grav =` intercepts stray symbol cleanly
