@@ -230,14 +230,8 @@ async function main() {
   graviton "<prompt>"            (or: grav "<prompt>")
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
   graviton -c [number] [prompt]  (Resume or switch active conversation topic)
+  graviton <command> [args...]   (or: grav <command>)
   <command> | graviton           (Streamline test & compiler terminal chatter)
-
-\x1b[1mAUTONOMOUS ENGINES (Zero-Config / Automatic)\x1b[0m
-  • \x1b[1mZero-Token Scaffolder\x1b[0m  : Auto-detects game/app requests, scaffolds foundation on disk (0 tokens)
-  • \x1b[1mLive-Reload Dev Server\x1b[0m : Auto-launches localhost daemon & opens browser ready to play
-  • \x1b[1mStandalone Bundler\x1b[0m     : Auto-detects bundling intent, compiles multi-file into 1 HTML
-  • \x1b[1mSyntax Self-Healer\x1b[0m     : Auto-repairs unclosed brackets, trailing commas & ESM imports
-  • \x1b[1mMemory Auto-Compactor\x1b[0m  : Auto-distills past turns & keeps recent context without prompt nag
 
 \x1b[1mOPTIONS\x1b[0m
   -f, --fast                     Fast execution mode without planning (effort: low)
@@ -247,14 +241,24 @@ async function main() {
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
 
-\x1b[1mUTILITY SHORTCUTS\x1b[0m
+\x1b[1mCOMMANDS\x1b[0m
+  "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
+  graph                          Render ASCII/Unicode multi-file dependency graph of project
   hud                            Display real-time token savings, cost calculator & port HUD
   diff                           Review colorized line-by-line diff of recent modifications made by AI
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   undo, rollback, rb             Revert files modified or created during the most recent AI session
+  index <file>                   Inspect AST function map and line ranges for any file
+  chat, repl                     Launch interactive REPL chat session
+  start <cmd...>                 Launch dev server cleanly as background daemon (non-hanging)
   stop [port|all]                Terminate background dev daemon or free blocked development port
   ports, port                    Scan and display active listening development ports (3000, 5173, etc.)
+  map                            Display workspace directory tree and detected dependencies
+  stats, gain                    Display lifetime telemetry dashboard & token savings
+  clean "<raw_text>"             Only synthesize prompt & copy to clipboard (do not launch Antigravity)
   dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
+  init [--global]                Initialize ~/.graviton directory and local Skill Vault
+  run <cmd...>                   Execute CLI command with streamlined terminal output filtering
   version, -v                    Display Graviton CLI version
 `);
     process.exit(0);
