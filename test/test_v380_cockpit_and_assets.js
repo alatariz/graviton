@@ -122,11 +122,12 @@ async function runTests() {
     const convJson = JSON.parse(resConv.body);
     assert(Array.isArray(convJson.conversations), '/api/conversations must return conversations array');
 
-    const resOpenCli = await httpPost(TEST_PORT, '/api/open-cli', { id: 'test-session-123' });
+    const resOpenCli = await httpPost(TEST_PORT, '/api/open-cli', { id: 'test-session-123', dryRun: true });
     assert.strictEqual(resOpenCli.status, 200, '/api/open-cli must return 200');
     const openCliJson = JSON.parse(resOpenCli.body);
     assert.strictEqual(openCliJson.success, true, '/api/open-cli must return success: true');
     assert(openCliJson.command.includes('grav -c test-session-123'), '/api/open-cli must format grav command');
+    assert.strictEqual(openCliJson.spawned, false, 'dryRun must not spawn process');
     console.log('  ✔ PASS: Cockpit REST APIs (/api/hud, /api/ports, /api/graph, /api/heal, /api/conversations, /api/open-cli) operational\n');
 
     // [TEST 4] Procedural Asset & Audio Directives in Game Blueprints

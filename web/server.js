@@ -135,27 +135,34 @@ export const server = http.createServer(async (req, res) => {
       const body = await parseJsonBody(req);
       const target = body.id || body.index || '';
       const cmdStr = target ? `grav -c ${target}` : 'grav';
+      const isTest = body.dryRun || process.env.NODE_ENV === 'test';
 
-      if (process.platform === 'win32') {
-        spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', cmdStr], {
-          cwd: process.cwd(),
-          detached: true,
-          stdio: 'ignore'
-        }).unref();
-      } else if (process.platform === 'darwin') {
-        spawn('osascript', ['-e', `tell application "Terminal" to do script "cd ${process.cwd()} && ${cmdStr}"`], {
-          detached: true,
-          stdio: 'ignore'
-        }).unref();
-      } else {
-        spawn('x-terminal-emulator', ['-e', `sh -c "cd ${process.cwd()} && ${cmdStr}; exec bash"`], {
-          detached: true,
-          stdio: 'ignore'
-        }).unref();
+      if (!isTest) {
+        if (process.platform === 'win32') {
+          const startArgs = ['/c', 'start', 'Graviton CLI', 'cmd.exe', '/k', 'grav'];
+          if (target) {
+            startArgs.push('-c', String(target));
+          }
+          spawn('cmd.exe', startArgs, {
+            cwd: process.cwd(),
+            detached: true,
+            stdio: 'ignore'
+          }).unref();
+        } else if (process.platform === 'darwin') {
+          spawn('osascript', ['-e', `tell application "Terminal" to do script "cd ${process.cwd()} && ${cmdStr}"`], {
+            detached: true,
+            stdio: 'ignore'
+          }).unref();
+        } else {
+          spawn('x-terminal-emulator', ['-e', `sh -c "cd ${process.cwd()} && ${cmdStr}; exec bash"`], {
+            detached: true,
+            stdio: 'ignore'
+          }).unref();
+        }
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: true, command: cmdStr }));
+      res.end(JSON.stringify({ success: true, command: cmdStr, spawned: !isTest }));
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ error: e.message }));
