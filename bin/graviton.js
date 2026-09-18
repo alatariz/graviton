@@ -40,6 +40,7 @@ import { resolveTargetScope } from '../src/context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdown.js';
 import { sanitizeArgsWithTypoGuard } from '../src/typo-guard.js';
+import { calculatePreFlightWeight, formatPreFlightReport, checkBudgetViolation } from '../src/budget-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,6 +125,8 @@ async function main() {
   let isConversationMode = false;
   let conversationAction = null;
   let conversationTarget = null;
+  let isDryRun = false;
+  let budgetLimit = null;
   const filteredArgs = [];
 
   for (let i = 0; i < effectiveArgs.length; i++) {
@@ -162,7 +165,15 @@ async function main() {
         conversationTarget = next;
         i++;
       }
-    } else if (arg !== '--dry-run') {
+    } else if (arg === '--dry-run') {
+      isDryRun = true;
+    } else if (arg === '--budget' || arg === '-b') {
+      const next = effectiveArgs[i + 1];
+      if (next && !next.startsWith('-')) {
+        budgetLimit = next;
+        i++;
+      }
+    } else {
       filteredArgs.push(arg);
     }
   }
@@ -246,6 +257,8 @@ async function main() {
   -p, --paste                    Attach clipboard content (images, files, text)
   -c, --conversation [number]    Open conversation history, select topic, or resume
   -n, --new                      Start a fresh conversation topic explicitly
+  --dry-run                      Simulate context & inspect estimated tokens without invoking AI
+  -b, --budget <tokens>          Enforce maximum context token ceiling (e.g. --budget 15k)
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
@@ -542,7 +555,7 @@ async function main() {
 
   // 6c. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    console.log('GRAVITON v2.1.0 (Graviton V2.1.0 Intelligent Context Engine & Token Shield)');
+    console.log('GRAVITON v3.1.0 (Graviton V3.1.0 Production-Ready Autonomous Engine)');
     process.exit(0);
   }
 
@@ -735,6 +748,32 @@ async function main() {
         process.exit(0);
       }
     }
+  }
+
+  // Pre-Flight Context Weight & Budget Inspection
+  const preFlightWeight = calculatePreFlightWeight(input, currentCwd, {
+    superPrompt,
+    targetFiles: targetScope?.targets || [],
+    budgetLimit
+  });
+
+  if (isDryRun) {
+    console.log('\n' + formatPreFlightReport(preFlightWeight));
+    console.log(`\x1b[1;32m[Graviton Dry-Run]\x1b[0m Pre-flight inspection complete. 0 tokens consumed. Antigravity was not invoked.\n`);
+    process.exit(0);
+  }
+
+  if (budgetLimit) {
+    const violation = checkBudgetViolation(preFlightWeight.totalEstimatedTokens, budgetLimit);
+    if (violation.violated) {
+      console.log('\n' + formatPreFlightReport(preFlightWeight));
+      console.error(`\n\x1b[1;31m[🚨 GRAVITON BUDGET EXCEEDED]\x1b[0m ${violation.message}`);
+      console.error(`\x1b[90mTip: Run with '-f' (fast mode), target specific files, or increase budget limit via '--budget <tokens>'.\x1b[0m\n`);
+      process.exit(1);
+    }
+  } else if (preFlightWeight.totalEstimatedTokens > 25000 && !isFast) {
+    console.log(`\x1b[33m[⚠️ GRAVITON TOKEN ALERT]\x1b[0m High context load detected: \x1b[1m~${preFlightWeight.totalEstimatedTokens.toLocaleString()} tokens\x1b[0m across ${preFlightWeight.targetFiles.length} files.`);
+    console.log(`\x1b[90mTip: To conserve tokens, you can run with '-f' (fast mode) or use '--budget 20k'.\x1b[0m`);
   }
 
   const result = await runAntigravityWithAutoAllow(superPrompt, {
