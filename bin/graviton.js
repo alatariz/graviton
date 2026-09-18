@@ -42,6 +42,10 @@ import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdo
 import { sanitizeArgsWithTypoGuard } from '../src/typo-guard.js';
 import { calculatePreFlightWeight, formatPreFlightReport, checkBudgetViolation } from '../src/budget-guard.js';
 import { generateAstFunctionIndex, formatAstFunctionIndex } from '../src/code-outliner.js';
+import { buildDependencyGraph, formatAsciiGraph } from '../src/dependency-graph.js';
+import { bundleWebApplication } from '../src/bundler.js';
+import { renderAsciiHud } from '../src/hud.js';
+import { selfHealFile } from '../src/self-healer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -226,6 +230,9 @@ async function main() {
 \x1b[1mAUTONOMOUS ENGINES\x1b[0m
   Autonomous Prompt Architect    Expands sparse requests into full technical specs or de-rambles filler
   Gemini Cognitive Overclock     Zero-stub enforcement, domain edge-case synthesis & KV-cache optimization
+  Autonomous Dependency Graph    In-memory DAG mapping callers & callees for surgical context pruning
+  Pre-Flight Self-Healing Guard  Sub-millisecond AST validator auto-closing braces & repairing imports
+  Zero-Setup App Bundler         Inlines CSS, JS, and local assets into standalone double-clickable HTML
   Autonomous Execution Pipe      Non-interactive relay bypassing manual CLI confirmation pauses
   Brevity Protocol Enforcer      Enforces zero-fluff technical directives & strips AI preambles
   Surgical Diff Enforcer         Restricts code mutations to minimal blast radius & diff hunks
@@ -266,6 +273,10 @@ async function main() {
 
 \x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt via Graviton Core & execute
+  graph                          Render ASCII/Unicode multi-file dependency graph of project
+  hud                            Display real-time token savings, cost calculator & port HUD
+  bundle, export [file] [out]    Bundle web app into a single standalone offline HTML file
+  dashboard, web, ui             Launch localhost-only visual developer cockpit (http://localhost:3000)
   chat, repl                     Launch interactive REPL chat session (Antigravity CLI History support)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity (agy) installation
@@ -351,7 +362,7 @@ async function main() {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.6.0 Production-Ready Autonomous Engine)`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (Graviton V3.7.0 Production-Ready Autonomous Engine)`);
     process.exit(0);
   }
 
@@ -408,20 +419,51 @@ async function main() {
     process.exit(0);
   }
 
-  // 4b. WEB STUDIO & VISUALIZER
-  if (command === 'web' || command === 'studio' || command === 'ui') {
+  // 4b. LOCALHOST COCKPIT & DASHBOARD
+  if (command === 'web' || command === 'studio' || command === 'ui' || command === 'dashboard' || command === '--dashboard') {
     const webDir = path.join(__dirname, '..', 'web');
     const serverPath = path.join(webDir, 'server.js');
     if (fs.existsSync(serverPath)) {
-      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON WEB STUDIO ===\x1b[0m`);
-      console.log(`\x1b[90mStarting zero-dependency web studio from ${webDir}...\x1b[0m\n`);
+      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON LOCALHOST COCKPIT & DASHBOARD ===\x1b[0m`);
+      console.log(`\x1b[90mStarting 100% private localhost dashboard from ${webDir}...\x1b[0m\n`);
       const proc = spawn('node', [serverPath], { cwd: webDir, stdio: 'inherit' });
       proc.on('close', code => process.exit(code || 0));
       return;
     } else {
-      console.log(`\x1b[33mGraviton Web Studio is located in the repository at ./web\x1b[0m`);
+      console.log(`\x1b[33mGraviton Web Dashboard is located in the repository at ./web\x1b[0m`);
     }
     process.exit(0);
+  }
+
+  // 4c. LIVE SAVINGS & ECONOMY HUD
+  if (command === 'hud' || command === '--hud') {
+    console.log(renderAsciiHud());
+    process.exit(0);
+  }
+
+  // 4d. AUTONOMOUS DEPENDENCY GRAPH
+  if (command === 'graph' || command === '--graph') {
+    const graph = buildDependencyGraph(process.cwd());
+    console.log(formatAsciiGraph(graph));
+    process.exit(0);
+  }
+
+  // 4e. ZERO-SETUP STANDALONE APP BUNDLER
+  if (command === 'bundle' || command === 'export' || command === '--bundle' || command === '--export') {
+    const entry = filteredArgs[1] || 'index.html';
+    const output = filteredArgs[2] || null;
+    console.log(`\x1b[36m[GRAVITON BUNDLER]\x1b[0m Inlining \x1b[1m${entry}\x1b[0m into standalone single HTML...`);
+    const res = bundleWebApplication(entry, output, process.cwd());
+    if (res.success) {
+      console.log(`\x1b[1;32m✔ Bundled successfully!\x1b[0m \x1b[90m(${(res.originalSize / 1024).toFixed(1)} KB -> ${(res.bundledSize / 1024).toFixed(1)} KB)\x1b[0m`);
+      console.log(`  Destination : \x1b[1;36m${res.outputPath}\x1b[0m`);
+      console.log(`  Files Inlined (${res.filesInlined.length}):`);
+      res.filesInlined.forEach(f => console.log(`    ↳ \x1b[90m${f}\x1b[0m`));
+      console.log(`\x1b[90mDouble-click the file to run offline anywhere with zero dependencies.\x1b[0m\n`);
+    } else {
+      console.error(`\x1b[31m[!] Bundle error: ${res.error}\x1b[0m`);
+    }
+    process.exit(res.success ? 0 : 1);
   }
 
   // 5. MAP & WORKSPACE HYDRATION

@@ -10,6 +10,10 @@ import { resolveDeltaHydration } from './delta-compressor.js';
 import { squeezeMixedContent } from './stack-squeezer.js';
 import { architectPrompt } from './prompt-architect.js';
 import { buildCognitiveContract, synthesizeDomainEdgeCases, formatDeterministicCachePrompt } from './cognitive-contract.js';
+import { buildDependencyGraph, formatAsciiGraph, getSurgicalContextFiles } from './dependency-graph.js';
+import { bundleWebApplication } from './bundler.js';
+import { healCodeSyntax, healRelativeImports, selfHealFile } from './self-healer.js';
+import { calculateEconomyMetrics, renderAsciiHud } from './hud.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -19,6 +23,10 @@ import { redactSecrets } from './workspace-helper.js';
 
 export { architectPrompt } from './prompt-architect.js';
 export { buildCognitiveContract, synthesizeDomainEdgeCases, formatDeterministicCachePrompt } from './cognitive-contract.js';
+export { buildDependencyGraph, formatAsciiGraph, getSurgicalContextFiles } from './dependency-graph.js';
+export { bundleWebApplication } from './bundler.js';
+export { healCodeSyntax, healRelativeImports, selfHealFile } from './self-healer.js';
+export { calculateEconomyMetrics, renderAsciiHud } from './hud.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;

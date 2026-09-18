@@ -6,6 +6,11 @@ import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { synthesizePrompt } from '../src/pipeline.js';
 import { resolveAgyExecutable } from '../bin/graviton-relay.js';
+import { calculateEconomyMetrics } from '../src/hud.js';
+import { buildDependencyGraph } from '../src/dependency-graph.js';
+import { bundleWebApplication } from '../src/bundler.js';
+import { selfHealFile } from '../src/self-healer.js';
+import { listActivePorts, killProcessOnPort } from '../src/port-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,6 +88,76 @@ export const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/api/stats') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(loadStats()));
+    return;
+  }
+
+  // 1b. API: GET /api/hud (Economy & Cost Metrics)
+  if (req.method === 'GET' && pathname === '/api/hud') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(calculateEconomyMetrics()));
+    return;
+  }
+
+  // 1c. API: GET /api/graph (Workspace AST Dependency DAG)
+  if (req.method === 'GET' && pathname === '/api/graph') {
+    const graph = buildDependencyGraph(process.cwd());
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(graph));
+    return;
+  }
+
+  // 1d. API: GET /api/ports (Active Dev Server Ports)
+  if (req.method === 'GET' && pathname === '/api/ports') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(listActivePorts()));
+    return;
+  }
+
+  // 1e. API: POST /api/stop-port
+  if (req.method === 'POST' && pathname === '/api/stop-port') {
+    try {
+      const body = await parseJsonBody(req);
+      const port = Number(body.port);
+      if (!port) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Port is required' }));
+        return;
+      }
+      killProcessOnPort(port);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: `Port ${port} released` }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // 1f. API: POST /api/bundle (Zero-Setup Single File Exporter)
+  if (req.method === 'POST' && pathname === '/api/bundle') {
+    try {
+      const body = await parseJsonBody(req);
+      const result = bundleWebApplication(body.entry || 'index.html', body.output || null, process.cwd());
+      res.writeHead(result.success ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // 1g. API: POST /api/heal (Syntax & Import Self-Healing)
+  if (req.method === 'POST' && pathname === '/api/heal') {
+    try {
+      const body = await parseJsonBody(req);
+      const result = selfHealFile(body.filePath || 'temp.js', body.code || '', process.cwd());
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
     return;
   }
 
