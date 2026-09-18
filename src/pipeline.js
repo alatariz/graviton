@@ -5,7 +5,7 @@ import { resolveTargetScope } from './context-scoper.js';
 import { getCompactMemoryDirective } from './session-compactor.js';
 import { isProtectedFile, generateDependencySummary } from './shield.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
-import { isSkeletonCandidate, skeletonizeCode, shrinkSvg } from './code-outliner.js';
+import { isSkeletonCandidate, isAstCandidate, generateAstFunctionIndex, skeletonizeCode, shrinkSvg } from './code-outliner.js';
 import { resolveDeltaHydration } from './delta-compressor.js';
 import { squeezeMixedContent } from './stack-squeezer.js';
 import fs from 'fs';
@@ -890,7 +890,22 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
           }
         }
 
-        if (!options.full && isSkeletonCandidate(resolved, lineCount)) {
+        if (!options.full && isAstCandidate(resolved, lineCount)) {
+          let focusName = null;
+          const candidateWords = (userInput || '').match(/[a-zA-Z_$][a-zA-Z0-9_$]{2,}/g) || [];
+          for (const word of candidateWords) {
+            if (new RegExp(`\\b(?:function|def|class|const|let|var|func|fn)\\s+${word}\\b`, 'i').test(rawFileContent)) {
+              focusName = word;
+              break;
+            }
+          }
+
+          const astResult = generateAstFunctionIndex(rawFileContent, relPath || filename, { focusName });
+          injectedFiles.push(astResult.formattedIndex);
+          if (focusName && astResult.targetFocusCode) {
+            injectedFiles.push(astResult.targetFocusCode);
+          }
+        } else if (!options.full && isSkeletonCandidate(resolved, lineCount)) {
           let focusName = null;
           const candidateWords = (userInput || '').match(/[a-zA-Z_$][a-zA-Z0-9_$]{2,}/g) || [];
           for (const word of candidateWords) {

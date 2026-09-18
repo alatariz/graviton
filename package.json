@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "3.2.0",
-  "description": "Graviton V3.2.0 - Autonomous Sliding-Window Trajectory Compactor, Pre-Flight Budget Guard & Intelligent Context Engine for Google Antigravity",
+  "version": "3.3.0",
+  "description": "Graviton V3.3.0 - AST File Skeletonizer & Function Indexer (Large File Shield), Sliding-Window Compactor, Pre-Flight Budget Guard & Context Engine for Antigravity",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "repository": {

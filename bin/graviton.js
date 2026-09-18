@@ -41,6 +41,7 @@ import { captureClipboard, formatClipboardAttachment } from '../src/clipboard.js
 import { isTranspilableDocument, transpileFileToMarkdown } from '../src/markitdown.js';
 import { sanitizeArgsWithTypoGuard } from '../src/typo-guard.js';
 import { calculatePreFlightWeight, formatPreFlightReport, checkBudgetViolation } from '../src/budget-guard.js';
+import { generateAstFunctionIndex, formatAstFunctionIndex } from '../src/code-outliner.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -234,6 +235,7 @@ async function main() {
   Lockfile & Asset Shield        Blocks bulky dependency lockfiles and minified bundles
   Delta Diff Compressor          Sends only line-level diff hunks across conversational turns
   Structural Code Outliner       Collapses function bodies (>120 lines) & shrinks SVG paths
+  AST Function Indexer           Shields 1000+ line files with line-range function maps (saves >80% tokens)
   Document Transpiler            Auto-transpiles Office (.docx, .pptx, .xlsx) & PDF to Markdown
   Content-Addressable Cache      Instant 0ms retrieval of transpiled documents via SHA-256 hashing
   JSON Schema Compactor          Squashes oversized JSON arrays into structural summaries
@@ -265,6 +267,7 @@ async function main() {
   chat, repl                     Launch interactive REPL chat session (Antigravity CLI History support)
   diff                           Review colorized line-by-line diff of recent modifications made by AI
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity (agy) installation
+  index <file>                   Inspect AST function map and line ranges for any file
   compact, cmp                   Compact long continuous session to refresh context window & save tokens
   undo, rollback, rb             Revert files modified or created during the most recent AI session
   start <cmd...>                 Launch long-running dev server cleanly as background daemon (non-hanging)
@@ -525,6 +528,24 @@ async function main() {
     process.exit(0);
   }
 
+  // 5j. AST FUNCTION INDEXER (V3.3.0 Large File Shield)
+  if (command === 'index' || command === '--index') {
+    const targetFile = filteredArgs[1];
+    if (!targetFile) {
+      console.error('\x1b[31mError: Please specify a file to index. Usage: grav index <file.js>\x1b[0m');
+      process.exit(1);
+    }
+    const resolvedPath = path.resolve(process.cwd(), targetFile);
+    if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isFile()) {
+      console.error(`\x1b[31mError: File '${targetFile}' not found in workspace.\x1b[0m`);
+      process.exit(1);
+    }
+    const content = fs.readFileSync(resolvedPath, 'utf8');
+    const astResult = generateAstFunctionIndex(content, path.relative(process.cwd(), resolvedPath));
+    console.log(formatAstFunctionIndex(astResult));
+    process.exit(0);
+  }
+
   // 6. SERVE WEB STUDIO
   if (command === 'serve' || command === '--serve') {
     const webServerPath = path.join(__dirname, '..', 'web', 'server.js');
@@ -555,7 +576,7 @@ async function main() {
 
   // 6c. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    console.log('GRAVITON v3.2.0 (Graviton V3.2.0 Production-Ready Autonomous Engine)');
+    console.log('GRAVITON v3.3.0 (Graviton V3.3.0 Production-Ready Autonomous Engine)');
     process.exit(0);
   }
 
