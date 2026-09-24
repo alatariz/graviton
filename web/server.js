@@ -11,8 +11,7 @@ import { buildDependencyGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
 import { selfHealFile } from '../src/self-healer.js';
 import { listActivePorts, killProcessOnPort } from '../src/port-guard.js';
-import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
-import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent } from '../src/autonomous-router.js';
+import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from '../src/autonomous-router.js';
 import {
   getWorkspaceConversations,
   setActiveConversation,
@@ -39,6 +38,7 @@ import { auditDeadCode, pruneUnusedImports, formatDeadCodeReport } from '../src/
 import { generateTestFile } from '../src/test-generator.js';
 import { planSymbolRename, applySymbolRename, formatRefactorPlan } from '../src/symbolic-refactor.js';
 import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock } from '../src/ambiguity-clarifier.js';
+import { detectDomainFromPrompt, scaffoldProject } from '../src/scaffolder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -706,7 +706,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       });
 
       const targetScope = resolveTargetScope(prompt, targetCwd);
-      const preFlight = calculatePreFlightWeight(prompt, targetCwd, targetScope.files);
+      const preFlight = calculatePreFlightWeight(prompt, targetCwd, { targetFiles: targetScope?.targets || [] });
 
       if (dryRun) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -726,7 +726,31 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       }
 
       // Live execution synthesis
-      const synthesized = await synthesizePrompt(prompt, { cwd: targetCwd, effort: modelRouting.agyEffort });
+      let clarifiedSpecificationDirective = '';
+      if (!isFast && typeof prompt === 'string' && prompt.trim().length > 0 && prompt.trim().length < 400 && !prompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
+        const ambiguityAnalysis = analyzePromptAmbiguity(prompt);
+        if (ambiguityAnalysis && ambiguityAnalysis.isAmbiguous) {
+          clarifiedSpecificationDirective = synthesizeClarifiedSpecificationBlock(ambiguityAnalysis);
+        }
+      }
+
+      const synthesized = await synthesizePrompt(prompt, null, {
+        cwd: targetCwd,
+        effort: modelRouting.agyEffort,
+        isContinuous: Boolean(requestedConvId),
+        conversationId: requestedConvId,
+        isDeep,
+        isFast
+      });
+
+      let finalSuperPrompt = synthesized.superPrompt || prompt;
+      if (clarifiedSpecificationDirective && !finalSuperPrompt.includes(clarifiedSpecificationDirective)) {
+        finalSuperPrompt = `${finalSuperPrompt}\n\n${clarifiedSpecificationDirective}`;
+      }
+      if (targetScope && targetScope.directive && !finalSuperPrompt.includes('[GRAVITON ACTIVE TARGET SCOPE')) {
+        finalSuperPrompt = `${targetScope.directive}\n\n${finalSuperPrompt}`;
+      }
+
       const stats = loadStats();
       stats.commandsRun = (stats.commandsRun || 0) + 1;
       stats.promptsOptimized = (stats.promptsOptimized || 0) + 1;
@@ -793,7 +817,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         try {
           console.log(`\n\x1b[36m[GRAVITON WEB IDE]\x1b[0m Executing prompt in: \x1b[1m${targetCwd}\x1b[0m (Topic: ${liveConvId ? liveConvId.slice(0, 8) + '...' : 'New Session'})`);
 
-          const runRes = await runAntigravityWithAutoAllow(prompt, {
+          const runRes = await runAntigravityWithAutoAllow(finalSuperPrompt, {
             cwd: targetCwd,
             conversationId: liveConvId || undefined,
             userPrompt: prompt,
@@ -820,6 +844,11 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
             true
           );
 
+          try {
+            autoHealWorkspaceFiles(targetCwd);
+            verifyProjectRuntime(targetCwd);
+          } catch {}
+
           const odo = readOdometer();
           const turnToks = runRes.turnTokens || odo.lastSessionTokens || 1200;
           let savedConv = null;
@@ -827,7 +856,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
             savedConv = saveWorkspaceConversation(targetCwd, liveConvId, prompt, {
               tokens: turnToks,
               assistantText: cleanOutput,
-              activeFiles: targetScope.files || []
+              activeFiles: targetScope.targets || targetScope.files || []
             });
             setActiveConversation(targetCwd, liveConvId);
           }
@@ -862,7 +891,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         };
       } else {
         try {
-          const runRes = await runAntigravityWithAutoAllow(prompt, {
+          const runRes = await runAntigravityWithAutoAllow(finalSuperPrompt, {
             cwd: targetCwd,
             conversationId: requestedConvId || undefined,
             userPrompt: prompt,
@@ -877,6 +906,12 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
             effectiveConvId,
             true
           );
+
+          try {
+            autoHealWorkspaceFiles(targetCwd);
+            verifyProjectRuntime(targetCwd);
+          } catch {}
+
           executionResult = {
             status: runRes.status === 0 || runRes.status === null ? 'completed' : 'error',
             output: cleanOutput || 'Session executed successfully.'
@@ -897,7 +932,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         savedConv = saveWorkspaceConversation(targetCwd, effectiveConvId, prompt, {
           tokens: lastTokens,
           assistantText: executionResult.output,
-          activeFiles: targetScope.files || []
+          activeFiles: targetScope.targets || targetScope.files || []
         });
         setActiveConversation(targetCwd, effectiveConvId);
       }

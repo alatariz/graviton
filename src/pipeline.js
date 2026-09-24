@@ -1157,6 +1157,11 @@ export function repromptLocally(rawText, workspaceContext = null, unlockedSkills
  * Main Synthesizer Orchestrator (Zero-Token Middleware)
  */
 export async function synthesizePrompt(rawText, apiKey = null, options = {}) {
+  let opts = options;
+  if (apiKey && typeof apiKey === 'object' && (!options || Object.keys(options).length === 0)) {
+    opts = apiKey;
+    apiKey = null;
+  }
   if (!rawText || typeof rawText !== 'string') {
     return {
       originalText: '',
@@ -1167,9 +1172,9 @@ export async function synthesizePrompt(rawText, apiKey = null, options = {}) {
     };
   }
 
-  const currentCwd = options.cwd || process.cwd();
-  const superPrompt = constructSuperPrompt(rawText, currentCwd);
-  const workspaceMap = options.workspaceMap || buildWorkspaceMap(currentCwd);
+  const currentCwd = opts.cwd || process.cwd();
+  const superPrompt = constructSuperPrompt(rawText, currentCwd, opts);
+  const workspaceMap = opts.workspaceMap || buildWorkspaceMap(currentCwd);
   const prunedText = pruneNoise(rawText);
   const originalTokens = estimateTokens(rawText);
   const prunedTokens = estimateTokens(prunedText);
