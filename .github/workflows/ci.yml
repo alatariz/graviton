@@ -40,7 +40,7 @@ jobs:
             console.log("Zero runtime dependencies confirmed.");
           '
 
-      - name: Run Master Test Suite (50 Suites)
+      - name: Run Master Test Suite (51 Suites)
         run: node test/run_all.js
 
       - name: Test CLI Global Binary Resolution

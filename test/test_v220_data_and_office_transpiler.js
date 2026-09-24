@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 import zlib from 'zlib';
 import { isDataFile, sampleJsonData, sampleCsvData } from '../src/data-sampler.js';
-import { isTranspilableDocument, transpileDocx, transpileXlsx, transpileFileToMarkdown } from '../src/markitdown.js';
+import { isTranspilableDocument, transpileDocx, transpileXlsx } from '../src/markitdown.js';
 import { constructSuperPrompt } from '../src/pipeline.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 

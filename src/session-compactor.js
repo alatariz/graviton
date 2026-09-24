@@ -1,7 +1,7 @@
 // src/session-compactor.js - .0.0 Smart Session Compaction & Autonomous Sliding Window
 import fs from 'fs';
 import path from 'path';
-import { getWorkspaceSession, saveWorkspaceSession, clearWorkspaceSession, getConversationHistory } from './session-manager.js';
+import { clearWorkspaceSession, getConversationHistory } from './session-manager.js';
 
 export const SLIDING_WINDOW_SIZE = 4;
 export const AUTONOMOUS_COMPACT_THRESHOLD = 6;

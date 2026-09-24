@@ -39,7 +39,7 @@
 > [!IMPORTANT]
 > **What is Graviton V5.0.0?**
 > Graviton is a zero-auth, high-performance terminal accelerator and **Autonomous Synthetic Metacognitive Engine** built specifically for the **Google Antigravity CLI (`agy`)**. 
-> Executing **100% offline** on your local machine with zero external API keys and **zero third-party runtime dependencies**, Graviton orchestrates a unified suite of autonomous background engines: Socratic dialectic reasoning, Code Property Graph (CPG) blast radius calculation, deterministic unit test synthesis, symbolic refactoring, dead-code elimination, runtime self-correction sentinels, 2026 API grounding invariants, and instant document transpilation with **50/50 test suites passing 100%**. All commands work interchangeably with either `graviton` or the shorthand `grav`.
+> Executing **100% offline** on your local machine with zero external API keys and **zero third-party runtime dependencies**, Graviton orchestrates a unified suite of autonomous background engines: Socratic dialectic reasoning, Code Property Graph (CPG) blast radius calculation, deterministic unit test synthesis, symbolic refactoring, dead-code elimination, runtime self-correction sentinels, 2026 API grounding invariants, and instant document transpilation with **51/51 test suites passing 100%**. All commands work interchangeably with either `graviton` or the shorthand `grav`.
 
 ---
 
@@ -474,43 +474,41 @@ Prevent unwanted files, proprietary secrets, and build directories from leaking 
 > **Dual Command Interchangeability:**
 > Every command and flag can be invoked using either the full binary **`graviton`** or the ultra-fast alias **`grav`** (e.g. `graviton -c` is identical to `grav -c`).
 
-| Full Command / Flag | Short Alias | Description |
-| :--- | :--- | :--- |
-| `graviton "<prompt>"` | `grav "<prompt>"` | [DEFAULT] Synthesize & execute with Smart Target Pinning (defaults to fresh chat) |
-| `graviton run "<prompt>"` | `grav run "<prompt>"` | Master Coordinator: ambiguity analysis, CPG blast check, dialectic prompt synthesis |
-| `graviton clarify "<prompt>"` | `grav clarify "<prompt>"` | Requirement Specification Clarifier: resolves underspecified prompts into strict constraints |
-| `graviton blast <file>` | `grav blast <file>` | Code Property Graph (CPG) blast radius analysis & direct/indirect consumer impact |
-| `graviton gentest <file>` | `grav gentest <file>` | Deterministically generate complete unit test suite and mock harness for module |
-| `graviton refactor <file> <old> <new>` | `grav refactor ...` | AST-guided safe symbol renaming & call-site migration across workspace |
-| `graviton deadcode` | `grav prune`, `grav deadcode`| Audit and eliminate unused imports, dead exports, and orphaned functions |
-| `graviton verify` | `grav check`, `grav verify` | Runtime Sentinel: validate syntax, imports, DOM bindings and auto-repair |
-| `graviton <file> [prompt]` | `grav <file> [prompt]` | Autonomous document transpilation (`.docx`, `.pdf`, `.pptx`, `.xlsx`, `.csv`) with 0ms cache |
-| `graviton -f "<prompt>"` | `grav -f "<prompt>"` | Fast mode: direct execution without planning (low effort, lowest latency) |
-| `graviton -d "<prompt>"` | `grav -d "<prompt>"` | Deep mode: deep precision synthesis & planning for complex architecture |
-| `graviton -c` / `--conversation` | `grav -c` | Open Antigravity IDE-style conversation history picker |
-| `graviton -c <no>` | `grav -c <no>` | Resume specific conversation in interactive REPL |
-| `graviton -c <no> "<prompt>"` | `grav -c <no> "..."` | Execute prompt directly on specific conversation topic |
-| `graviton -c del <no>` | `grav -c del <no>` | Delete conversation from workspace history |
-| `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Explicitly start a fresh conversation (reset session context) |
-| `graviton chat` | `grav chat`, `grav repl` | Launch interactive REPL chat shell with dynamic topic indicator |
-| `graviton doctor [--fix]` | `grav doc`, `grav doctor` | Inspect system health, runtime versions, and CLI binaries |
-| `graviton diff` | `grav diff` | Review colorized unified diff of AI file edits |
-| `graviton undo` | `grav rb`, `grav undo` | Safety Rollback: restore modified files and remove AI-created files |
-| `graviton compact` | `grav cmp`, `grav compact` | Compact long session context to refresh window and save tokens |
-| `graviton start <cmd>` | `grav start <cmd>` | Run dev server as a silent background daemon (tree-killed on exit) |
-| `graviton stop [port]` | `grav stop [port]` | Terminate daemon or free occupied port (3000, 5173, etc.) |
-| `graviton ports` | `grav port`, `grav ports` | Scan common dev ports for active listening processes |
-| `graviton stats` | `grav gain`, `grav stats` | Display lifetime telemetry dashboard & token savings |
-| `graviton map` | `grav map` | Display indexed workspace directory tree |
-| `graviton clean "<prompt>"` | `grav clean "<prompt>"` | Synthesize SuperPrompt & copy to clipboard (bypass AI launch) |
-| `graviton web` | `grav web`, `grav studio` | Launch Graviton Web IDE, developer cockpit & visualizer (http://localhost:3000) |
-| `graviton version` | `grav -v` | Display Graviton version and engine metadata |
+| Full Command / Flag | Short Alias | Execution Mode | Description |
+| :--- | :--- | :--- | :--- |
+| `graviton "<prompt>"` | `grav "<prompt>"` | **Autonomous** | [DEFAULT] Master synthesis & execution: auto-clarifies ambiguity, pins CPG target files, and auto-verifies runtime sentinel |
+| `graviton check [--fix]` | `grav check`, `grav verify` | **Manual / Cockpit** | Unified Multi-Engine Audit: Sentinel, Adversarial Critic, Dead-Code, and CPG (`--fix` to auto-heal & prune) |
+| `graviton blast <file>` | `grav blast <file>` | **Manual / Cockpit** | Code Property Graph (CPG) blast radius analysis & direct/indirect consumer impact |
+| `graviton gentest <file>` | `grav gentest <file>` | **Manual / Cockpit** | Deterministically generate complete unit test suite and mock harness for module |
+| `graviton refactor <f> <old> <new>` | `grav refactor ...` | **Manual / Cockpit** | AST-guided safe symbol renaming & call-site migration across workspace (`--apply` to execute) |
+| `graviton deadcode` | `grav prune`, `grav deadcode`| **Manual / Cockpit** | Audit and prune unused imports, dead exports, and orphaned functions (`--apply` to prune) |
+| `graviton diff` | `grav diff` | **Manual / Cockpit** | Review colorized unified diff of AI file edits |
+| `graviton undo` | `grav rb`, `grav undo` | **Manual / Cockpit** | Safety Rollback: restore modified files and remove AI-created files |
+| `graviton agent` | `grav agent`, `grav web` | **Cockpit Launcher** | Launch Graviton Web Agent & Cockpit IDE with 1-click developer tools (http://localhost:3000) |
+| `graviton <file> [prompt]` | `grav <file> [prompt]` | **Autonomous** | Autonomous document transpilation (`.docx`, `.pdf`, `.pptx`, `.xlsx`, `.csv`) with 0ms cache |
+| `graviton -f "<prompt>"` | `grav -f "<prompt>"` | Option Flag | Fast mode: direct execution without planning (low effort, lowest latency) |
+| `graviton -d "<prompt>"` | `grav -d "<prompt>"` | Option Flag | Deep mode: deep precision synthesis & planning for complex architecture |
+| `graviton -c` / `--conversation` | `grav -c` | Option Flag | Open Antigravity IDE-style conversation history picker |
+| `graviton -c <no>` | `grav -c <no>` | Option Flag | Resume specific conversation in interactive REPL |
+| `graviton -c <no> "<prompt>"` | `grav -c <no> "..."` | Option Flag | Execute prompt directly on specific conversation topic |
+| `graviton -c del <no>` | `grav -c del <no>` | Option Flag | Delete conversation from workspace history |
+| `graviton -n "<prompt>"` | `grav -n "<prompt>"` | Option Flag | Explicitly start a fresh conversation (reset session context) |
+| `graviton chat` | `grav chat`, `grav repl` | Interactive | Launch interactive REPL chat shell with dynamic topic indicator |
+| `graviton doctor [--fix]` | `grav doc`, `grav doctor` | Diagnostics | Inspect system health, runtime versions, and CLI binaries |
+| `graviton compact` | `grav cmp`, `grav compact` | Utility | Compact long session context to refresh window and save tokens |
+| `graviton start <cmd>` | `grav start <cmd>` | Process Guard | Run dev server as a silent background daemon (tree-killed on exit) |
+| `graviton stop [port]` | `grav stop [port]` | Process Guard | Terminate daemon or free occupied port (3000, 5173, etc.) |
+| `graviton ports` | `grav port`, `grav ports` | Process Guard | Scan common dev ports for active listening processes |
+| `graviton stats` | `grav gain`, `grav stats` | Telemetry | Display lifetime telemetry dashboard & token savings |
+| `graviton map` | `grav map` | Workspace | Display indexed workspace directory tree |
+| `graviton clean "<prompt>"` | `grav clean "<prompt>"` | Clipboard | Synthesize SuperPrompt & copy to clipboard (bypass AI launch) |
+| `graviton version` | `grav -v` | Meta | Display Graviton version and engine metadata |
 
 ---
 
 <h2 id="empirical-benchmarks">Empirical Benchmarks: Real-World Efficiency in V5.0.0</h2>
 
-Measured on production enterprise repositories across 50 Master Test Suites:
+Measured on production enterprise repositories across 51 Master Test Suites:
 
 | Scenario / Task | Without Graviton (Raw Output) | With Graviton V5.0.0 | Token Efficiency | Latency Impact |
 | :--- | :--- | :--- | :--- | :--- |

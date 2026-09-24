@@ -5,8 +5,7 @@ import path from 'path';
 import os from 'os';
 import {
   resolveDesignSystem,
-  formatDesignSystemSpecification,
-  DESIGN_CATEGORIES
+  formatDesignSystemSpecification
 } from '../src/design-intelligence.js';
 import {
   resolveSkillDirectives,

@@ -56,7 +56,8 @@ const testFiles = [
   'test_v470_symbolic_refactor.js',
   'test_v480_dead_code_cleaner.js',
   'test_v490_ambiguity_clarifier.js',
-  'test_v500_unified_orchestrator.js'
+  'test_v500_unified_orchestrator.js',
+  'test_v510_web_agent_tools.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

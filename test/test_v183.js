@@ -1,7 +1,7 @@
 ﻿import assert from 'assert';
 import path from 'path';
 import fs from 'fs';
-import { resolveAgyExecutable, getCrossPlatformCommand, runAntigravityWithAutoAllow } from '../bin/graviton-relay.js';
+import { resolveAgyExecutable, runAntigravityWithAutoAllow } from '../bin/graviton-relay.js';
 
 console.log('=== STARTING V1.8.3 ROCK-SOLID RELAY TEST SUITE ===\n');
 

@@ -4,7 +4,6 @@ import path from 'path';
 import { constructSuperPrompt, readOdometer } from './pipeline.js';
 import { runAntigravityWithAutoAllow } from '../bin/graviton-relay.js';
 import {
-  getWorkspaceSession,
   clearWorkspaceSession,
   getWorkspaceConversations,
   getActiveConversation,
@@ -17,13 +16,13 @@ import {
 } from './session-manager.js';
 import { executeRollback } from './rollback-manager.js';
 import { listActivePorts, stopDaemonOrPort } from './port-guard.js';
-import { compactWorkspaceSession, checkCompactionStatus, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from './session-compactor.js';
+import { compactWorkspaceSession, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from './session-compactor.js';
 import { inspectSessionFiles } from './sanity-guard.js';
 import { getSessionDiff } from './diff-viewer.js';
 import { runDoctor, formatDoctorReport } from './doctor.js';
 import { resolveTargetScope } from './context-scoper.js';
 import { captureClipboard, formatClipboardAttachment } from './clipboard.js';
-import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
+import { transpileFileToMarkdown } from './markitdown.js';
 import { listSessionSnapshots, clearSessionSnapshots } from './delta-compressor.js';
 import { resolveModelAndEffort } from './model-selector.js';
 

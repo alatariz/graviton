@@ -8,7 +8,6 @@ import {
   getWorkspaceSession,
   saveWorkspaceSession,
   clearWorkspaceSession,
-  isValidConversation,
   getBrainDir
 } from '../src/session-manager.js';
 import { constructSuperPrompt, buildWorkspaceMap } from '../src/pipeline.js';

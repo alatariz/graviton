@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 import zlib from 'zlib';
 import { isTranspilableDocument, transpilePdf, transpilePptx, transpileFileToMarkdown } from '../src/markitdown.js';
-import { getCachedMarkdown, setCachedMarkdown, computeFileHashKey, clearTranspilerCache } from '../src/cache-manager.js';
+import { getCachedMarkdown, computeFileHashKey, clearTranspilerCache } from '../src/cache-manager.js';
 import { constructSuperPrompt } from '../src/pipeline.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 

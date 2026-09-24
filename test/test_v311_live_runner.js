@@ -10,10 +10,9 @@ import {
   createLiveReloadServer,
   findAvailablePort,
   openBrowser,
-  launchLiveRunner,
   MIME_TYPES
 } from '../src/live-runner.js';
-import { detectWorkspaceDevServer, killProcessTree } from '../src/port-guard.js';
+import { detectWorkspaceDevServer } from '../src/port-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

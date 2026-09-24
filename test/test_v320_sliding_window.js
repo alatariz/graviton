@@ -7,9 +7,7 @@ import {
   distillPastTurns,
   checkAndApplySlidingWindow,
   getCompactMemoryDirective,
-  trackSessionTurn,
-  SLIDING_WINDOW_SIZE,
-  AUTONOMOUS_COMPACT_THRESHOLD
+  trackSessionTurn
 } from '../src/session-compactor.js';
 
 console.log('=== STARTING GRAVITON V3.2.0 AUTONOMOUS SLIDING-WINDOW TEST SUITE ===\n');

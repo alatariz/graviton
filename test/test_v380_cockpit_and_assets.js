@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 import { server } from '../web/server.js';
 import { synthesizeDomainEdgeCases } from '../src/cognitive-contract.js';
 import { expandSparsePrompt } from '../src/prompt-architect.js';
-import { calculateEconomyMetrics } from '../src/hud.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

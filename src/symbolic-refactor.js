@@ -21,11 +21,12 @@ export function planSymbolRename(workspaceDir, targetFile, oldSymbol, newSymbol)
 
   const root = path.resolve(workspaceDir || process.cwd());
   const cpg = buildCodePropertyGraph(root);
-  const normTarget = normalizePath(targetFile);
+  const relTarget = path.isAbsolute(targetFile) ? path.relative(root, targetFile) : targetFile;
+  const normTarget = normalizePath(relTarget);
 
   // Match target file in CPG
   const matchedFile = Object.keys(cpg.files).find(f =>
-    f === normTarget || f.endsWith('/' + normTarget) || f.endsWith('\\' + normTarget)
+    f === normTarget || normTarget.endsWith(f) || f.endsWith(normTarget)
   );
 
   if (!matchedFile) {

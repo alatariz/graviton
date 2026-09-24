@@ -196,6 +196,14 @@ export function pruneUnusedImports(workspaceDir, options = {}) {
     const originalContent = content;
 
     for (const sym of symbolsToRemove) {
+      // 0. Default or namespace import: import foo from '...' or import * as foo from '...'
+      const defaultImportRegex = new RegExp(`^\\s*import\\s+(?:\\*\\s+as\\s+)?${sym}\\s+from\\s+['"][^'"]+['"];?\\r?\\n?`, 'm');
+      if (defaultImportRegex.test(content)) {
+        content = content.replace(defaultImportRegex, '');
+        symbolsPruned++;
+        continue;
+      }
+
       // 1. Single imported symbol on its own line: import { foo } from '...'
       const singleImportRegex = new RegExp(`^\\s*import\\s*\\{\\s*${sym}\\s*\\}\\s*from\\s*['"][^'"]+['"];?\\r?\\n?`, 'm');
       if (singleImportRegex.test(content)) {

@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { normalizePosixPath, isGravIgnored, createGravFilter } from '../src/ignore-parser.js';
+import { normalizePosixPath, createGravFilter } from '../src/ignore-parser.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
 import { readAndTruncateFile } from '../src/pipeline.js';
 import { transpileDocx, transpileXlsx, transpilePptx, transpilePdf, transpileFileToMarkdown } from '../src/markitdown.js';

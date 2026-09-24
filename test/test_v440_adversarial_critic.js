@@ -7,9 +7,7 @@ import {
   evaluateCodeAdversarially,
   evaluateWorkspaceAdversarially,
   formatAdversarialCritique,
-  synthesizeAdversarialPromptHarness,
-  CRITIC_CATEGORIES,
-  SEVERITY
+  synthesizeAdversarialPromptHarness
 } from '../src/adversarial-critic.js';
 
 console.log('\x1b[1m\x1b[36m===============================================================');

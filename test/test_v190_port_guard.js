@@ -7,7 +7,6 @@ import http from 'http';
 import { spawn } from 'child_process';
 import {
   findProcessOnPort,
-  killProcessTree,
   killProcessOnPort,
   startBackgroundDaemon,
   stopDaemonOrPort,

@@ -2,10 +2,10 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { spawn, spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { synthesizePrompt, readOdometer } from '../src/pipeline.js';
-import { resolveAgyExecutable, runAntigravityWithAutoAllow, extractCleanAssistantResponse, cleanTerminalOutput } from '../bin/graviton-relay.js';
+import { resolveAgyExecutable, runAntigravityWithAutoAllow, extractCleanAssistantResponse } from '../bin/graviton-relay.js';
 import { calculateEconomyMetrics } from '../src/hud.js';
 import { buildDependencyGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
@@ -33,7 +33,12 @@ import { resolveTargetScope } from '../src/context-scoper.js';
 import { calculatePreFlightWeight } from '../src/budget-guard.js';
 import { verifyProjectRuntime } from '../src/runtime-sentinel.js';
 import { evaluateWorkspaceAdversarially } from '../src/adversarial-critic.js';
-import { buildCodePropertyGraph, calculateBlastRadius } from '../src/code-property-graph.js';
+import { buildCodePropertyGraph, calculateBlastRadius, formatBlastRadiusReport } from '../src/code-property-graph.js';
+import { runUnifiedSanityCheck, formatUnifiedDiagnosticReport } from '../src/unified-orchestrator.js';
+import { auditDeadCode, pruneUnusedImports, formatDeadCodeReport } from '../src/dead-code-cleaner.js';
+import { generateTestFile } from '../src/test-generator.js';
+import { planSymbolRename, applySymbolRename, formatRefactorPlan } from '../src/symbolic-refactor.js';
+import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock } from '../src/ambiguity-clarifier.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -437,8 +442,8 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
     try {
       const body = await parseJsonBody(req);
       const command = (body.command || '').trim().toLowerCase();
-      const targetCwd = resolveCwd(body.cwd);
       const args = body.args || {};
+      const targetCwd = resolveCwd(args.cwd || body.cwd);
 
       if (command === 'diff') {
         const output = getSessionDiff(targetCwd);
@@ -528,7 +533,6 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       }
 
       if (command === 'verify' || command === 'sentinel') {
-        const targetCwd = resolveCwd(args.cwd);
         const report = verifyProjectRuntime(targetCwd);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ success: true, command: 'verify', report }));
@@ -536,7 +540,6 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       }
 
       if (command === 'audit' || command === 'critique') {
-        const targetCwd = resolveCwd(args.cwd);
         const report = evaluateWorkspaceAdversarially(targetCwd);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ success: true, command: 'audit', report }));
@@ -544,7 +547,6 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       }
 
       if (command === 'blast') {
-        const targetCwd = resolveCwd(args.cwd);
         const target = args.target;
         if (!target) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -553,13 +555,92 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         }
         const cpg = buildCodePropertyGraph(targetCwd);
         const report = calculateBlastRadius(cpg, target);
+        const formatted = formatBlastRadiusReport(report);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: true, command: 'blast', report }));
+        res.end(JSON.stringify({ success: true, command: 'blast', report, formatted }));
+        return;
+      }
+
+      if (command === 'check' || command === 'sanity') {
+        const report = runUnifiedSanityCheck(targetCwd);
+        const formatted = formatUnifiedDiagnosticReport(report);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'check', report, formatted }));
+        return;
+      }
+
+      if (command === 'deadcode') {
+        const audit = auditDeadCode(targetCwd);
+        const formatted = formatDeadCodeReport(audit);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'deadcode', audit, formatted }));
+        return;
+      }
+
+      if (command === 'prune') {
+        const result = pruneUnusedImports(targetCwd);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'prune', result }));
+        return;
+      }
+
+      if (command === 'gentest') {
+        const target = args.target || args.file;
+        if (!target) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Target source file is required for test generation' }));
+          return;
+        }
+        const fullTarget = path.isAbsolute(target) ? target : path.resolve(targetCwd, target);
+        const fullOut = args.output ? (path.isAbsolute(args.output) ? args.output : path.resolve(targetCwd, args.output)) : null;
+        const result = generateTestFile(fullTarget, fullOut);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'gentest', ...result }));
+        return;
+      }
+
+      if (command === 'refactor_plan' || command === 'refactor') {
+        const targetFile = args.file || args.target;
+        const oldSymbol = args.oldSymbol || args.old;
+        const newSymbol = args.newSymbol || args.new;
+        if (!targetFile || !oldSymbol || !newSymbol) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'file, oldSymbol, and newSymbol are required for refactoring' }));
+          return;
+        }
+        const plan = planSymbolRename(targetCwd, targetFile, oldSymbol, newSymbol);
+        const formatted = formatRefactorPlan(plan);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'refactor_plan', plan, formatted }));
+        return;
+      }
+
+      if (command === 'refactor_apply') {
+        const targetFile = args.file || args.target;
+        const oldSymbol = args.oldSymbol || args.old;
+        const newSymbol = args.newSymbol || args.new;
+        if (!targetFile || !oldSymbol || !newSymbol) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'file, oldSymbol, and newSymbol are required for refactoring' }));
+          return;
+        }
+        const plan = planSymbolRename(targetCwd, targetFile, oldSymbol, newSymbol);
+        const result = applySymbolRename(plan);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'refactor_apply', plan, result }));
+        return;
+      }
+
+      if (command === 'clarify') {
+        const prompt = args.prompt || '';
+        const analysis = analyzePromptAmbiguity(prompt);
+        const specification = synthesizeClarifiedSpecificationBlock(analysis);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'clarify', analysis, specification }));
         return;
       }
 
       if (command === 'cpg') {
-        const targetCwd = resolveCwd(args.cwd);
         const cpg = buildCodePropertyGraph(targetCwd);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({

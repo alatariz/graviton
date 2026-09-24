@@ -5,14 +5,12 @@ import path from 'path';
 import os from 'os';
 import {
   healCodeSyntax,
-  healRelativeImports,
-  selfHealFile
+  healRelativeImports
 } from '../src/self-healer.js';
 import {
   buildDependencyGraph,
   formatAsciiGraph,
-  getSurgicalContextFiles,
-  extractImportSpecifiers
+  getSurgicalContextFiles
 } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
 import { calculateEconomyMetrics, renderAsciiHud } from '../src/hud.js';

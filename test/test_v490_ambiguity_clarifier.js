@@ -5,8 +5,7 @@ import path from 'path';
 import os from 'os';
 import {
   analyzePromptAmbiguity,
-  synthesizeClarifiedSpecificationBlock,
-  DOMAIN_PATTERNS
+  synthesizeClarifiedSpecificationBlock
 } from '../src/ambiguity-clarifier.js';
 import {
   constructSuperPrompt,

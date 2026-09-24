@@ -5,7 +5,6 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import {
-  recordFileSnapshot,
   resolveDeltaHydration,
   checkOutOfBandModification
 } from '../src/delta-compressor.js';
@@ -15,10 +14,6 @@ import {
   getCompactMemoryDirective
 } from '../src/session-compactor.js';
 import { constructSuperPrompt, estimateTokens } from '../src/pipeline.js';
-import { transpileFileToMarkdown } from '../src/markitdown.js';
-import { squeezeMixedContent } from '../src/stack-squeezer.js';
-import { skeletonizeCode } from '../src/code-outliner.js';
-import { createGravFilter } from '../src/ignore-parser.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

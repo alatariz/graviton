@@ -5,8 +5,6 @@ import path from 'path';
 import os from 'os';
 import {
   trackSessionTurn,
-  checkCompactionStatus,
-  checkAndApplySlidingWindow,
   autoCompactSessionIfExceeded,
   getCompactMemoryDirective,
   AUTONOMOUS_COMPACT_THRESHOLD,

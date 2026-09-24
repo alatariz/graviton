@@ -5,8 +5,7 @@ import path from 'path';
 import os from 'os';
 import {
   detectGroundedLibraries,
-  synthesizeGroundedResearchBlock,
-  GROUNDED_LIBRARY_REGISTRY
+  synthesizeGroundedResearchBlock
 } from '../src/live-researcher.js';
 import {
   constructSuperPrompt,

@@ -5,15 +5,11 @@ import os from 'os';
 import {
   loadGravIgnore,
   loadGravitonIgnore,
-  compilePattern,
   isGravIgnored,
-  isGravitonIgnored,
-  createGravFilter,
-  createGravitonFilter
+  isGravitonIgnored
 } from '../src/ignore-parser.js';
 import {
   getTelemetry,
-  recordTelemetry,
   recordTelemetrySync,
   formatTelemetryDashboard
 } from '../src/telemetry.js';

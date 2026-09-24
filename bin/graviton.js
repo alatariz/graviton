@@ -12,20 +12,14 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { getTelemetry, formatTelemetryDashboard, recordTelemetry } from '../src/telemetry.js';
 import { synthesizePrompt, estimateTokens, buildWorkspaceMap, constructSuperPrompt, readOdometer, purgeOldBackups } from '../src/pipeline.js';
 import { filterCliOutput } from '../src/cli-filter.js';
 import { runAntigravityWithAutoAllow } from './graviton-relay.js';
 import {
-  getWorkspaceSession,
   clearWorkspaceSession,
-  getWorkspaceConversations,
   getActiveConversation,
   setActiveConversation,
-  saveWorkspaceConversation,
   deleteWorkspaceConversation,
-  formatConversationList,
-  generateConversationTitle,
   runInteractiveConversationPicker,
   getConversationHistory,
   formatConversationHistory
@@ -33,7 +27,7 @@ import {
 import { executeRollback, listRollbackItems } from '../src/rollback-manager.js';
 import { startBackgroundDaemon, stopDaemonOrPort, listActivePorts, findProcessOnPort, killProcessOnPort, detectWorkspaceDevServer } from '../src/port-guard.js';
 import { startChatRepl } from '../src/chat-repl.js';
-import { compactWorkspaceSession, checkAndApplySlidingWindow, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
+import { compactWorkspaceSession, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
 import { runDoctor, formatDoctorReport } from '../src/doctor.js';
 import { getSessionDiff } from '../src/diff-viewer.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
@@ -45,7 +39,6 @@ import { generateAstFunctionIndex, formatAstFunctionIndex } from '../src/code-ou
 import { buildDependencyGraph, formatAsciiGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
 import { renderAsciiHud } from '../src/hud.js';
-import { selfHealFile } from '../src/self-healer.js';
 import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 import { launchLiveRunner, openBrowser } from '../src/live-runner.js';
 import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from '../src/autonomous-router.js';
@@ -250,25 +243,27 @@ async function main() {
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
 
-\x1b[1mCOMMANDS\x1b[0m
-  "<raw_text>"                   [DEFAULT] Synthesize prompt & execute (effort: medium)
-  diff                           Review colorized line-by-line diff of recent modifications made by AI
+\x1b[1mAUTONOMOUS ENGINES\x1b[0m \x1b[90m(Run automatically inside every prompt execution)\x1b[0m
+  ● Ambiguity Clarifier          Auto-detects missing bounds & expands engineering specs
+  ● Design Intelligence          Auto-injects 2026 design tokens, themes & WCAG guidelines
+  ● Code Property Graph (CPG)    Auto-pins target files & calculates dependency impact
+  ● Runtime Sentinel             Auto-verifies syntax & DOM bindings post-execution
+  ● Syntax Self-Healer           Auto-repairs broken brackets, JSON commas & missing imports
+
+\x1b[1mCORE COMMANDS\x1b[0m \x1b[90m(Run with 'graviton' or 'grav')\x1b[0m
+  "<raw_text>"                   [DEFAULT] Synthesize prompt & execute with autonomous engines
+  check, verify, audit           Run unified diagnostic suite (Sentinel + Security + Dead-Code + CPG)
+  blast <file>                   Calculate blast radius & downstream dependent ripple effect
+  prune, deadcode                Audit and prune unused imports & dead exports (--apply to prune)
+  gentest <file>                 Auto-generate deterministic unit test scaffold for a source file
+  refactor <file> <old> <new>    AST-guided safe symbol renaming across workspace (--apply to execute)
+  diff                           Review colorized line-by-line diff of recent modifications
   undo, rollback, rb             Revert files modified or created during the most recent AI session
-  stats, hud                     Display lifetime token & dollar savings dashboard + active ports
-  graph                          Render ASCII/Unicode multi-file dependency graph of project
-  verify, sentinel               Scan runtime integrity, DOM bindings & syntax health
-  audit, critique                Run dual-agent adversarial red-team security & resilience audit
-  blast, impact                  Calculate blast radius & downstream dependent ripple effect
-  cpg                            Inspect workspace Code Property Graph and symbol topology
-  gentest, testgen               Auto-generate deterministic unit test scaffold for a source file
-  refactor                       AST-guided safe symbol renaming across all workspace files
-  deadcode, prune                Audit and prune unused imports, dead exports, and orphaned helpers
-  clarify "<prompt>"             Analyze prompt ambiguity & display clarified engineering baseline
-  check, sanity                  Run unified diagnostic check (Sentinel + Critic + Dead-Code + CPG)
-  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   agent, web, dashboard, ui      Launch localhost-only visual Gravity Agent (http://localhost:3000)
-  chat, repl                     Launch interactive REPL chat session
+  doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
+  stats, hud                     Display lifetime token & dollar savings dashboard + active ports
   stop [port|all]                Terminate background dev daemon or free blocked development port
+  chat, repl                     Launch interactive REPL chat session
   version, -v                    Display Graviton CLI version
 `);
     process.exit(0);
@@ -603,7 +598,21 @@ async function main() {
 
   // 4o. UNIFIED AUTONOMOUS COORDINATOR SANITY CHECK (V5.0.0)
   if (command === 'check' || command === 'sanity' || command === 'v5') {
-    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const targetDir = filteredArgs[1] && !filteredArgs[1].startsWith('-') ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const isFix = rawArgs.includes('--fix') || rawArgs.includes('-f') || rawArgs.includes('--prune');
+
+    if (isFix) {
+      console.log(`\x1b[36m[GRAVITON UNIFIED FIX]\x1b[0m Applying automated auto-heal & dead-code pruning...`);
+      const pruneRes = pruneUnusedImports(targetDir);
+      const healRes = autoHealWorkspaceFiles(targetDir);
+      if (pruneRes.symbolsPruned > 0) {
+        console.log(`  \x1b[32m✔\x1b[0m Pruned \x1b[1m${pruneRes.symbolsPruned}\x1b[0m unused import(s) across ${pruneRes.filesModified} file(s).`);
+      }
+      if (healRes.filesHealedCount > 0) {
+        console.log(`  \x1b[32m✔\x1b[0m Auto-healed \x1b[1m${healRes.filesHealedCount}\x1b[0m file(s).`);
+      }
+    }
+
     const sanity = runUnifiedSanityCheck(targetDir);
     console.log(formatUnifiedDiagnosticReport(sanity));
     process.exit(sanity.passed ? 0 : 1);
@@ -979,6 +988,15 @@ async function main() {
     }
   }
 
+  let clarifiedSpecificationDirective = '';
+  if (!isFast && typeof input === 'string' && input.trim().length > 0 && input.trim().length < 400 && !input.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
+    const ambiguityAnalysis = analyzePromptAmbiguity(input);
+    if (ambiguityAnalysis && ambiguityAnalysis.isAmbiguous) {
+      console.log(`\x1b[36m[GRAVITON CLARIFIER]\x1b[0m Resolved prompt ambiguity (${ambiguityAnalysis.score}/100): auto-injected technical bounds.`);
+      clarifiedSpecificationDirective = synthesizeClarifiedSpecificationBlock(ambiguityAnalysis);
+    }
+  }
+
   const superPrompt = constructSuperPrompt(input, currentCwd, {
     isContinuous: continueSession,
     conversationTitle: activeTitle,
@@ -991,9 +1009,13 @@ async function main() {
     isFast: isFast
   });
 
-  const finalSuperPrompt = autonomousScaffoldDirective
+  let finalSuperPrompt = autonomousScaffoldDirective
     ? `${superPrompt}\n\n${autonomousScaffoldDirective}`
     : superPrompt;
+
+  if (clarifiedSpecificationDirective) {
+    finalSuperPrompt = `${finalSuperPrompt}\n\n${clarifiedSpecificationDirective}`;
+  }
 
   if (finalSuperPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
     console.log('\x1b[36m[GRAVITON AUTONOMOUS OVERCLOCK]\x1b[0m Synthesized full-stack architecture specification with zero stubs.');
@@ -1152,6 +1174,19 @@ async function main() {
   if (healRes && healRes.filesHealedCount > 0) {
     console.log(`\x1b[36m[GRAVITON SELF-HEALER]\x1b[0m Auto-healed \x1b[1m${healRes.filesHealedCount}\x1b[0m file(s) on disk (closed brackets, repaired JSON trailing commas, patched imports).`);
   }
+
+  // Post-Execution Autonomous Runtime Sentinel Verification:
+  try {
+    const sentinelReport = verifyProjectRuntime(currentCwd);
+    if (!sentinelReport.valid) {
+      console.log(`\x1b[33m[GRAVITON RUNTIME SENTINEL]\x1b[0m ${sentinelReport.summary}`);
+      if (sentinelReport.defects && sentinelReport.defects.length > 0) {
+        sentinelReport.defects.slice(0, 3).forEach(d => console.log(`  ● ${d.message || d.file}`));
+      }
+    } else {
+      console.log(`\x1b[32m✔  [RUNTIME SENTINEL]\x1b[0m Workspace integrity verified (0 syntax defects, 0 broken imports).`);
+    }
+  } catch {}
 
   console.log(`\x1b[32m✔  Execution complete. (${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
   process.exit(0);

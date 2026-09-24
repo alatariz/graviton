@@ -5,11 +5,9 @@ import fs from 'fs';
 import os from 'os';
 import {
   analyzePromptProfile,
-  deramblePrompt,
-  expandSparsePrompt,
   architectPrompt
 } from '../src/prompt-architect.js';
-import { constructSuperPrompt, estimateTokens } from '../src/pipeline.js';
+import { constructSuperPrompt } from '../src/pipeline.js';
 
 console.log('\n===============================================================');
 console.log('   GRAVITON V3.5.0 PROMPT ARCHITECT & REPROMPTER TEST SUITE');

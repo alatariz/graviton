@@ -3,15 +3,14 @@
 
 import fs from 'fs';
 import path from 'path';
-import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock } from './ambiguity-clarifier.js';
+import { analyzePromptAmbiguity } from './ambiguity-clarifier.js';
 import { synthesizeGroundedResearchBlock } from './live-researcher.js';
-import { resolveDesignSystem, formatDesignSystemSpecification } from './design-intelligence.js';
-import { buildCodePropertyGraph, calculateBlastRadius, formatBlastRadiusReport } from './code-property-graph.js';
-import { evaluateWorkspaceAdversarially, formatAdversarialCritique } from './adversarial-critic.js';
-import { verifyProjectRuntime, generateSelfCorrectionDirective } from './runtime-sentinel.js';
-import { auditDeadCode, formatDeadCodeReport } from './dead-code-cleaner.js';
-import { generateTestFile } from './test-generator.js';
-import { constructSuperPrompt, getPromptCachePrefix } from './pipeline.js';
+import { resolveDesignSystem } from './design-intelligence.js';
+import { buildCodePropertyGraph } from './code-property-graph.js';
+import { evaluateWorkspaceAdversarially } from './adversarial-critic.js';
+import { verifyProjectRuntime } from './runtime-sentinel.js';
+import { auditDeadCode } from './dead-code-cleaner.js';
+import { constructSuperPrompt } from './pipeline.js';
 
 /**
  * Execute unified end-to-end orchestration analysis for a user request.

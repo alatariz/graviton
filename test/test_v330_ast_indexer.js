@@ -6,14 +6,11 @@ import os from 'os';
 import { execSync } from 'child_process';
 import {
   isAstCandidate,
-  isSkeletonCandidate,
-  countBraceDelta,
   parseJsTsAst,
   parsePythonAst,
   parseGoAst,
   parseRustAst,
-  generateAstFunctionIndex,
-  formatAstFunctionIndex
+  generateAstFunctionIndex
 } from '../src/code-outliner.js';
 import { constructSuperPrompt } from '../src/pipeline.js';
 

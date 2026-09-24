@@ -5,7 +5,7 @@ import { resolveTargetScope } from './context-scoper.js';
 import { getCompactMemoryDirective } from './session-compactor.js';
 import { isProtectedFile, generateDependencySummary } from './shield.js';
 import { isTranspilableDocument, transpileFileToMarkdown } from './markitdown.js';
-import { isSkeletonCandidate, isAstCandidate, generateAstFunctionIndex, skeletonizeCode, shrinkSvg } from './code-outliner.js';
+import { isSkeletonCandidate, isAstCandidate, generateAstFunctionIndex, skeletonizeCode } from './code-outliner.js';
 import { resolveDeltaHydration } from './delta-compressor.js';
 import { squeezeMixedContent } from './stack-squeezer.js';
 import { architectPrompt } from './prompt-architect.js';

@@ -7,7 +7,7 @@ import http from 'http';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { server } from '../web/server.js';
-import { scaffoldProject, detectDomainFromPrompt, getScaffoldTemplate } from '../src/scaffolder.js';
+import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

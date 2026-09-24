@@ -12,7 +12,7 @@ import {
   compactWorkspaceSession,
   getCompactMemoryDirective
 } from '../src/session-compactor.js';
-import { saveWorkspaceSession, getWorkspaceSession } from '../src/session-manager.js';
+import { getWorkspaceSession } from '../src/session-manager.js';
 
 async function runTests() {
   console.log('=== STARTING V2.0.0 SESSION COMPACTOR TEST SUITE ===\n');

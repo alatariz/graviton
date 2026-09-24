@@ -5,7 +5,7 @@ import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pi
 import { getLatestConversationId, saveWorkspaceSession, getConversationHistory } from '../src/session-manager.js';
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 import { inspectSessionFiles } from '../src/sanity-guard.js';
-import { trackSessionTurn, checkCompactionStatus, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
+import { trackSessionTurn, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
 
 /**
  * Resolves the command executable name based on the OS.

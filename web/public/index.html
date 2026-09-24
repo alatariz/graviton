@@ -1631,10 +1631,15 @@
       <div class="ide-drawer" id="ideDrawer">
         <div class="drawer-header">
           <div class="drawer-tabs">
-            <button class="drawer-tab active" data-tab="doctor" onclick="switchDrawerTab('doctor')">Doctor</button>
+            <button class="drawer-tab active" data-tab="check" onclick="switchDrawerTab('check')">Health Check</button>
+            <button class="drawer-tab" data-tab="deadcode" onclick="switchDrawerTab('deadcode')">Dead Code</button>
+            <button class="drawer-tab" data-tab="blast" onclick="switchDrawerTab('blast')">Blast Radius</button>
+            <button class="drawer-tab" data-tab="gentest" onclick="switchDrawerTab('gentest')">Generate Tests</button>
+            <button class="drawer-tab" data-tab="refactor" onclick="switchDrawerTab('refactor')">Refactor</button>
             <button class="drawer-tab" data-tab="diff" onclick="switchDrawerTab('diff')">Diff</button>
-            <button class="drawer-tab" data-tab="undo" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
+            <button class="drawer-tab" data-tab="undo" onclick="switchDrawerTab('undo')">Rollback</button>
             <button class="drawer-tab" data-tab="graph" onclick="switchDrawerTab('graph')">AST Graph</button>
+            <button class="drawer-tab" data-tab="doctor" onclick="switchDrawerTab('doctor')">Doctor</button>
             <button class="drawer-tab" data-tab="ports" onclick="switchDrawerTab('ports')">Ports</button>
             <button class="drawer-tab" data-tab="stats" onclick="switchDrawerTab('stats')">Odometer</button>
             <button class="drawer-tab" data-tab="version" onclick="switchDrawerTab('version')">Version</button>
@@ -1686,7 +1691,7 @@
     let activeCwd = '';
     let currentConversationId = null;
     let selectedEffort = 'grav';
-    let currentDrawerTab = 'doctor';
+    let currentDrawerTab = 'check';
     let conversationsData = [];
     let isDrawerCollapsed = false;
     let isDrawerMaximized = false;
@@ -2737,6 +2742,11 @@
 
       const titleEl = document.getElementById('drawerTitle');
       const titles = {
+        check: 'UNIFIED HEALTH CHECK & MULTI-ENGINE AUDIT',
+        deadcode: 'DEAD CODE & UNUSED IMPORTS AUDIT',
+        blast: 'CODE PROPERTY GRAPH & BLAST RADIUS ENGINE',
+        gentest: 'DETERMINISTIC UNIT TEST AUTO-GENERATOR',
+        refactor: 'AST-GUIDED SYMBOL REFACTORING ENGINE',
         doctor: 'SYSTEM HEALTH & ENVIRONMENT DIAGNOSTICS',
         diff: 'SESSION GIT MODIFICATIONS & FILE ADDS',
         undo: 'SAFETY ROLLBACK & GRANULAR FILE RESTORATION',
@@ -2771,7 +2781,118 @@
           })
         }).then(r => r.json());
 
-        if (currentDrawerTab === 'doctor') {
+        if (currentDrawerTab === 'check') {
+          const r = res.report || {};
+          const sent = r.sentinel || {};
+          const crit = r.critic || {};
+          const dead = r.deadCode || {};
+          const cpg = r.cpg || {};
+
+          let html = `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem; margin-bottom: 0.8rem;">
+              <div class="metric-box" style="padding:0.6rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; color:var(--text-main);">Runtime Sentinel</span>
+                  <span style="color:${sent.valid ? 'var(--cyan)' : 'var(--red)'}; font-size:10px; font-weight:700;">${sent.valid ? 'VALID' : 'DEFECTS'}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim); margin-top:0.3rem;">${escapeHtml(sent.summary || 'Syntax and DOM valid')}</div>
+              </div>
+
+              <div class="metric-box" style="padding:0.6rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; color:var(--text-main);">Adversarial Audit</span>
+                  <span style="color:${crit.passed ? 'var(--cyan)' : 'var(--red)'}; font-size:10px; font-weight:700;">${crit.passed ? 'PASSED' : 'FLAGGED'}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim); margin-top:0.3rem;">${crit.findings ? crit.findings.length : 0} security & leak finding(s)</div>
+              </div>
+
+              <div class="metric-box" style="padding:0.6rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; color:var(--text-main);">Dead Code Audit</span>
+                  <span style="color:${dead.totalDeadItems === 0 ? 'var(--cyan)' : 'var(--yellow)'}; font-size:10px; font-weight:700;">${dead.totalDeadItems === 0 ? 'CLEAN' : `${dead.totalDeadItems} UNUSED`}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim); margin-top:0.3rem;">${dead.unusedImports ? dead.unusedImports.length : 0} file(s) with unused imports</div>
+              </div>
+
+              <div class="metric-box" style="padding:0.6rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-weight:600; color:var(--text-main);">Property Graph</span>
+                  <span style="color:var(--cyan); font-size:10px; font-weight:700;">MAPPED</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-dim); margin-top:0.3rem;">${cpg.totalFiles || 0} files | ${cpg.totalSymbols || 0} mapped symbols</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:0.6rem; align-items:center;">
+              <button class="btn-ide accent" onclick="pruneAndHealAction()">Auto-Heal & Prune Dead Code</button>
+              <button class="btn-ide" onclick="runCurrentDrawerCommand()">Re-run Diagnostics</button>
+            </div>
+          `;
+          bodyEl.innerHTML = html;
+        } else if (currentDrawerTab === 'deadcode') {
+          const audit = res.audit || {};
+          const unused = audit.unusedImports || [];
+          if (audit.totalDeadItems === 0) {
+            bodyEl.innerHTML = `
+              <div style="color:var(--cyan); font-weight:600; margin-bottom:0.5rem;">[OK] Zero dead code or unused imports detected.</div>
+              <div style="color:var(--text-dim); font-size:11px;">Workspace code tree is 100% clean and optimized.</div>
+            `;
+          } else {
+            let html = `
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                <span style="color:var(--yellow); font-weight:600;">Detected ${audit.totalDeadItems} unused import symbols across ${unused.length} file(s):</span>
+                <button class="btn-ide accent" onclick="pruneDeadCodeAction()">Prune Unused Imports</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0.4rem; max-height:160px; overflow-y:auto;">
+            `;
+            unused.forEach(item => {
+              html += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:4px; padding:0.4rem 0.6rem;">
+                  <div style="color:var(--cyan); font-weight:500;">${escapeHtml(item.file)}</div>
+                  <div style="color:var(--text-dim); font-size:11px; margin-top:0.2rem;">Unused: <span style="color:#ef4444;">${escapeHtml(item.unusedSymbols.join(', '))}</span></div>
+                </div>
+              `;
+            });
+            html += `</div>`;
+            bodyEl.innerHTML = html;
+          }
+        } else if (currentDrawerTab === 'blast') {
+          let html = `
+            <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+              <input type="text" id="blastTargetInput" placeholder="Target file (e.g. src/pipeline.js) or symbol name" value="src/pipeline.js" style="flex:1; background:#10131a; border:1px solid var(--border); color:#fff; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:12px; border-radius:4px;">
+              <button class="btn-ide accent" onclick="runBlastAnalysisAction()">Analyze Impact</button>
+            </div>
+            <div id="blastOutputContainer" style="color:var(--text-dim); font-size:11px;">
+              ${res.formatted ? `<pre style="white-space:pre-wrap; margin:0; font-family:var(--font-mono); font-size:11px; color:#e2e8f0;">${escapeHtml(res.formatted)}</pre>` : 'Enter a source file above and click Analyze Impact.'}
+            </div>
+          `;
+          bodyEl.innerHTML = html;
+        } else if (currentDrawerTab === 'gentest') {
+          let html = `
+            <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+              <input type="text" id="gentestTargetInput" placeholder="Source file (e.g. src/auth-helper.js)" value="" style="flex:1; background:#10131a; border:1px solid var(--border); color:#fff; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:12px; border-radius:4px;">
+              <button class="btn-ide accent" onclick="runGenTestAction()">Generate Test Suite</button>
+            </div>
+            <div id="gentestOutputContainer" style="color:var(--text-dim); font-size:11px;">
+              Enter a source file in the workspace to automatically generate a deterministic unit test scaffold with stubs and assertions.
+            </div>
+          `;
+          bodyEl.innerHTML = html;
+        } else if (currentDrawerTab === 'refactor') {
+          let html = `
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto auto; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+              <input type="text" id="refactorFileInput" placeholder="File (e.g. src/pipeline.js)" style="background:#10131a; border:1px solid var(--border); color:#fff; padding:0.35rem 0.5rem; font-family:var(--font-mono); font-size:11px; border-radius:4px;">
+              <input type="text" id="refactorOldInput" placeholder="Old symbol" style="background:#10131a; border:1px solid var(--border); color:#fff; padding:0.35rem 0.5rem; font-family:var(--font-mono); font-size:11px; border-radius:4px;">
+              <input type="text" id="refactorNewInput" placeholder="New symbol" style="background:#10131a; border:1px solid var(--border); color:#fff; padding:0.35rem 0.5rem; font-family:var(--font-mono); font-size:11px; border-radius:4px;">
+              <button class="btn-ide" onclick="previewRefactorAction()">Preview Diff</button>
+              <button class="btn-ide accent" onclick="applyRefactorAction()">Apply</button>
+            </div>
+            <div id="refactorOutputContainer" style="color:var(--text-dim); font-size:11px; max-height:160px; overflow-y:auto;">
+              Specify a source file and symbol names above to perform AST-guided safe refactoring across call sites.
+            </div>
+          `;
+          bodyEl.innerHTML = html;
+        } else if (currentDrawerTab === 'doctor') {
           bodyEl.textContent = res.report || JSON.stringify(res, null, 2);
         } else if (currentDrawerTab === 'diff') {
           bodyEl.textContent = res.output || 'No changes recorded.';
@@ -2819,6 +2940,159 @@
         }
       } catch (err) {
         bodyEl.textContent = `Command error: ${err.message}`;
+      }
+    }
+
+    async function pruneAndHealAction() {
+      try {
+        showToast('Applying auto-heal and dead-code pruning...');
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'prune', cwd: activeCwd })
+        }).then(r => r.json());
+        showToast(`Pruned ${res.result?.symbolsPruned || 0} unused import(s)`);
+        runCurrentDrawerCommand();
+      } catch (err) {
+        showToast(`Error: ${err.message}`);
+      }
+    }
+
+    async function pruneDeadCodeAction() {
+      try {
+        showToast('Pruning unused imports...');
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'prune', cwd: activeCwd })
+        }).then(r => r.json());
+        showToast(`Pruned ${res.result?.symbolsPruned || 0} unused import(s)`);
+        runCurrentDrawerCommand();
+      } catch (err) {
+        showToast(`Error: ${err.message}`);
+      }
+    }
+
+    async function runBlastAnalysisAction() {
+      const input = document.getElementById('blastTargetInput');
+      const target = input ? input.value.trim() : '';
+      if (!target) {
+        showToast('Enter target file or symbol');
+        return;
+      }
+      const out = document.getElementById('blastOutputContainer');
+      if (out) out.textContent = 'Calculating blast radius...';
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'blast', cwd: activeCwd, args: { target } })
+        }).then(r => r.json());
+        if (out) {
+          if (res.formatted) {
+            out.innerHTML = `<pre style="white-space:pre-wrap; margin:0; font-family:var(--font-mono); font-size:11px; color:#e2e8f0;">${escapeHtml(res.formatted)}</pre>`;
+          } else if (res.report) {
+            out.innerHTML = `<pre style="white-space:pre-wrap; margin:0; font-family:var(--font-mono); font-size:11px; color:#e2e8f0;">${escapeHtml(JSON.stringify(res.report, null, 2))}</pre>`;
+          } else {
+            out.textContent = res.error || 'Failed to calculate blast radius.';
+          }
+        }
+      } catch (err) {
+        if (out) out.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function runGenTestAction() {
+      const input = document.getElementById('gentestTargetInput');
+      const target = input ? input.value.trim() : '';
+      if (!target) {
+        showToast('Specify source file');
+        return;
+      }
+      const out = document.getElementById('gentestOutputContainer');
+      if (out) out.textContent = 'Generating unit test suite...';
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'gentest', cwd: activeCwd, args: { file: target } })
+        }).then(r => r.json());
+        if (out) {
+          if (res.success) {
+            out.innerHTML = `
+              <div style="color:var(--cyan); font-weight:600; margin-bottom:0.4rem;">[OK] Unit test suite generated successfully!</div>
+              <div>Test File: <span style="color:#fff; font-weight:500;">${escapeHtml(res.testFilePath)}</span></div>
+              <div style="color:var(--text-dim); margin-top:0.2rem;">Generated ${res.testCount} deterministic assertions.</div>
+            `;
+            fetchWorkspace();
+          } else {
+            out.textContent = res.error || 'Failed to generate test suite.';
+          }
+        }
+      } catch (err) {
+        if (out) out.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function previewRefactorAction() {
+      const file = document.getElementById('refactorFileInput')?.value.trim();
+      const oldSymbol = document.getElementById('refactorOldInput')?.value.trim();
+      const newSymbol = document.getElementById('refactorNewInput')?.value.trim();
+      if (!file || !oldSymbol || !newSymbol) {
+        showToast('File, old symbol, and new symbol are required');
+        return;
+      }
+      const out = document.getElementById('refactorOutputContainer');
+      if (out) out.textContent = 'Generating refactoring plan...';
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'refactor_plan', cwd: activeCwd, args: { file, oldSymbol, newSymbol } })
+        }).then(r => r.json());
+        if (out) {
+          if (res.formatted) {
+            out.innerHTML = `<pre style="white-space:pre-wrap; margin:0; font-family:var(--font-mono); font-size:11px; color:#e2e8f0;">${escapeHtml(res.formatted)}</pre>`;
+          } else {
+            out.textContent = res.error || 'Failed to plan refactor.';
+          }
+        }
+      } catch (err) {
+        if (out) out.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function applyRefactorAction() {
+      const file = document.getElementById('refactorFileInput')?.value.trim();
+      const oldSymbol = document.getElementById('refactorOldInput')?.value.trim();
+      const newSymbol = document.getElementById('refactorNewInput')?.value.trim();
+      if (!file || !oldSymbol || !newSymbol) {
+        showToast('File, old symbol, and new symbol are required');
+        return;
+      }
+      if (!confirm(`Apply AST symbol rename: '${oldSymbol}' -> '${newSymbol}'?`)) return;
+      const out = document.getElementById('refactorOutputContainer');
+      if (out) out.textContent = 'Applying AST refactoring...';
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: 'refactor_apply', cwd: activeCwd, args: { file, oldSymbol, newSymbol } })
+        }).then(r => r.json());
+        if (out) {
+          if (res.success) {
+            out.innerHTML = `
+              <div style="color:var(--cyan); font-weight:600; margin-bottom:0.4rem;">[OK] Symbol refactoring applied successfully!</div>
+              <div>Modified ${res.result?.filesModified || 0} file(s) across ${res.result?.replacementsApplied || 0} code locations.</div>
+            `;
+            showToast('Refactoring applied');
+            fetchWorkspace();
+          } else {
+            out.textContent = res.error || 'Failed to apply refactor.';
+          }
+        }
+      } catch (err) {
+        if (out) out.textContent = `Error: ${err.message}`;
       }
     }
 

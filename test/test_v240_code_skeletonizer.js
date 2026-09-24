@@ -8,7 +8,6 @@ import {
   shrinkSvg,
   skeletonizeJs,
   skeletonizePy,
-  skeletonizeCode,
   isSkeletonCandidate
 } from '../src/code-outliner.js';
 import { constructSuperPrompt } from '../src/pipeline.js';

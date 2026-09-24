@@ -5,7 +5,6 @@ import path from 'path';
 import os from 'os';
 import {
   isStackTrace,
-  isInternalFrame,
   squeezeStackTrace,
   squeezeMixedContent
 } from '../src/stack-squeezer.js';
