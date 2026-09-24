@@ -107,11 +107,8 @@ export function createLiveReloadServer(workspaceDir, options = {}) {
   const sseClients = new Set();
   let watchDebounceTimer = null;
 
-  // Set up recursive file watcher for live-reload
-  let watcher = null;
-  try {
-    watcher = fs.watch(rootDir, { recursive: true }, (eventType, filename) => {
-      if (!filename) return;
+  const onWatchChange = (eventType, filename) => {
+    if (filename) {
       const cleanName = filename.replace(/\\/g, '/');
       if (
         cleanName.includes('.git/') ||
@@ -121,17 +118,27 @@ export function createLiveReloadServer(workspaceDir, options = {}) {
       ) {
         return;
       }
+    }
 
-      if (watchDebounceTimer) clearTimeout(watchDebounceTimer);
-      watchDebounceTimer = setTimeout(() => {
-        for (const client of sseClients) {
-          try {
-            client.write('data: reload\n\n');
-          } catch {}
-        }
-      }, 150);
-    });
-  } catch {}
+    if (watchDebounceTimer) clearTimeout(watchDebounceTimer);
+    watchDebounceTimer = setTimeout(() => {
+      for (const client of sseClients) {
+        try {
+          client.write('data: reload\n\n');
+        } catch {}
+      }
+    }, 50);
+  };
+
+  // Set up file watcher for live-reload (with non-recursive fallback for platforms like Linux)
+  let watcher = null;
+  try {
+    watcher = fs.watch(rootDir, { recursive: true }, onWatchChange);
+  } catch {
+    try {
+      watcher = fs.watch(rootDir, onWatchChange);
+    } catch {}
+  }
 
   const server = http.createServer((req, res) => {
     // 1. SSE Live Reload Stream Endpoint
