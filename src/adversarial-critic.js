@@ -1,4 +1,4 @@
-// src/adversarial-critic.js - Graviton V5.0.0 Adversarial Red-Team & Verification Critic
+// src/adversarial-critic.js - Graviton V5.1.1 Adversarial Red-Team & Verification Critic
 // Rigorous verification for code security, resilience, and memory leak prevention.
 
 import fs from 'fs';

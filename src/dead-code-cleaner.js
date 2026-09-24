@@ -1,4 +1,4 @@
-// src/dead-code-cleaner.js - Graviton V5.0.0 Dead-Code & Unused Symbol Eliminator
+// src/dead-code-cleaner.js - Graviton V5.1.1 Dead-Code & Unused Symbol Eliminator
 // Detects unused imports, orphaned functions, and dead exports using Code Property Graph.
 
 import fs from 'fs';

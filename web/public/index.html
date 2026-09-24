@@ -1631,18 +1631,18 @@
       <div class="ide-drawer" id="ideDrawer">
         <div class="drawer-header">
           <div class="drawer-tabs">
-            <button class="drawer-tab active" data-tab="check" onclick="switchDrawerTab('check')">Health Check</button>
-            <button class="drawer-tab" data-tab="deadcode" onclick="switchDrawerTab('deadcode')">Dead Code</button>
-            <button class="drawer-tab" data-tab="blast" onclick="switchDrawerTab('blast')">Blast Radius</button>
-            <button class="drawer-tab" data-tab="gentest" onclick="switchDrawerTab('gentest')">Generate Tests</button>
-            <button class="drawer-tab" data-tab="refactor" onclick="switchDrawerTab('refactor')">Refactor</button>
-            <button class="drawer-tab" data-tab="diff" onclick="switchDrawerTab('diff')">Diff</button>
-            <button class="drawer-tab" data-tab="undo" onclick="switchDrawerTab('undo')">Rollback</button>
-            <button class="drawer-tab" data-tab="graph" onclick="switchDrawerTab('graph')">AST Graph</button>
-            <button class="drawer-tab" data-tab="doctor" onclick="switchDrawerTab('doctor')">Doctor</button>
-            <button class="drawer-tab" data-tab="ports" onclick="switchDrawerTab('ports')">Ports</button>
-            <button class="drawer-tab" data-tab="stats" onclick="switchDrawerTab('stats')">Odometer</button>
-            <button class="drawer-tab" data-tab="version" onclick="switchDrawerTab('version')">Version</button>
+            <button class="drawer-tab active" data-tab="check" onclick="switchDrawerTab('check')" title="Comprehensive 4-layer diagnostic suite (Runtime Sentinel, Dual-Agent Critic, Dead Code, CPG)">Health Check</button>
+            <button class="drawer-tab" data-tab="deadcode" onclick="switchDrawerTab('deadcode')" title="Audit unused imports, orphaned helpers, and 1-click prune">Dead Code</button>
+            <button class="drawer-tab" data-tab="blast" onclick="switchDrawerTab('blast')" title="Code Property Graph dependency impact & ripple effect calculator">Blast Radius</button>
+            <button class="drawer-tab" data-tab="gentest" onclick="switchDrawerTab('gentest')" title="Deterministic unit test & assertion scaffolder for source files">Generate Tests</button>
+            <button class="drawer-tab" data-tab="refactor" onclick="switchDrawerTab('refactor')" title="AST-guided safe symbol renaming across all workspace references">Refactor</button>
+            <button class="drawer-tab" data-tab="diff" onclick="switchDrawerTab('diff')" title="Review unified line-by-line diff of recent AI modifications">Diff</button>
+            <button class="drawer-tab" data-tab="undo" onclick="switchDrawerTab('undo')" title="Granular file restoration, rollback & undo previous AI changes">Rollback</button>
+            <button class="drawer-tab" data-tab="graph" onclick="switchDrawerTab('graph')" title="Visualize multi-file workspace dependency DAG & topology">AST Graph</button>
+            <button class="drawer-tab" data-tab="doctor" onclick="switchDrawerTab('doctor')" title="System health, Node.js runtime & Google Antigravity binary diagnostics">Doctor</button>
+            <button class="drawer-tab" data-tab="ports" onclick="switchDrawerTab('ports')" title="Active background development daemons and port collision guard">Ports</button>
+            <button class="drawer-tab" data-tab="stats" onclick="switchDrawerTab('stats')" title="Real-time token economy, prompt cache hits & dollar savings meter">Odometer</button>
+            <button class="drawer-tab" data-tab="version" onclick="switchDrawerTab('version')" title="Graviton core version, Node engine, and release metadata">Version</button>
           </div>
 
           <div class="drawer-controls">
@@ -1654,7 +1654,10 @@
 
         <div class="drawer-body" id="drawerBodyContainer">
           <div class="drawer-toolbar">
-            <span class="drawer-title" id="drawerTitle">SYSTEM HEALTH DIAGNOSTICS</span>
+            <div>
+              <span class="drawer-title" id="drawerTitle">HEALTH CHECK (Unified Diagnostic Suite)</span>
+              <span class="drawer-subtitle" id="drawerSubtitle" style="display:block; font-size:11px; color:var(--text-dim); margin-top:2px;">Runs 4-layer autonomous audit: Runtime Sentinel syntax, dual-agent security critic, dead code audit, and Code Property Graph dependency check.</span>
+            </div>
             <button class="btn-ide" onclick="runCurrentDrawerCommand()">Run Command</button>
           </div>
           <div id="drawerBody" class="terminal-output-box">
@@ -2741,21 +2744,40 @@
       });
 
       const titleEl = document.getElementById('drawerTitle');
+      const subtitleEl = document.getElementById('drawerSubtitle');
+
       const titles = {
-        check: 'UNIFIED HEALTH CHECK & MULTI-ENGINE AUDIT',
-        deadcode: 'DEAD CODE & UNUSED IMPORTS AUDIT',
-        blast: 'CODE PROPERTY GRAPH & BLAST RADIUS ENGINE',
-        gentest: 'DETERMINISTIC UNIT TEST AUTO-GENERATOR',
-        refactor: 'AST-GUIDED SYMBOL REFACTORING ENGINE',
-        doctor: 'SYSTEM HEALTH & ENVIRONMENT DIAGNOSTICS',
-        diff: 'SESSION GIT MODIFICATIONS & FILE ADDS',
-        undo: 'SAFETY ROLLBACK & GRANULAR FILE RESTORATION',
-        graph: 'AUTONOMOUS MULTI-FILE AST DEPENDENCY DAG',
-        ports: 'ACTIVE DEV DAEMON & PORT GUARD',
-        stats: 'LIFETIME TELEMETRY & TOKEN ODOMETER',
-        version: 'GRAVITON BUILD & RUNTIME VERSION'
+        check: 'HEALTH CHECK (Unified Diagnostic Suite)',
+        deadcode: 'DEAD CODE CLEANER (Import & Export Pruning)',
+        blast: 'BLAST RADIUS CALCULATOR (Code Property Graph)',
+        gentest: 'GENERATE TESTS (Deterministic Test Scaffolder)',
+        refactor: 'SYMBOLIC REFACTOR (AST-Guided Symbol Renamer)',
+        diff: 'FILE DIFF INSPECTOR (Recent Modifications)',
+        undo: 'ROLLBACK MANAGER (Granular Session Revert)',
+        graph: 'AST DEPENDENCY GRAPH (Workspace DAG)',
+        doctor: 'GRAVITON DOCTOR (Environment Health Diagnostics)',
+        ports: 'PORT GUARD (Dev Daemon & Process Manager)',
+        stats: 'TOKEN ODOMETER (Telemetry & Savings Metrics)',
+        version: 'GRAVITON VERSION & BUILD METADATA'
       };
-      titleEl.textContent = titles[tab] || tab.toUpperCase();
+
+      const subtitles = {
+        check: 'Runs 4-layer autonomous audit: Runtime Sentinel syntax, dual-agent security critic, dead code audit, and Code Property Graph dependency check.',
+        deadcode: 'Scans AST trees across the workspace to detect unreferenced imports and dead exports, with 1-click automated pruning.',
+        blast: 'Maps downstream consumer dependencies and calculates the ripple effect on other files before modifying code.',
+        gentest: 'Parses function signatures, exports, and contracts in a file to automatically scaffold production-ready unit tests.',
+        refactor: 'Safely plans and applies project-wide identifier renames across all import statements, declarations, and call sites without breaking code.',
+        diff: 'Shows a unified line-by-line colored diff of all files created, modified, or patched during the current session.',
+        undo: 'Provides a safe undo mechanism to restore modified files or delete created files from recent AI operations.',
+        graph: 'Renders the complete import and export dependency tree linking modules and files throughout the workspace.',
+        doctor: 'Verifies Node.js engine compatibility, Google Antigravity (agy) binary resolution, Git version, and filesystem cache health.',
+        ports: 'Monitors active development servers, identifies stuck localhost processes, and terminates background daemons.',
+        stats: 'Tracks session token consumption, lifetime tokens saved, Flash/Pro dollar economy, and cache efficiency.',
+        version: 'Displays current Graviton release (v5.1.1), Node environment, active workspace directory, and autonomous engine readiness.'
+      };
+
+      if (titleEl) titleEl.textContent = titles[tab] || tab.toUpperCase();
+      if (subtitleEl) subtitleEl.textContent = subtitles[tab] || '';
       runCurrentDrawerCommand();
     }
 
@@ -2934,7 +2956,7 @@
         } else if (currentDrawerTab === 'stats') {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         } else if (currentDrawerTab === 'version') {
-          bodyEl.textContent = `GRAVITON v${res.version || '5.0.0'}\nNode: ${navigator.userAgent}\nEnvironment: Developer Agent Localhost`;
+          bodyEl.textContent = `GRAVITON v${res.version || '5.1.1'}\nNode: ${navigator.userAgent}\nEnvironment: Developer Agent Localhost`;
         } else {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         }

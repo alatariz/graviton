@@ -1,14 +1,14 @@
-# Graviton Developer Cockpit & Web IDE (V5.0.0)
+# Graviton Developer Cockpit & Web Agent (V5.1.1)
 
-This directory contains the local developer cockpit, live documentation, and real-time streaming Web IDE for Graviton V5.0.0.
+This directory contains the local developer cockpit, live documentation, and real-time streaming Web Agent for Graviton V5.1.1.
 
-## Running the Web IDE Locally (100% Zero-Dependency)
+## Running the Web Agent Locally (100% Zero-Dependency)
 
 No external `npm install` needed. Run directly using pure Node.js stdlib:
 
 ```bash
 # Launch from root using Graviton CLI:
-grav web
+grav agent
 
 # Or run directly from web/:
 cd web

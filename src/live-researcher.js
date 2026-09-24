@@ -1,4 +1,4 @@
-// src/live-researcher.js - Graviton V5.0.0 Library Grounding & API Invariants Engine
+// src/live-researcher.js - Graviton V5.1.1 Library Grounding & API Invariants Engine
 // Ingests modern library specifications and ecosystem invariants.
 
 export const GROUNDED_LIBRARY_REGISTRY = {

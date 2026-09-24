@@ -1,4 +1,4 @@
-// src/workspace-helper.js - Graviton V5.0.0 Workspace Utilities & Secret Scrubbing
+// src/workspace-helper.js - Graviton V5.1.1 Workspace Utilities & Secret Scrubbing
 import fs from 'fs';
 import path from 'path';
 

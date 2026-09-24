@@ -1,4 +1,4 @@
-// src/symbolic-refactor.js - Graviton V5.0.0 Symbolic Refactoring Engine
+// src/symbolic-refactor.js - Graviton V5.1.1 Symbolic Refactoring Engine
 // AST-guided safe symbol renaming and call-site migrations across workspace files.
 
 import fs from 'fs';

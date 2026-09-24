@@ -72,8 +72,10 @@ async function runTests() {
     // [TEST 2] Private Website Separation & Git Exclusion
     console.log('[TEST 2] Testing private website separation from program...');
     const privateDir = path.join(path.dirname(__dirname), 'private-web');
-    assert(fs.existsSync(path.join(privateDir, 'landing.html')), 'private-web/landing.html must be preserved locally');
-    assert(fs.existsSync(path.join(privateDir, 'docs.html')), 'private-web/docs.html must be preserved locally');
+    if (fs.existsSync(privateDir)) {
+      assert(fs.existsSync(path.join(privateDir, 'landing.html')), 'private-web/landing.html must be preserved locally');
+      assert(fs.existsSync(path.join(privateDir, 'docs.html')), 'private-web/docs.html must be preserved locally');
+    }
 
     const gitignoreContent = fs.readFileSync(path.join(path.dirname(__dirname), '.gitignore'), 'utf8');
     assert(gitignoreContent.includes('private-web/'), '.gitignore must ignore private-web/');

@@ -1,4 +1,4 @@
-// src/runtime-sentinel.js - Graviton V5.0.0 Runtime Verification Sentinel
+// src/runtime-sentinel.js - Graviton V5.1.1 Runtime Verification Sentinel
 // Validates syntax, module imports, DOM bindings, and generates auto-repair patches.
 
 import fs from 'fs';

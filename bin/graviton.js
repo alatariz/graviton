@@ -228,7 +228,7 @@ async function main() {
     console.log(`
 \x1b[1m\x1b[36mGRAVITON\x1b[0m — Autonomous AI Acceleration Layer for Antigravity \x1b[90m(CLI: \x1b[33mgraviton\x1b[90m or \x1b[33mgrav\x1b[90m)\x1b[0m
 
-\x1b[1mUSAGE\x1b[0m \x1b[90m(Run with 'graviton' or shorthand 'grav')\x1b[0m
+\x1b[1mUSAGE\x1b[0m
   graviton "<prompt>"            (or: grav "<prompt>")
   graviton <file> [prompt]       (Auto-transpiles .docx, .pdf, .pptx, .xlsx, .csv, code)
   graviton -c [number] [prompt]  (Resume or switch active conversation topic)
@@ -243,14 +243,7 @@ async function main() {
   -n, --new                      Start a fresh conversation topic explicitly
   --dry-run                      Simulate context & inspect estimated tokens without invoking AI
 
-\x1b[1mAUTONOMOUS ENGINES\x1b[0m \x1b[90m(Run automatically inside every prompt execution)\x1b[0m
-  ● Ambiguity Clarifier          Auto-detects missing bounds & expands engineering specs
-  ● Design Intelligence          Auto-injects 2026 design tokens, themes & WCAG guidelines
-  ● Code Property Graph (CPG)    Auto-pins target files & calculates dependency impact
-  ● Runtime Sentinel             Auto-verifies syntax & DOM bindings post-execution
-  ● Syntax Self-Healer           Auto-repairs broken brackets, JSON commas & missing imports
-
-\x1b[1mCORE COMMANDS\x1b[0m \x1b[90m(Run with 'graviton' or 'grav')\x1b[0m
+\x1b[1mCOMMANDS\x1b[0m
   "<raw_text>"                   [DEFAULT] Synthesize prompt & execute with autonomous engines
   check, verify, audit           Run unified diagnostic suite (Sentinel + Security + Dead-Code + CPG)
   blast <file>                   Calculate blast radius & downstream dependent ripple effect
@@ -259,7 +252,7 @@ async function main() {
   refactor <file> <old> <new>    AST-guided safe symbol renaming across workspace (--apply to execute)
   diff                           Review colorized line-by-line diff of recent modifications
   undo, rollback, rb             Revert files modified or created during the most recent AI session
-  agent, web, dashboard, ui      Launch localhost-only visual Gravity Agent (http://localhost:3000)
+  agent, web, ui                 Launch localhost-only visual Gravity Agent (http://localhost:3000)
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
   stats, hud                     Display lifetime token & dollar savings dashboard + active ports
   stop [port|all]                Terminate background dev daemon or free blocked development port
@@ -313,7 +306,7 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '5.0.0';
+    let version = '5.1.1';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
@@ -375,7 +368,7 @@ async function main() {
   }
 
   // 4b. LOCALHOST GRAVITON AGENT (Gravity Agent)
-  if (command === 'agent' || command === 'web' || command === 'studio' || command === 'ui' || command === 'dashboard' || command === '--agent' || command === '--dashboard') {
+  if (command === 'agent' || command === 'web' || command === 'studio' || command === 'ui' || command === '--agent') {
     const webDir = path.join(__dirname, '..', 'web');
     const serverPath = path.join(webDir, 'server.js');
     if (fs.existsSync(serverPath)) {

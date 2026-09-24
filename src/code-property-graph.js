@@ -1,4 +1,4 @@
-// src/code-property-graph.js - Graviton V5.0.0 Code Property Graph (CPG) & Semantic Relational Memory
+// src/code-property-graph.js - Graviton V5.1.1 Code Property Graph (CPG) & Semantic Relational Memory
 // Multi-dimensional AST, Call Graph, and Blast Radius Engine.
 
 import fs from 'fs';

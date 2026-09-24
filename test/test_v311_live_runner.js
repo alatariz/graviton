@@ -111,8 +111,11 @@ async function runTests() {
     await new Promise(r => setTimeout(r, 200));
     fs.writeFileSync(path.join(testDir, 'game.js'), 'console.log("game updated!");', 'utf8');
 
-    // Wait for debounced watcher broadcast (~300ms)
-    await new Promise(r => setTimeout(r, 400));
+    // Poll for debounced watcher broadcast (up to 3000ms for virtualized CI runners)
+    for (let i = 0; i < 30; i++) {
+      if (reloadEventReceived) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
     sseReq.destroy();
 
     assert.strictEqual(reloadEventReceived, true, 'SSE client must receive reload event when file is modified');

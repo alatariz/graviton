@@ -1,4 +1,4 @@
-// src/ambiguity-clarifier.js - Graviton V5.0.0 Requirement Specification Clarifier
+// src/ambiguity-clarifier.js - Graviton V5.1.1 Requirement Specification Clarifier
 // Analyzes underspecified prompts and deterministically synthesizes technical constraints.
 
 export const DOMAIN_PATTERNS = {

@@ -1,4 +1,4 @@
-// src/design-intelligence.js - Graviton V5.0.0 Design Intelligence Matrix
+// src/design-intelligence.js - Graviton V5.1.1 Design Intelligence Matrix
 // Modern aesthetic standards, dynamic palettes, typography, and UI anti-patterns.
 
 export const DESIGN_CATEGORIES = {
