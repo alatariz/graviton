@@ -806,7 +806,7 @@ export function generateEconomizerDirective(userInput, options = {}) {
   if (options && options.rawOutput) return '';
   const isCreatingNewFile = /\b(?:buat(?:kan)?\s+file\s+baru|create\s+(?:a\s+)?new\s+file|write\s+(?:the\s+)?entire\s+file|buatkan\s+dari\s+nol|scaffold)\b/i.test(userInput || '');
   if (isCreatingNewFile) return '';
-  return `[GRAVITON RESPONSE ECONOMIZER]\nWhen modifying existing files, DO NOT rewrite full files in response output. Output localized Search/Replace blocks or Unified Diffs to conserve tokens.\n`;
+  return `[GRAVITON RESPONSE ECONOMIZER]\nWhen modifying existing files, DO NOT rewrite full files in conversational responses; output localized Search/Replace blocks or Unified Diffs. On disk, for major UI redesigns or large overhauls, you may use write_to_file in a single pass to prevent tool loops.\n`;
 }
 
 /**
@@ -896,7 +896,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
   const scopedTargets = targetScope && Array.isArray(targetScope.targets) ? targetScope.targets : [];
   const uniqueFiles = Array.from(new Set([...matches, ...scopedTargets]));
-  // Autonomous Code Property Graph (CPG) & Blast Radius Guard (V5.1.3)
+  // Autonomous Code Property Graph (CPG) & Blast Radius Guard (V5.1.4)
   let cpgBlastBlock = '';
   if (!options.noCpg && scopedTargets.length > 0) {
     try {
@@ -1089,13 +1089,14 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 5. TOKEN SHIELD & ASSET GUARD: NEVER read, search, or dump raw dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, composer.lock, Cargo.lock) or minified assets (.min.js, .min.css). If analyzing dependencies or troubleshooting packages, read package.json exclusively. Lockfiles contain redundant resolution metadata that wastes tens of thousands of tokens.
 6. [BREVITY PROTOCOL]: Output zero pleasantries, zero conversational filler, and zero apologies. Use terse, dense technical fragments. Execute requested tasks directly using tools without asking questions. Always complete requested actions before finishing.
 7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
-8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.
+8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in conversational responses; provide localized Search/Replace blocks or Unified Diffs. For major UI redesigns, large layout overhauls, or when modifying > 30% of a file on disk: USE write_to_file (with Overwrite: true) to write the complete updated file in A SINGLE PASS. NEVER loop between view_file and replace_file_content on the same file more than 2 times.
 9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.
 10. [AUTONOMOUS DIRECT EXECUTION - ZERO APPROVAL REQUESTS]: You are executing with full autonomous privileges (--dangerously-skip-permissions). NEVER output phrases requesting user approval or review, such as "AWAITING USER APPROVAL", "SUMMARY OF ACTIONABLE DECISIONS", "Please review the implementation plan and approve", or ask the user for confirmation. Execute modifications immediately and autonomously.
-11. [ANTI-EXPLORATION & SURGICAL TOOL DISCIPLINE]: The target files for this task are explicitly pinned and outlined above. Do NOT perform exploratory file scanning (grep_search or repeated view_file). Inspect only the necessary file sections in a single pass and execute localized edits immediately. Do NOT exceed 10 tool calls per prompt.`.replace(/\r\n/g, '\n');
+11. [ANTI-EXPLORATION & MAXIMUM 8 TOOL STEPS]: You have a strict budget of at most 8 tool calls for this entire turn. All needed target files and AST outlines are already pinned. Do NOT run directory commands (Get-ChildItem, ls, dir). Do NOT call view_file repeatedly on files you have already viewed. Make your edits decisively and provide your response within 8 steps.`.replace(/\r\n/g, '\n');
 
-  // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
-  const workspaceBlock = isContinuous
+  // Delta Prompting: in continuous sessions, omit repetitive workspace tree map only if targets are already pinned
+  const hasTargets = targetScope && Array.isArray(targetScope.targets) && targetScope.targets.length > 0;
+  const workspaceBlock = (isContinuous && hasTargets)
     ? `[GRAVITON SESSION CONTINUITY ACTIVE]\nWorkspace tree already indexed in previous turn. Delta Target Scope applied below.`
     : workspaceInfo;
 

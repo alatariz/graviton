@@ -127,6 +127,9 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
 
   const scoredFiles = [];
 
+  const isUiPrompt = /\b(?:tampilan|ui|clean|desain|layout|halaman|view|warna|font|tombol|game|arena|minimalis|norak|comfy|kiri|kanan|tengah|modal|tab|navbar|header|footer)\b/i.test(promptLower);
+  const isLogicPrompt = /\b(?:soal|level|kunci|jawaban|hint|score|timer|logic|srs|quiz|formula|rumus|fungsi|hitung|evaluator|exercise|pelajaran|materi|state|storage)\b/i.test(promptLower);
+
   for (const relFile of allFiles) {
     const lowerRel = relFile.toLowerCase();
     const baseName = path.basename(relFile).toLowerCase();
@@ -149,6 +152,25 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
       }
     }
 
+    // 3. Semantic Role & Extension matching
+    if (isUiPrompt) {
+      if (baseName.endsWith('.html') || baseName.endsWith('.jsx') || baseName.endsWith('.tsx') || baseName.endsWith('.vue')) {
+        score += 55;
+      } else if (baseName.endsWith('.css') || baseName.endsWith('.scss') || baseName.endsWith('.tailwind')) {
+        score += 35;
+      }
+    }
+
+    if (isLogicPrompt) {
+      if (baseName.endsWith('.js') || baseName.endsWith('.ts') || baseName.endsWith('.py')) {
+        if (/app|main|index|logic|srs|eval|exercise|game|core/i.test(baseName)) {
+          score += 45;
+        } else {
+          score += 25;
+        }
+      }
+    }
+
     if (score > 0) {
       scoredFiles.push({ file: relFile, score });
     }
@@ -158,7 +180,7 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
   let targets = scoredFiles.slice(0, 3).map(s => s.file);
   let isLastTouch = false;
 
-  // If no high-confidence target was found, or if it's an ambiguous follow-up, use Last-Touch Context
+  // Fallback 1: Last-Touch Context
   if (targets.length === 0 || (isFollowUpPrompt(prompt) && targets.length === 0)) {
     const lastTouched = getLastTouchedFiles(cwd);
     if (lastTouched.length > 0) {

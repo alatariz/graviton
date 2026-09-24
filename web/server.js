@@ -862,12 +862,17 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           });
 
           liveConvId = runRes.conversationId || liveConvId || getLatestConversationId();
-          const cleanOutput = extractCleanAssistantResponse(
+          let cleanOutput = extractCleanAssistantResponse(
             cleanText || runRes.cleanResponse || runRes.accumulatedText || '',
             targetCwd,
             liveConvId,
             true
           );
+
+          if (!cleanOutput && runRes.failReason) {
+            cleanOutput = `[GRAVITON EXECUTION HALTED]\n${runRes.failReason}\nAll file modifications made on disk were safely preserved.`;
+            sendEvent('delta', { text: cleanOutput });
+          }
 
           try {
             autoHealWorkspaceFiles(targetCwd);
@@ -942,7 +947,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
 
           executionResult = {
             status: runRes.status === 0 || runRes.status === null ? 'completed' : 'error',
-            output: cleanOutput || 'Session executed successfully.'
+            output: cleanOutput || runRes.failReason || 'Session executed successfully.'
           };
         } catch (execErr) {
           executionResult = {

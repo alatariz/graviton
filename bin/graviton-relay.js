@@ -575,7 +575,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let toolLineActive = false;
     let streamLineBuffer = '';
     let toolExecutionCount = 0;
-    const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || (options.isDeep ? 50 : 35);
+    const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || (options.isDeep ? 20 : 12);
+    const fileViewTracker = {};
 
     const processStreamChunk = (chunk, isFinal = false) => {
       streamLineBuffer += chunk;
@@ -670,6 +671,13 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
                 if (toolName === 'view_file') {
                   const file = params.AbsolutePath || params.TargetFile || '';
+                  if (file) {
+                    const normFile = path.resolve(file);
+                    fileViewTracker[normFile] = (fileViewTracker[normFile] || 0) + 1;
+                    if (fileViewTracker[normFile] >= 3) {
+                      process.stdout.write(`\n\x1b[33m[GRAVITON ANTI-LOOP]\x1b[0m "${path.basename(file)}" inspected ${fileViewTracker[normFile]}x. Enforcing direct edits...\x1b[0m\n`);
+                    }
+                  }
                   toolDesc = `\x1b[36m●  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
                   const file = params.TargetFile || params.AbsolutePath || '';
@@ -839,9 +847,17 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
         return reject(new Error(failReason || `[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
       }
 
-      const finalCleanText = cleanAccumulatedText
+      let finalCleanText = cleanAccumulatedText
         ? cleanAccumulatedText.trim()
         : extractCleanAssistantResponse('', executionCwd, latestConvId, true);
+
+      if (!finalCleanText && aborted && failReason) {
+        if (/loop limit exceeded|circuit breaker/i.test(failReason)) {
+          finalCleanText = `[GRAVITON CIRCUIT BREAKER ACTIVE]\nTool execution limit reached (${MAX_TOOL_STEPS} steps). Execution was automatically halted to prevent runaway token expenditure.\nAll file modifications made up to this step were preserved on disk.`;
+        } else {
+          finalCleanText = `[GRAVITON NOTICE]: Execution halted (${failReason}).`;
+        }
+      }
 
       resolve({
         status: finalStatus,
