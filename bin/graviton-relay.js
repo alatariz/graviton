@@ -573,6 +573,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let aborted = false;
     let failReason = null;
     let toolLineActive = false;
+    let streamLineBuffer = '';
     let toolExecutionCount = 0;
     const defaultMaxSteps = options.isFast ? 15 : (options.isDeep ? 40 : 25);
     const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || defaultMaxSteps;
