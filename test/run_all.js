@@ -44,7 +44,19 @@ const testFiles = [
   'test_v313_model_selector.js',
   'test_v314_granular_undo_and_model_fix.js',
   'test_v315_dashboard_ide_api.js',
-  'test_v316_ide_features.js'
+  'test_v316_ide_features.js',
+  'test_v317_web_ide_streaming.js',
+  'test_v400_synthetic_agi.js',
+  'test_v410_design_intelligence.js',
+  'test_v420_runtime_sentinel.js',
+  'test_v430_live_researcher.js',
+  'test_v440_adversarial_critic.js',
+  'test_v450_code_property_graph.js',
+  'test_v460_test_generator.js',
+  'test_v470_symbolic_refactor.js',
+  'test_v480_dead_code_cleaner.js',
+  'test_v490_ambiguity_clarifier.js',
+  'test_v500_unified_orchestrator.js'
 ];
 
 console.log('\x1b[1m\x1b[36m===============================================================');

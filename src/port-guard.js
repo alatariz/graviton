@@ -1,4 +1,4 @@
-// src/port-guard.js - Graviton V3.0.0 Background Daemon & Port Guard
+// src/port-guard.js - .0.0 Background Daemon & Port Guard
 import { execSync, spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Graviton V3.0.0 Port Guard & Daemon Manager
+ * .0.0 Port Guard & Daemon Manager
  * Detects and frees blocked ports, manages background dev server processes,
  * and ensures no orphan zombie servers leak on Windows or Unix.
  */
@@ -141,12 +141,56 @@ export function killProcessOnPort(port) {
   return { port: p, freed: false, pid: found.pid, error: `Could not terminate PID ${found.pid} on port ${p}.` };
 }
 
+let lastPortsCache = null;
+let lastPortsCacheTime = 0;
+
 /**
  * Scans common local development ports and reports listening processes.
+ * High-performance single-pass parser with 2.5s TTL cache.
  * @param {number[]} commonPorts
  * @returns {Array<{ port: number, pid: number }>}
  */
 export function listActivePorts(commonPorts = [3000, 3001, 4200, 5173, 8000, 8080, 8081]) {
+  const now = Date.now();
+  if (lastPortsCache && (now - lastPortsCacheTime < 2500)) {
+    return lastPortsCache;
+  }
+
+  const isWindows = process.platform === 'win32';
+  if (isWindows) {
+    try {
+      const output = execSync('netstat -ano -p tcp', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+      const lines = output.split(/\r?\n/);
+      const portMap = new Map();
+      for (const line of lines) {
+        if (!line.includes('LISTENING')) continue;
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 4) {
+          const localAddr = parts[1];
+          const pidStr = parts[parts.length - 1];
+          const colonIdx = localAddr.lastIndexOf(':');
+          if (colonIdx !== -1) {
+            const portNum = parseInt(localAddr.slice(colonIdx + 1), 10);
+            const pidNum = parseInt(pidStr, 10);
+            if (!isNaN(portNum) && !isNaN(pidNum) && pidNum > 0) {
+              portMap.set(portNum, pidNum);
+            }
+          }
+        }
+      }
+      const active = [];
+      for (const port of commonPorts) {
+        const pid = portMap.get(port);
+        if (pid) {
+          active.push({ port, pid });
+        }
+      }
+      lastPortsCache = active;
+      lastPortsCacheTime = now;
+      return active;
+    } catch {}
+  }
+
   const active = [];
   for (const port of commonPorts) {
     const found = findProcessOnPort(port);
@@ -154,6 +198,8 @@ export function listActivePorts(commonPorts = [3000, 3001, 4200, 5173, 8000, 808
       active.push(found);
     }
   }
+  lastPortsCache = active;
+  lastPortsCacheTime = now;
   return active;
 }
 

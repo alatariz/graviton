@@ -1,4 +1,5 @@
-// src/prompt-architect.js - Graviton V3.5.0 Autonomous Prompt Architect & Dynamic Reprompter
+// src/prompt-architect.js - .0.0 Autonomous Prompt Architect & Dynamic Reprompter
+import { resolveDesignSystem } from './design-intelligence.js';
 
 /**
  * Robust conversational filler phrases in Indonesian and English (without greedy dot matching).
@@ -33,7 +34,7 @@ export function analyzePromptProfile(text) {
     intent = 'game_dev';
   } else if (/\b(?:api|backend|rest|crud|endpoint|express|fastapi|nest|controller|route|microservice)\b/i.test(clean)) {
     intent = 'backend_api';
-  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css|trello|kanban|todo|spotify|ecommerce|shop|store|calculator|kalkulator|editor|aplikasi|app|web\s*app)\b/i.test(clean)) {
+  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css|trello|kanban|todo|spotify|ecommerce|shop|store|calculator|kalkulator|editor|aplikasi|app|web|website|web\s*app)\b/i.test(clean)) {
     intent = 'frontend_ui';
   } else if (/\b(?:database|sql|table|schema|migration|bigquery|postgres|mysql|sqlite|query)\b/i.test(clean)) {
     intent = 'database_sql';
@@ -255,43 +256,50 @@ export function expandSparsePrompt(promptText, intent, options = {}) {
       `6. Testing & Health: Add a '/health' endpoint and automated test suite verifying all routes.`;
   }
 
-  // 3. FRONTEND & FULL-STACK WEB APPLICATION BLUEPRINT (Trello, Spotify, SaaS, Dashboards)
+  // 3. FRONTEND & FULL-STACK WEB APPLICATION BLUEPRINT (2026 Modern Design Standard)
   if (intent === 'frontend_ui') {
+    const ds = resolveDesignSystem(cleanPrompt, intent);
     const isWebAppClone = /\b(?:clone|cloning|duplikat|saas|trello|kanban|spotify|ecommerce|shop|store)\b/i.test(cleanPrompt)
       || (/\b(?:app|aplikasi)\b/i.test(cleanPrompt) && !/\b(?:layout|component|navbar|modal)\b/i.test(cleanPrompt));
     if (isWebAppClone) {
-      return `[ARCHITECTED TECHNICAL SPECIFICATION: Production Interactive Web Application]\n` +
+      return `[ARCHITECTED TECHNICAL SPECIFICATION: Production Interactive Web Application - 2026 Modern Design Standard]\n` +
         `User Request: "${cleanPrompt}"\n\n` +
-        `Execute complete implementation with clean, modular HTML5, CSS3, and vanilla JavaScript:\n\n` +
-        `1. Semantic Structure & Component Architecture:\n` +
-        `   - Semantic HTML5 layout with accessibility roles and ARIA labels adapting cleanly from mobile (360px) to ultra-wide desktop.\n` +
-        `   - Header / Navigation, Main workspace view, dynamic sidebar, and modal dialog system.\n\n` +
-        `2. Responsive Layout & Views:\n` +
-        `   - Responsive Flexbox/Grid adapting gracefully across viewports.\n\n` +
-        `3. Reactive State Management & Local Persistence:\n` +
-        `   - Centralized reactive state store managing user entities, active views, and filter states.\n` +
-        `   - Automatic localStorage synchronization ensuring full data persistence across browser reloads with seed initial records.\n\n` +
-        `4. Core Functional Mechanisms & Full CRUD operations:\n` +
-        `   - Full CRUD operations (Create, Read, Update, Delete) for main domain entities.\n` +
-        `   - Interactive controls: Drag-and-drop or reordering, search/filter inputs with real-time feedback, and sorting.\n` +
-        `   - Keyboard shortcuts & focus management (Escape to close modals, Enter to submit, Tab navigation).\n\n` +
-        `5. Design System & Theming:\n` +
-        `   - Modern styling with CSS variables (tokens for colors, typography, elevation shadows, border radius) with dark/light mode toggle.\n\n` +
-        `6. Polish, Notifications & Feedback:\n` +
-        `   - Non-blocking toast notification system for success, warning, and error alerts.\n` +
-        `   - Micro-interactions, smooth hover transitions, loading skeletons, and empty state illustrations.\n\n` +
-        `7. Zero-Stub Production Guarantee:\n` +
-        `   - Self-contained, single-file or cleanly modularized bundle ready to open in any browser immediately.`;
+        `Execute complete implementation with modern 2026 web design standards, clean HTML5, CSS3, and vanilla JavaScript:\n\n` +
+        `1. 2026 Modern Visual Design System & Aesthetics (${ds.category}):\n` +
+        `   - Design Pattern & Style: ${ds.pattern} with ${ds.style}.\n` +
+        `   - Color Palette Tokens: Background (${ds.palette.bg}), Surfaces (${ds.palette.surface}), Borders (${ds.palette.border}), Primary Accent (${ds.palette.primary}), Text (${ds.palette.text}), Muted (${ds.palette.muted}).\n` +
+        `   - Contemporary Typography: High-legibility sans-serif stack (${ds.typography}), gradient hero headings (linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)), and uppercase tracked badge pills.\n` +
+        `   - Key Visual Effects: ${ds.keyEffects}.\n` +
+        `   - Anti-Dated Guarantee: Strictly NO default unstyled HTML tables, NO plain gray backgrounds, NO standard browser blue buttons. Every component must be refined with custom sleek scrollbars, rounded geometry (border-radius: 8px to 14px), and inline SVGs.\n` +
+        `   - Strict Anti-Patterns: ${ds.antiPatterns}.\n\n` +
+        `2. Micro-Interactions, Motion & Feedback:\n` +
+        `   - Hardware-accelerated smooth transitions (transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1)).\n` +
+        `   - Hover lift effects (transform: translateY(-2px)) and tactile button press depression (transform: scale(0.98)).\n` +
+        `   - Elegant non-blocking toast notifications (auto-dismissing after 3s) for all user actions instead of primitive alert().\n` +
+        `   - Glassmorphic modal dialog with backdrop blur (Escape key and outside-click dismiss).\n\n` +
+        `3. Responsive Fluid Layout & Navigation:\n` +
+        `   - Sticky / floating top navigation bar with brand badge, search/filter input, and quick action buttons.\n` +
+        `   - Fluid CSS Grid / Flexbox layout adapting seamlessly from 360px mobile viewports to ultra-wide displays without horizontal scroll.\n\n` +
+        `4. Reactive State Management & Local Persistence:\n` +
+        `   - Centralized reactive state store managing user entities, active views, search queries, and filter states.\n` +
+        `   - Automatic localStorage synchronization ensuring full data persistence across browser reloads with pre-seeded initial records.\n\n` +
+        `5. Core Functional Mechanisms & Full CRUD:\n` +
+        `   - Full CRUD operations (Create, Read, Update, Delete) with instant DOM updates.\n` +
+        `   - Real-time search filter and category pills with live count indicators.\n` +
+        `   - Empty state placeholders with clean SVG graphics when items or search results are empty.\n\n` +
+        `6. Zero-Stub Production Guarantee:\n` +
+        `   - 100% complete, runnable, standalone code ready to view in browser immediately with zero dependencies.`;
     }
 
-    return `[ARCHITECTED TECHNICAL SPECIFICATION: Responsive UI Component]\n` +
+    return `[ARCHITECTED TECHNICAL SPECIFICATION: 2026 Ultra-Modern Responsive UI Component - ${ds.category}]\n` +
       `User Request: "${cleanPrompt}"\n\n` +
-      `Implement production-ready user interface:\n` +
-      `1. Semantic Structure: Clean semantic HTML5 elements with accessibility roles and ARIA labels.\n` +
-      `2. Responsive Layout: CSS Flexbox/Grid adapting gracefully from mobile (360px) to desktop (1920px).\n` +
-      `3. Interactive State: Reactive event handling, keyboard navigation (Tab/Esc/Enter), and focus management.\n` +
-      `4. Design System: Modern styling with CSS variables (tokens for colors, spacing, radius, transitions) supporting dark/light mode.\n` +
-      `5. Polish: Subtle transitions, empty states, and loading indicators.`;
+      `Implement production-ready user interface with 2026 design excellence:\n` +
+      `1. Semantic Structure: Clean semantic HTML5 elements with accessibility roles and ARIA labels adapting from mobile (360px) to ultra-wide.\n` +
+      `2. Responsive Layout: Responsive Flexbox/Grid adapting gracefully across viewports without horizontal overflow.\n` +
+      `3. Design System & 2026 Aesthetics: ${ds.style}. Color Tokens: bg=${ds.palette.bg}, surface=${ds.palette.surface}, border=${ds.palette.border}, primary=${ds.palette.primary}, text=${ds.palette.text}. Typography: ${ds.typography}.\n` +
+      `4. Interactive State & Micro-Interactions: Reactive event handling, smooth hover transforms (translateY(-2px)), button active states, keyboard navigation (Tab/Esc/Enter), and non-blocking toast notifications.\n` +
+      `5. Zero-Dated Polish: No default unstyled HTML elements, custom sleek scrollbars, gradient headings, and inline SVG icons.\n` +
+      `6. Anti-Patterns: ${ds.antiPatterns}.`;
   }
 
   // 4. DATABASE / SQL BLUEPRINT
@@ -305,16 +313,18 @@ export function expandSparsePrompt(promptText, intent, options = {}) {
       `4. Performant Queries: Avoid SELECT *; use explicit column projections and parameterized filters.`;
   }
 
-  // Universal Fallback for any sparse creation request
+  // Universal Fallback for any sparse creation request (2026 Modern Standard)
   const isCreationVerb = /\b(?:buat(?:kan)?|bikin|create|build|make|scaffold|duplikat|clone|cloning)\b/i.test(cleanPrompt);
   if (isCreationVerb) {
-    return `[ARCHITECTED TECHNICAL SPECIFICATION: Production Web Application]\n` +
+    const ds = resolveDesignSystem(cleanPrompt, 'general');
+    return `[ARCHITECTED TECHNICAL SPECIFICATION: 2026 Production Web Application - ${ds.category}]\n` +
       `User Request: "${cleanPrompt}"\n\n` +
-      `Execute complete implementation with clean, modular architecture:\n\n` +
-      `1. Modular Structure & Responsive Layout: Clean semantic HTML5, modern CSS3 Flexbox/Grid adapting to mobile and desktop.\n` +
-      `2. State Management & Persistence: Centralized reactive state with localStorage persistence and seed initial data.\n` +
-      `3. Core Functional Features: Full implementation of all requested mechanisms with interactive handlers.\n` +
-      `4. Defensive Guardrails: Input validation, error feedback, keyboard navigation, and zero stubs.`;
+      `Execute complete implementation with 2026 modern design standards:\n\n` +
+      `1. 2026 Design System: ${ds.pattern} with ${ds.style}. Color tokens: bg=${ds.palette.bg}, surface=${ds.palette.surface}, border=${ds.palette.border}, primary=${ds.palette.primary}.\n` +
+      `2. Responsive Fluid Layout: CSS Grid/Flexbox adapting gracefully from mobile to desktop without horizontal scroll.\n` +
+      `3. State & Persistence: Centralized reactive state with localStorage persistence and pre-populated seed data.\n` +
+      `4. Interactive Polish: Micro-interactions (hover lift, active press), non-blocking toast alerts, modal dialogs, and zero stubs.\n` +
+      `5. Strict Anti-Patterns: ${ds.antiPatterns}.`;
   }
 
   return cleanPrompt;

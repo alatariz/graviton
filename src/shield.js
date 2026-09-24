@@ -1,4 +1,4 @@
-// src/shield.js - Graviton V2.1.0 Token Shield (Lockfile & Minified Asset Guard)
+// src/shield.js - .0.0 Token Shield (Lockfile & Minified Asset Guard)
 import fs from 'fs';
 import path from 'path';
 

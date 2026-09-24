@@ -1,4 +1,4 @@
-// src/markitdown.js - Graviton V2.3.0 Zero-Dependency Office, PDF & Document to Markdown Transpiler
+// src/markitdown.js - .0.0 Zero-Dependency Office, PDF & Document to Markdown Transpiler
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';

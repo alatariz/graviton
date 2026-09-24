@@ -1,11 +1,11 @@
-// src/session-manager.js - Graviton V3.0.0 Workspace Conversation Manager
+// src/session-manager.js - .0.0 Workspace Conversation Manager
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import readline from 'readline';
 
 /**
- * Graviton V3.0.0 Workspace Conversation Manager
+ * .0.0 Workspace Conversation Manager
  * Provides Antigravity IDE-style conversation history management:
  * - Multi-conversation tracking per workspace (.graviton-conversations.json)
  * - Auto-generated human-readable topic titles
@@ -325,6 +325,9 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
     return { id: null, title: 'No Conversation', turns: [], totalTurns: 0, cumulativeTokens: 0, activeFiles: [] };
   }
 
+// High-speed transcript cache keyed by transcript file path, mtime, and size
+const transcriptCache = new Map();
+
   const title = targetConv ? targetConv.title : 'Conversation';
   let transcriptFile = null;
   for (const bDir of getBrainCandidates()) {
@@ -339,9 +342,16 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
 
   if (transcriptFile && fs.existsSync(transcriptFile)) {
     try {
-      const content = fs.readFileSync(transcriptFile, 'utf8');
-      const lines = content.trim().split(/\r?\n/);
-      let currentAssistantBuffer = [];
+      const stat = fs.statSync(transcriptFile);
+      const cached = transcriptCache.get(transcriptFile);
+      if (cached && cached.mtime === stat.mtimeMs && cached.size === stat.size) {
+        for (const t of cached.parsedTurns) {
+          parsedTurns.push(t);
+        }
+      } else {
+        const content = fs.readFileSync(transcriptFile, 'utf8');
+        const lines = content.trim().split(/\r?\n/);
+        let currentAssistantBuffer = [];
 
       const flushAssistant = () => {
         if (currentAssistantBuffer.length > 0) {
@@ -405,8 +415,10 @@ export function getConversationHistory(cwd = process.cwd(), indexOrId = null, ma
       }
 
       flushAssistant();
-    } catch {}
-  }
+      transcriptCache.set(transcriptFile, { mtime: stat.mtimeMs, size: stat.size, parsedTurns: [...parsedTurns] });
+    }
+  } catch {}
+}
 
   // Fallback to internal registry history or lastPrompt if transcript wasn't found or empty
   if (parsedTurns.length === 0) {

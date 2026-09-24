@@ -1,4 +1,4 @@
-// src/scaffolder.js - Graviton V3.9.0 Zero-Token Project Scaffolder Engine
+// src/scaffolder.js - .0.0 Zero-Token Project Scaffolder Engine
 import fs from 'fs';
 import path from 'path';
 
@@ -493,69 +493,314 @@ export function getScaffoldTemplate(domain) {
 </body>
 </html>`;
 
-    default: // fullstack_saas or general_web
+    default: // fullstack_saas or general_web (2026 Ultra-Modern Standard)
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modern Application</title>
+  <title>Graviton 2026 Modern Application</title>
   <style>
     :root {
-      --bg: #040711; --surface: #060c1d; --card: rgba(8, 16, 34, 0.75);
-      --border: rgba(56, 189, 248, 0.15); --aqua: #00f0ff; --text: #f1f5f9;
+      --bg: #07090e;
+      --surface: rgba(14, 18, 28, 0.75);
+      --surface-card: rgba(20, 26, 42, 0.65);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #38bdf8;
+      --cyan: #38bdf8;
+      --cyan-subtle: rgba(56, 189, 248, 0.12);
+      --green: #10b981;
+      --green-subtle: rgba(16, 185, 129, 0.12);
+      --violet: #818cf8;
+      --red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 12px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 2rem; }
-    .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
-    header { border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
-    h1 { color: var(--aqua); font-size: 1.5rem; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
-    input, button { font-family: inherit; font-size: 0.9rem; padding: 0.6rem 1rem; border-radius: 6px; }
-    input { background: #02050e; border: 1px solid var(--border); color: #fff; width: 100%; margin-bottom: 1rem; outline: none; }
-    input:focus { border-color: var(--aqua); }
-    button { background: var(--aqua); color: #040711; border: none; font-weight: bold; cursor: pointer; }
-    button:hover { opacity: 0.9; }
-    .item-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
-    .item-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 6px; }
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 60%);
+      color: var(--text-main);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 2.5rem 1.5rem;
+      user-select: none;
+    }
+    .container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      background: var(--cyan-subtle);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+    .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-val { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+    .main-card {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: rgba(10, 14, 22, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+    button {
+      background: var(--cyan);
+      color: #000000;
+      border: none;
+      font-weight: 600;
+      padding: 0.75rem 1.4rem;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    button:hover { opacity: 0.92; transform: translateY(-1px); }
+    button:active { transform: scale(0.98); }
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .item-row {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    .item-row:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(26, 34, 54, 0.75);
+    }
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .item-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .btn-delete {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--red);
+      padding: 0.35rem 0.75rem;
+      font-size: 12px;
+    }
+    .btn-delete:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--red);
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #111624;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #fff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Modern Web Application</h1>
-      <span id="badge" style="font-size: 0.8rem; color: #94a3b8;">Local State Active</span>
+      <div>
+        <h1 class="brand-title">Modern Web Application</h1>
+        <div style="font-size: 13px; color: var(--text-dim); margin-top: 2px;">2026 Autonomous Architecture</div>
+      </div>
+      <div class="badge-pill">Local Persistence Active</div>
     </header>
-    <div class="card">
-      <input type="text" id="item-input" placeholder="Enter new item...">
-      <button onclick="addItem()">Add Record</button>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Active Records</span>
+        <span class="stat-val" id="valTotal">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Architecture</span>
+        <span class="stat-val" style="font-size:1.2rem; color:var(--cyan); margin-top:4px;">Glassmorphic</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Storage Engine</span>
+        <span class="stat-val" style="font-size:1.2rem; color:var(--green); margin-top:4px;">localStorage</span>
+      </div>
+    </div>
+
+    <div class="main-card">
+      <div class="input-row">
+        <input type="text" id="item-input" placeholder="Type a new item to record..." onkeydown="if(event.key==='Enter')addItem()">
+        <button onclick="addItem()">Add Record</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="search-input" placeholder="Search records..." style="max-width: 260px; padding:0.5rem 0.85rem;" oninput="render()">
+        <span id="counterText" style="font-size:12px; color:var(--text-dim);">Showing all items</span>
+      </div>
+
       <div class="item-list" id="list"></div>
     </div>
   </div>
 
+  <div class="toast" id="toastBox">Action completed</div>
+
   <script>
-    let items = JSON.parse(localStorage.getItem('app_items') || '["Sample Task 1", "Sample Task 2"]');
+    let items = JSON.parse(localStorage.getItem('app_items_2026') || '["Autonomous Task Pipeline", "Zero-Latency Hydration", "Modern 2026 UI Design"]');
+
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 2200);
+    }
+
     function render() {
+      const query = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+      const filtered = items.filter(it => it.toLowerCase().includes(query));
       const list = document.getElementById('list');
-      list.innerHTML = items.map((it, idx) => \`
-        <div class="item-row">
-          <span>\${it}</span>
-          <button style="background: #f43f5e; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="removeItem(\${idx})">Delete</button>
-        </div>
-      \`).join('');
-      localStorage.setItem('app_items', JSON.stringify(items));
+      const totalEl = document.getElementById('valTotal');
+      const counterEl = document.getElementById('counterText');
+
+      if (totalEl) totalEl.textContent = items.length;
+      if (counterEl) counterEl.textContent = query ? \`Filtered: \${filtered.length} of \${items.length}\` : \`Total records: \${items.length}\`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = \`<div style="text-align:center; padding:2rem; color:var(--text-dim); font-size:13px;">No matching records found.</div>\`;
+        return;
+      }
+
+      list.innerHTML = filtered.map((it, idx) => {
+        const realIdx = items.indexOf(it);
+        return \`
+          <div class="item-row">
+            <div class="item-left">
+              <span class="item-dot"></span>
+              <span style="font-size:14px; color:var(--text-main);">\${escapeHtml(it)}</span>
+            </div>
+            <button class="btn-delete" onclick="removeItem(\${realIdx})">Remove</button>
+          </div>
+        \`;
+      }).join('');
+
+      localStorage.setItem('app_items_2026', JSON.stringify(items));
     }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
     function addItem() {
-      const val = document.getElementById('item-input').value.trim();
+      const input = document.getElementById('item-input');
+      const val = input.value.trim();
       if (!val) return;
-      items.push(val);
-      document.getElementById('item-input').value = '';
+      items.unshift(val);
+      input.value = '';
+      showToast('Record added');
       render();
     }
+
     function removeItem(idx) {
-      items.splice(idx, 1);
-      render();
+      if (idx >= 0 && idx < items.length) {
+        const removed = items.splice(idx, 1);
+        showToast('Record removed');
+        render();
+      }
     }
+
     render();
   </script>
 </body>

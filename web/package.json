@@ -1,7 +1,7 @@
 {
   "name": "graviton-web-studio",
-  "version": "3.0.0",
-  "description": "Graviton V3.0.0 Web Studio, Documentation & Visualizer",
+  "version": "5.0.0",
+  "description": "Graviton V5.0.0 Developer Cockpit & Real-time Web IDE",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "type": "module",

@@ -1,4 +1,4 @@
-// src/bundler.js - Graviton V3.7.0 Zero-Setup Standalone App Bundler & Exporter
+// src/bundler.js - .0.0 Zero-Setup Standalone App Bundler & Exporter
 import fs from 'fs';
 import path from 'path';
 

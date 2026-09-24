@@ -1,6 +1,48 @@
-// src/workspace-helper.js - Graviton V3.0.0 Workspace Context & Sensitive Data Scrubbing
+// src/workspace-helper.js - Graviton V5.0.0 Workspace Utilities & Secret Scrubbing
 import fs from 'fs';
 import path from 'path';
+
+export function normalizePath(p) {
+  if (!p || typeof p !== 'string') return '';
+  return p.replace(/\\/g, '/');
+}
+
+export function collectWorkspaceFiles(dir, options = {}) {
+  const maxFiles = options.maxFiles || 500;
+  const extensions = options.extensions ? new Set(options.extensions) : null;
+  const ignoredDirs = new Set(options.ignoredDirs || [
+    'node_modules', '.git', 'dist', 'build', '.gemini', '.cache', 'coverage', '.graviton'
+  ]);
+  const results = [];
+
+  function walk(currentDir) {
+    if (results.length >= maxFiles) return;
+    let entries;
+    try {
+      entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (results.length >= maxFiles) break;
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        if (!ignoredDirs.has(entry.name)) {
+          walk(fullPath);
+        }
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (!extensions || extensions.has(ext)) {
+          results.push(fullPath);
+        }
+      }
+    }
+  }
+
+  walk(dir);
+  return results;
+}
 
 export function redactSecrets(text) {
   if (!text || typeof text !== 'string') return text;
@@ -40,7 +82,7 @@ export function detectWorkspaceContext(cwd = process.cwd()) {
       context.type = 'Python';
     }
 
-    // Capture first 10 source files
+    // Capture first source files
     context.mainFiles = files.filter(f => !f.startsWith('.') && !['node_modules', 'target', 'dist', 'build', '.git'].includes(f)).slice(0, 8);
   } catch (e) {}
 

@@ -1,4 +1,4 @@
-// src/progress-indicator.js - Graviton V3.0.0 Live AI Progress Indicator Controller
+// src/progress-indicator.js - .0.0 Live AI Progress Indicator Controller
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import path from 'path';

@@ -1,4 +1,4 @@
-// src/context-scoper.js - Graviton V3.0.0 Smart Target Pinning & Delta Scoping Engine
+// src/context-scoper.js - .0.0 Smart Target Pinning & Delta Scoping Engine
 import fs from 'fs';
 import path from 'path';
 import { createGravitonFilter } from './ignore-parser.js';

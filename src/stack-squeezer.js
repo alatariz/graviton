@@ -1,4 +1,4 @@
-// src/stack-squeezer.js - Graviton V2.6.0 Smart Stack Trace Squeezer
+// src/stack-squeezer.js - .0.0 Smart Stack Trace Squeezer
 import path from 'path';
 
 /**

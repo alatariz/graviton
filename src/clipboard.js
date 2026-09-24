@@ -1,4 +1,4 @@
-// src/clipboard.js - Graviton V2.1.0 Native Clipboard Ingestion Engine
+// src/clipboard.js - .0.0 Native Clipboard Ingestion Engine
 import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';

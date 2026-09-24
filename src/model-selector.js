@@ -1,6 +1,6 @@
 // src/model-selector.js - Graviton Autonomous Prompt-Aware Model Selector
 /**
- * Graviton V3.13.0 Autonomous Model Selector
+ * .0.0 Autonomous Model Selector
  * 
  * Decoupled Architecture:
  * 1. Effort Resolution:
@@ -159,7 +159,7 @@ export function classifyModelForPrompt(prompt, context = {}) {
  * @returns {{ effort: 'low' | 'medium' | 'high', tier: 'flash' | 'pro', modelName: string, reason: string }}
  */
 export function resolveModelAndEffort(options = {}) {
-  // 1. Resolve effort strictly from CLI flags
+  // 1. Resolve effort strictly from options
   let effort = 'medium';
   if (options.effort) {
     effort = options.effort;
@@ -167,6 +167,21 @@ export function resolveModelAndEffort(options = {}) {
     effort = 'low';
   } else if (options.isDeep) {
     effort = 'high';
+  }
+
+  // Handle Grav mode:
+  // Grav mode is fixed to gemini-3.8-flash with effort medium
+  // because gemini-3.1-pro does not support medium effort.
+  const isGrav = Boolean(options.isGrav || effort === 'grav');
+  if (isGrav) {
+    return {
+      effort: 'medium',
+      agyEffort: 'medium',
+      tier: 'flash',
+      baseModel: 'gemini-3.8-flash',
+      modelName: 'gemini-3.8-flash-medium',
+      reason: 'Grav balanced mode uses gemini-3.8-flash medium (gemini-3.1-pro has no medium tier)'
+    };
   }
 
   // 2. Resolve model tier autonomously from prompt

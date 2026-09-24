@@ -30,16 +30,17 @@ jobs:
         shell: bash
         run: |
           echo "Verifying package.json has 0 runtime dependencies..."
-          node -e "
-            const pkg = require('./package.json');
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
             if (pkg.dependencies && Object.keys(pkg.dependencies).length > 0) {
-              console.error('ERROR: Core Graviton CLI must have 0 runtime dependencies!');
+              console.error("ERROR: Core Graviton CLI must have 0 runtime dependencies!");
               process.exit(1);
             }
-            console.log('✔ Zero runtime dependencies confirmed.');
-          "
+            console.log("Zero runtime dependencies confirmed.");
+          '
 
-      - name: Run Master Test Suite (9 Suites)
+      - name: Run Master Test Suite (50 Suites)
         run: node test/run_all.js
 
       - name: Test CLI Global Binary Resolution
@@ -47,5 +48,4 @@ jobs:
         run: |
           node bin/graviton.js --version
           node bin/graviton.js --help
-          # doc command runs diagnostics; on clean CI runners agy is not installed so exit code 1 is expected
           node bin/graviton.js doc || true

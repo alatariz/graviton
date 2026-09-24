@@ -1,4 +1,4 @@
-// src/budget-guard.js - Graviton V3.1.0 Pre-Flight Budget Guard & Dry-Run Inspector
+// src/budget-guard.js - .0.0 Pre-Flight Budget Guard & Dry-Run Inspector
 import fs from 'fs';
 import path from 'path';
 import { estimateTokens } from './pipeline.js';

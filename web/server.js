@@ -5,7 +5,7 @@ import os from 'os';
 import { spawn, spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { synthesizePrompt, readOdometer } from '../src/pipeline.js';
-import { resolveAgyExecutable, runAntigravityWithAutoAllow } from '../bin/graviton-relay.js';
+import { resolveAgyExecutable, runAntigravityWithAutoAllow, extractCleanAssistantResponse, cleanTerminalOutput } from '../bin/graviton-relay.js';
 import { calculateEconomyMetrics } from '../src/hud.js';
 import { buildDependencyGraph } from '../src/dependency-graph.js';
 import { bundleWebApplication } from '../src/bundler.js';
@@ -31,6 +31,9 @@ import { getSessionDiff } from '../src/diff-viewer.js';
 import { getTelemetry } from '../src/telemetry.js';
 import { resolveTargetScope } from '../src/context-scoper.js';
 import { calculatePreFlightWeight } from '../src/budget-guard.js';
+import { verifyProjectRuntime } from '../src/runtime-sentinel.js';
+import { evaluateWorkspaceAdversarially } from '../src/adversarial-critic.js';
+import { buildCodePropertyGraph, calculateBlastRadius } from '../src/code-property-graph.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,10 +74,10 @@ function getPackageVersion() {
   try {
     if (fs.existsSync(PKG_PATH)) {
       const pkg = JSON.parse(fs.readFileSync(PKG_PATH, 'utf8'));
-      return pkg.version || '3.13.0';
+      return pkg.version || '5.0.0';
     }
   } catch {}
-  return '3.13.0';
+  return '5.0.0';
 }
 
 const MIME_TYPES = {
@@ -227,28 +230,66 @@ export const server = http.createServer(async (req, res) => {
         return;
       }
 
+      let chosenPath = '';
+
       if (process.platform === 'win32') {
         const initial = activeWorkspaceDir.replace(/'/g, "''");
-        const psScript = `Add-Type -AssemblyName System.Windows.Forms; $form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description = 'Select Workspace Directory for Graviton IDE'; $d.ShowNewFolderButton = $true; $d.SelectedPath = '${initial}'; if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.SelectedPath }`;
-        const psRes = spawnSync('powershell.exe', ['-NoProfile', '-Command', psScript], {
-          encoding: 'utf8',
-          timeout: 60000
+        const psScript = `
+Add-Type -AssemblyName System.Windows.Forms
+$form = New-Object System.Windows.Forms.Form
+$form.TopMost = $true
+$form.StartPosition = 'CenterScreen'
+$d = New-Object System.Windows.Forms.FolderBrowserDialog
+$d.Description = 'Select Workspace Directory for Graviton Agent'
+$d.ShowNewFolderButton = $true
+$d.AutoUpgradeEnabled = $true
+$d.SelectedPath = '${initial}'
+if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
+  [Console]::Out.WriteLine($d.SelectedPath)
+}
+`;
+        chosenPath = await new Promise((resolve) => {
+          const child = spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', '-'], {
+            stdio: ['pipe', 'pipe', 'ignore'],
+            windowsHide: true
+          });
+          let out = '';
+          child.stdout.on('data', chunk => out += chunk.toString());
+          child.on('close', () => resolve(out.trim()));
+          child.on('error', () => resolve(''));
+          child.stdin.write(psScript);
+          child.stdin.end();
         });
+      } else if (process.platform === 'darwin') {
+        chosenPath = await new Promise((resolve) => {
+          const child = spawn('osascript', ['-e', 'POSIX path of (choose folder with prompt "Select Workspace Directory")'], {
+            stdio: ['ignore', 'pipe', 'ignore']
+          });
+          let out = '';
+          child.stdout.on('data', chunk => out += chunk.toString());
+          child.on('close', () => resolve(out.trim()));
+          child.on('error', () => resolve(''));
+        });
+      } else {
+        chosenPath = await new Promise((resolve) => {
+          const child = spawn('zenity', ['--file-selection', '--directory', '--title=Select Workspace Directory'], {
+            stdio: ['ignore', 'pipe', 'ignore']
+          });
+          let out = '';
+          child.stdout.on('data', chunk => out += chunk.toString());
+          child.on('close', () => resolve(out.trim()));
+          child.on('error', () => resolve(''));
+        });
+      }
 
-        const chosenPath = (psRes.stdout || '').trim();
-        if (chosenPath && fs.existsSync(chosenPath) && fs.statSync(chosenPath).isDirectory()) {
-          activeWorkspaceDir = path.resolve(chosenPath);
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: true, cwd: activeWorkspaceDir, picked: true }));
-          return;
-        } else {
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ success: false, cancelled: true, cwd: activeWorkspaceDir }));
-          return;
-        }
+      if (chosenPath && fs.existsSync(chosenPath) && fs.statSync(chosenPath).isDirectory()) {
+        activeWorkspaceDir = path.resolve(chosenPath);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, cwd: activeWorkspaceDir, picked: true }));
+        return;
       } else {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ success: false, message: 'Native picker is available on Windows. Use directory input.', cwd: activeWorkspaceDir }));
+        res.end(JSON.stringify({ success: false, cancelled: true, cwd: activeWorkspaceDir }));
         return;
       }
     } catch (e) {
@@ -486,6 +527,53 @@ export const server = http.createServer(async (req, res) => {
         return;
       }
 
+      if (command === 'verify' || command === 'sentinel') {
+        const targetCwd = resolveCwd(args.cwd);
+        const report = verifyProjectRuntime(targetCwd);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'verify', report }));
+        return;
+      }
+
+      if (command === 'audit' || command === 'critique') {
+        const targetCwd = resolveCwd(args.cwd);
+        const report = evaluateWorkspaceAdversarially(targetCwd);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'audit', report }));
+        return;
+      }
+
+      if (command === 'blast') {
+        const targetCwd = resolveCwd(args.cwd);
+        const target = args.target;
+        if (!target) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Target file or symbol is required for blast radius analysis' }));
+          return;
+        }
+        const cpg = buildCodePropertyGraph(targetCwd);
+        const report = calculateBlastRadius(cpg, target);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, command: 'blast', report }));
+        return;
+      }
+
+      if (command === 'cpg') {
+        const targetCwd = resolveCwd(args.cwd);
+        const cpg = buildCodePropertyGraph(targetCwd);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          command: 'cpg',
+          root: cpg.root,
+          totalFiles: cpg.totalFiles,
+          totalSymbols: cpg.totalSymbols,
+          dependencyGraph: cpg.dependencyGraph,
+          reverseDeps: cpg.reverseDeps
+        }));
+        return;
+      }
+
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: `Unknown command: ${command}` }));
     } catch (e) {
@@ -509,16 +597,29 @@ export const server = http.createServer(async (req, res) => {
       const targetCwd = resolveCwd(body.cwd);
       const rawEffort = (body.effort || 'grav').toLowerCase();
       const dryRun = Boolean(body.dryRun);
-      const requestedConvId = body.conversationId || null;
+      const isExplicitNew = Boolean(body.isNew);
+      const activeSession = getActiveConversation(targetCwd);
+
+      // Conversation Continuity: if not explicitly starting new chat, default to workspace's active conversation
+      let requestedConvId = null;
+      if (!isExplicitNew) {
+        if (body.conversationId) {
+          requestedConvId = body.conversationId;
+        } else if (activeSession && activeSession.id) {
+          requestedConvId = activeSession.id;
+        }
+      }
 
       // Map Fast / Grav / Deep (and backwards compatible low / medium / high)
       const isFast = rawEffort === 'fast' || rawEffort === 'low';
       const isDeep = rawEffort === 'deep' || rawEffort === 'high';
-      const effortMode = (rawEffort === 'grav' || rawEffort === 'medium') ? 'medium' : (isFast ? 'low' : (isDeep ? 'high' : undefined));
+      const isGrav = rawEffort === 'grav' || (!isFast && !isDeep);
+      const effortMode = isGrav ? 'grav' : (isFast ? 'low' : 'high');
 
       const modelRouting = resolveModelAndEffort({
         isFast,
         isDeep,
+        isGrav,
         effort: effortMode,
         prompt
       });
@@ -551,6 +652,124 @@ export const server = http.createServer(async (req, res) => {
       stats.tokensSaved = (stats.tokensSaved || 0) + (synthesized.stats?.tokensSaved || 1200);
       saveStats(stats);
 
+      const wantsStream = Boolean(body.stream || req.headers.accept === 'text/event-stream' || parsedUrl.searchParams.get('stream') === 'true');
+
+      // 1. SSE STREAMING RESPONSE (Web IDE Live Feedback)
+      if (wantsStream) {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*'
+        });
+
+        const sendEvent = (event, data) => {
+          try {
+            res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+          } catch {}
+        };
+
+        sendEvent('start', {
+          cwd: targetCwd,
+          conversationId: requestedConvId,
+          effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
+          modelRouting,
+          targetScope,
+          preFlight
+        });
+
+        if (process.env.NODE_ENV === 'test' || body.testMode) {
+          const simulatedId = requestedConvId || 'conv-sim-' + Date.now();
+          sendEvent('tool', { state: 'ACTIVE', tool: 'view_file', desc: 'Inspecting workspace context...' });
+          sendEvent('tool', { state: 'DONE', tool: 'view_file', duration: 0.1 });
+          const mockChunk = `Simulated Antigravity execution for: "${prompt.slice(0, 60)}..." in ${targetCwd}`;
+          sendEvent('delta', { text: mockChunk });
+
+          const odo = readOdometer();
+          const lastTokens = odo.lastSessionTokens || 1200;
+          const savedConv = saveWorkspaceConversation(targetCwd, simulatedId, prompt, {
+            tokens: lastTokens,
+            assistantText: mockChunk,
+            activeFiles: targetScope.files || []
+          });
+          setActiveConversation(targetCwd, simulatedId);
+
+          sendEvent('done', {
+            success: true,
+            conversationId: simulatedId,
+            sessionTokens: (savedConv && savedConv.cumulativeTokens) || lastTokens,
+            lifetimeTokens: odo.totalTokens,
+            response: mockChunk,
+            cleanResponse: mockChunk
+          });
+          res.end();
+          return;
+        }
+
+        let liveConvId = requestedConvId;
+        let cleanText = '';
+
+        try {
+          console.log(`\n\x1b[36m[GRAVITON WEB IDE]\x1b[0m Executing prompt in: \x1b[1m${targetCwd}\x1b[0m (Topic: ${liveConvId ? liveConvId.slice(0, 8) + '...' : 'New Session'})`);
+
+          const runRes = await runAntigravityWithAutoAllow(prompt, {
+            cwd: targetCwd,
+            conversationId: liveConvId || undefined,
+            userPrompt: prompt,
+            effort: modelRouting.agyEffort,
+            model: modelRouting.baseModel,
+            rejectOnError: false,
+            onToolUpdate: (toolEvt) => {
+              sendEvent('tool', toolEvt);
+            },
+            onTextDelta: (deltaText) => {
+              cleanText += deltaText;
+              sendEvent('delta', { text: deltaText });
+            },
+            onResult: (resData) => {
+              if (resData.response) cleanText = resData.response;
+            }
+          });
+
+          liveConvId = runRes.conversationId || liveConvId || getLatestConversationId();
+          const cleanOutput = extractCleanAssistantResponse(
+            cleanText || runRes.cleanResponse || runRes.accumulatedText || '',
+            targetCwd,
+            liveConvId,
+            true
+          );
+
+          const odo = readOdometer();
+          const turnToks = runRes.turnTokens || odo.lastSessionTokens || 1200;
+          let savedConv = null;
+          if (liveConvId) {
+            savedConv = saveWorkspaceConversation(targetCwd, liveConvId, prompt, {
+              tokens: turnToks,
+              assistantText: cleanOutput,
+              activeFiles: targetScope.files || []
+            });
+            setActiveConversation(targetCwd, liveConvId);
+          }
+
+          sendEvent('done', {
+            success: runRes.status === 0 || runRes.status === null,
+            conversationId: liveConvId,
+            sessionTokens: (savedConv && savedConv.cumulativeTokens) || turnToks,
+            lifetimeTokens: odo.totalTokens,
+            response: cleanOutput,
+            cleanResponse: cleanOutput,
+            targetScope,
+            modelRouting
+          });
+        } catch (execErr) {
+          sendEvent('error', { error: execErr.message });
+        } finally {
+          res.end();
+        }
+        return;
+      }
+
+      // 2. STANDARD SYNCHRONOUS JSON RESPONSE (Tests & Standard POST API)
       let executionResult = { status: 'completed', output: '' };
       let effectiveConvId = requestedConvId;
 
@@ -562,20 +781,24 @@ export const server = http.createServer(async (req, res) => {
         };
       } else {
         try {
-          const runRes = runAntigravityWithAutoAllow(prompt, {
+          const runRes = await runAntigravityWithAutoAllow(prompt, {
             cwd: targetCwd,
             conversationId: requestedConvId || undefined,
             userPrompt: prompt,
             effort: modelRouting.agyEffort,
             model: modelRouting.baseModel,
-            sync: true,
-            stdio: 'pipe',
             rejectOnError: false
           });
-          effectiveConvId = requestedConvId || getLatestConversationId();
+          effectiveConvId = runRes.conversationId || requestedConvId || getLatestConversationId();
+          const cleanOutput = extractCleanAssistantResponse(
+            runRes.cleanResponse || runRes.accumulatedText || (runRes.stdout ? runRes.stdout.toString('utf8') : ''),
+            targetCwd,
+            effectiveConvId,
+            true
+          );
           executionResult = {
-            status: 'completed',
-            output: runRes && runRes.stdout ? runRes.stdout.toString('utf8') : 'Session executed successfully.'
+            status: runRes.status === 0 || runRes.status === null ? 'completed' : 'error',
+            output: cleanOutput || 'Session executed successfully.'
           };
         } catch (execErr) {
           executionResult = {
@@ -846,7 +1069,7 @@ export const server = http.createServer(async (req, res) => {
     fs.createReadStream(filePath).pipe(res);
   } else {
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<h1>404 Not Found</h1><p>The requested file does not exist in Graviton Developer Dashboard.</p>');
+    res.end('<h1>404 Not Found</h1><p>The requested file does not exist in Graviton Agent.</p>');
   }
 });
 
@@ -875,13 +1098,13 @@ export function startStudioServer(preferredPort = 3000, maxRetries = 10) {
 
     server.listen(port, () => {
       console.log(`\n\x1b[1m\x1b[36m===============================================================`);
-      console.log(`   GRAVITON DEVELOPER DASHBOARD ONLINE (100% Localhost)`);
+      console.log(`   GRAVITON AGENT ONLINE (Gravity Agent - 100% Localhost)`);
       console.log(`===============================================================\x1b[0m`);
-      console.log(`  Dashboard URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
+      console.log(`  Agent URL : \x1b[1;32mhttp://localhost:${port}\x1b[0m`);
       if (port !== preferredPort) {
         console.log(`  Port Note   : \x1b[90mRunning on fallback port ${port} (preferred port ${preferredPort} in use)\x1b[0m`);
       }
-      console.log(`\x1b[90m  Press Ctrl+C to terminate dashboard.\x1b[0m\n`);
+      console.log(`\x1b[90m  Press Ctrl+C to terminate agent.\x1b[0m\n`);
     });
   }
 

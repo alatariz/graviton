@@ -107,7 +107,8 @@ async function runTests() {
     });
     assert.strictEqual(gravRes.status, 200);
     assert.strictEqual(gravRes.body.effortName, 'Grav');
-    assert.strictEqual(gravRes.body.modelRouting.agyEffort, 'high'); // for gemini-3.1-pro architectural or normal
+    assert.strictEqual(gravRes.body.modelRouting.agyEffort, 'medium'); // fixed to gemini-3.8-flash medium
+    assert.strictEqual(gravRes.body.modelRouting.baseModel, 'gemini-3.8-flash');
 
     // 2c. Deep effort
     const deepRes = await httpPost(TEST_PORT, '/api/chat', {

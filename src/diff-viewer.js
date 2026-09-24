@@ -1,4 +1,4 @@
-// src/diff-viewer.js - Graviton V3.0.0 Colorized Session Diff Viewer
+// src/diff-viewer.js - .0.0 Colorized Session Diff Viewer
 import fs from 'fs';
 import path from 'path';
 

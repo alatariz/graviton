@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GRAVITON DASHBOARD - Autonomous Developer IDE</title>
+  <title>GRAVITON AGENT - Autonomous Developer Agent</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
   <style>
     :root {
       --bg: #090a0f;
@@ -72,15 +73,41 @@
     .brand-tag {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0 0.5rem;
+      gap: 0.45rem;
+      padding: 0 0.65rem 0 0.5rem;
       font-weight: 700;
       font-size: 11px;
       letter-spacing: 0.08em;
-      color: var(--cyan);
+      color: #ffffff;
       font-family: var(--font-mono);
       border-right: 1px solid var(--border);
-      margin-right: 0.25rem;
+      margin-right: 0.35rem;
+    }
+
+    .agent-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.65);
+      animation: pulse-agent 2s infinite ease-in-out;
+      display: inline-block;
+    }
+
+    @keyframes pulse-agent {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .engine-tag {
+      font-size: 9px;
+      padding: 0.1rem 0.4rem;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
     }
 
     .menu-group {
@@ -169,9 +196,9 @@
       padding-right: 0.5rem;
     }
 
-    /* 2. DIRECTORY & ACTION TOOLBAR */
+    /* 2. WORKSPACE DIRECTORY & AGENT ACTION TOOLBAR */
     .ide-toolbar {
-      background: var(--bg-panel);
+      background: #0a0c13;
       border-bottom: 1px solid var(--border);
       padding: 0.4rem 0.85rem;
       display: flex;
@@ -181,25 +208,56 @@
       z-index: 90;
     }
 
-    .dir-bar {
+    .workspace-nav-bar {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.45rem;
       flex: 1;
-      max-width: 780px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 0.2rem 0.4rem;
+      max-width: 860px;
     }
 
-    .dir-label {
+    .ws-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
       font-family: var(--font-mono);
       font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .ws-icon {
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .ws-folder-name {
+      color: #ffffff;
       font-weight: 600;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      padding-left: 0.2rem;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ws-input-container {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex: 1;
+      background: #11141e;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 4px;
+      padding: 0.15rem 0.3rem;
+      transition: all 0.15s ease;
+    }
+
+    .ws-input-container:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.18);
     }
 
     .dir-input {
@@ -210,12 +268,64 @@
       font-family: var(--font-mono);
       font-size: 12px;
       outline: none;
-      padding: 0.15rem 0.3rem;
+      padding: 0.15rem 0.35rem;
       user-select: text;
     }
 
-    .dir-input:focus {
-      color: var(--cyan);
+    .dir-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .btn-ws-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.2rem 0.55rem;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .btn-ws-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .btn-ws-action.accent {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: #030712;
+    }
+
+    .btn-ws-action.accent:hover {
+      background: #7dd3fc;
+      border-color: #7dd3fc;
+    }
+
+    .recent-ws-select {
+      background: #11141e;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.25rem 0.45rem;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      max-width: 160px;
+      transition: all 0.15s ease;
+    }
+
+    .recent-ws-select:hover, .recent-ws-select:focus {
+      border-color: var(--cyan);
+      color: var(--text-main);
     }
 
     .btn-ide {
@@ -253,31 +363,85 @@
     }
 
     .btn-ide.cli {
-      background: var(--green-subtle);
-      border-color: rgba(16, 185, 129, 0.3);
-      color: var(--green);
+      background: var(--cyan-subtle);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
     }
 
     .btn-ide.cli:hover {
-      background: rgba(16, 185, 129, 0.22);
-      border-color: var(--green);
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--cyan);
       color: #ffffff;
+    }
+
+    .btn-layout-toggle {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .btn-layout-toggle:hover {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--cyan);
+    }
+
+    .btn-layout-toggle.active {
+      color: var(--cyan);
+      background: var(--cyan-subtle);
+      border-color: rgba(56, 189, 248, 0.3);
     }
 
     /* 3. METRICS STRIP */
     .metrics-strip {
-      background: #080a0f;
+      background: #08090d;
       border-bottom: 1px solid var(--border);
-      padding: 0.35rem 1rem;
+      padding: 0.45rem 0.85rem;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.65rem;
+      transition: all 0.2s ease;
+    }
+
+    @media (max-width: 1100px) {
+      .metrics-strip {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .metrics-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 520px) {
+      .metrics-strip {
+        grid-template-columns: 1fr;
+      }
     }
 
     .metric-box {
+      background: rgba(14, 18, 28, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 2px solid rgba(56, 189, 248, 0.35);
+      border-radius: 5px;
+      padding: 0.45rem 0.65rem;
       display: flex;
       flex-direction: column;
-      gap: 0.1rem;
+      gap: 0.15rem;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .metric-box:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(18, 23, 36, 0.7);
     }
 
     .metric-box-title {
@@ -292,9 +456,10 @@
 
     .metric-box-val {
       font-family: var(--font-mono);
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #ffffff;
+      letter-spacing: -0.01em;
     }
 
     .metric-box-sub {
@@ -519,6 +684,18 @@
       text-overflow: ellipsis;
     }
 
+    .chat-id-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
     .chat-model-badge {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -634,6 +811,188 @@
       font-family: var(--font-mono);
       font-size: 11px;
       color: var(--text-muted);
+    }
+
+    /* MARKDOWN & CODE BLOCKS */
+    .turn-bubble .md-h1 { font-size: 15px; font-weight: 700; margin: 0.6rem 0 0.35rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    .turn-bubble .md-h2 { font-size: 14px; font-weight: 600; margin: 0.5rem 0 0.3rem; color: var(--cyan); }
+    .turn-bubble .md-h3 { font-size: 13px; font-weight: 600; margin: 0.4rem 0 0.25rem; color: var(--cyan); }
+    .turn-bubble .md-hr { border: none; border-top: 1px solid var(--border); margin: 0.75rem 0; }
+    .turn-bubble .md-inline-code {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #38bdf8;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .md-code-chip {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #93c5fd;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.08rem 0.35rem;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    .md-tag-chip {
+      display: inline-block;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #c084fc;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.08rem 0.35rem;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+    .turn-bubble .md-ul, .turn-bubble .md-ol { margin: 0.35rem 0 0.35rem 1.25rem; }
+    .turn-bubble .md-li { margin-bottom: 0.2rem; }
+    .turn-bubble .md-oli, .turn-bubble .md-uli {
+      display: flex;
+      align-items: baseline;
+      gap: 0.45rem;
+      margin-bottom: 0.25rem;
+      line-height: 1.5;
+    }
+    .turn-bubble .oli-num {
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 11.5px;
+      flex-shrink: 0;
+    }
+    .turn-bubble .uli-bullet {
+      color: var(--cyan);
+      font-size: 8px;
+      flex-shrink: 0;
+      transform: translateY(-1px);
+    }
+    .turn-bubble .md-para-break { height: 0.5rem; }
+
+    /* CODE BOX */
+    .code-box {
+      margin: 0.6rem 0;
+      background: #080a0f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .code-box-header {
+      background: #0e111a;
+      padding: 0.3rem 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .code-lang-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+    .btn-copy-code {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-copy-code:hover {
+      background: var(--bg-card-hover);
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+    .code-box-pre {
+      padding: 0.65rem 0.85rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      user-select: text;
+    }
+
+    /* LIVE TOOL BADGE & STREAM CURSOR */
+    .live-tools-container {
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .tool-badge.active {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+    }
+    .tool-badge.done {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--green);
+    }
+    .tool-dot {
+      color: var(--cyan);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+    .tool-check {
+      color: var(--green);
+      font-weight: 700;
+    }
+    .cursor-pulse {
+      display: inline-block;
+      color: var(--cyan);
+      animation: blink 0.9s infinite;
+      font-weight: 700;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .error-pill {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--red);
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 0.4rem;
     }
 
     .terminal-output-box {
@@ -998,23 +1357,27 @@
 </head>
 <body>
 
-  <!-- 1. TOP IDE MENU BAR -->
+  <!-- 1. TOP AGENT MENU BAR -->
   <nav class="ide-menubar">
-    <div class="brand-tag">GRAVITON IDE</div>
+    <div class="brand-tag">
+      <span class="agent-pulse-dot" title="Graviton Autonomous Engine Online"></span>
+      <span>GRAVITON AGENT</span>
+      <span style="display:none">GRAVITON DASHBOARD</span>
+    </div>
 
     <div class="menu-group">
       <!-- FILE MENU -->
-      <div class="menu-item" id="menuFile">
+      <div class="menu-item" id="menuFile" onmouseenter="handleMenuHover('menuFile')">
         <button class="menu-btn" onclick="toggleMenu('menuFile')">File</button>
         <div class="menu-dropdown">
           <button class="menu-action" onclick="startNewConversation(); closeMenus();">
             <span>New Chat Session</span><span class="shortcut">Ctrl+N</span>
           </button>
-          <button class="menu-action" onclick="browseWorkspaceFolder(); closeMenus();">
-            <span>Open Folder (Dialog)...</span><span class="shortcut">Ctrl+O</span>
+          <button class="menu-action" onclick="focusDirInput(); closeMenus();">
+            <span>Open / Switch Workspace...</span><span class="shortcut">Ctrl+O</span>
           </button>
-          <button class="menu-action" onclick="revealWorkspaceInExplorer(); closeMenus();">
-            <span>Reveal in File Explorer</span>
+          <button class="menu-action" onclick="browseWorkspaceFolder(); closeMenus();" style="display:none;">
+            <span>Select Folder (Dialog)...</span>
           </button>
           <div class="menu-separator"></div>
           <button class="menu-action" onclick="focusDirInput(); closeMenus();">
@@ -1027,7 +1390,7 @@
       </div>
 
       <!-- EDIT MENU -->
-      <div class="menu-item" id="menuEdit">
+      <div class="menu-item" id="menuEdit" onmouseenter="handleMenuHover('menuEdit')">
         <button class="menu-btn" onclick="toggleMenu('menuEdit')">Edit</button>
         <div class="menu-dropdown">
           <button class="menu-action" onclick="renameCurrentChat(); closeMenus();">
@@ -1044,7 +1407,7 @@
       </div>
 
       <!-- VIEW MENU -->
-      <div class="menu-item" id="menuView">
+      <div class="menu-item" id="menuView" onmouseenter="handleMenuHover('menuView')">
         <button class="menu-btn" onclick="toggleMenu('menuView')">View</button>
         <div class="menu-dropdown">
           <button class="menu-action" onclick="toggleSidebar(); closeMenus();">
@@ -1064,20 +1427,20 @@
       </div>
 
       <!-- TERMINAL / CLI MENU -->
-      <div class="menu-item" id="menuTerminal">
+      <div class="menu-item" id="menuTerminal" onmouseenter="handleMenuHover('menuTerminal')">
         <button class="menu-btn" onclick="toggleMenu('menuTerminal')">Terminal</button>
         <div class="menu-dropdown">
           <button class="menu-action" onclick="openActiveCli(); closeMenus();">
-            <span>Open External CLI (grav)</span>
+            <span>Open External CLI</span>
           </button>
           <button class="menu-action" onclick="switchDrawerTab('doctor'); ensureDrawerOpen(); closeMenus();">
-            <span>Run Doctor (grav doctor)</span>
+            <span>Run Doctor Diagnostics</span>
           </button>
           <button class="menu-action" onclick="switchDrawerTab('diff'); ensureDrawerOpen(); closeMenus();">
-            <span>Inspect Session Diff (grav diff)</span>
+            <span>Inspect Session Diff</span>
           </button>
           <button class="menu-action" onclick="switchDrawerTab('undo'); ensureDrawerOpen(); closeMenus();">
-            <span>Safety Rollback (grav undo)</span>
+            <span>Safety Rollback</span>
           </button>
           <button class="menu-action" onclick="switchDrawerTab('ports'); ensureDrawerOpen(); closeMenus();">
             <span>Manage Dev Ports</span>
@@ -1086,7 +1449,7 @@
       </div>
 
       <!-- HELP MENU -->
-      <div class="menu-item" id="menuHelp">
+      <div class="menu-item" id="menuHelp" onmouseenter="handleMenuHover('menuHelp')">
         <button class="menu-btn" onclick="toggleMenu('menuHelp')">Help</button>
         <div class="menu-dropdown">
           <button class="menu-action" onclick="switchDrawerTab('version'); ensureDrawerOpen(); closeMenus();">
@@ -1102,33 +1465,62 @@
       </div>
     </div>
 
-    <div class="menubar-right">
-      <span id="headerOdometer">Odometer: Syncing...</span>
-      <span>100% Localhost</span>
+    <div class="menubar-right" style="margin-left:auto; display:flex; align-items:center; gap:0.35rem;">
+      <span id="headerOdometer" style="display:none;"></span>
+      <button class="btn-layout-toggle active" id="btnToggleSidebar" onclick="toggleSidebar()" title="Toggle Sidebar (Ctrl+B)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      </button>
+      <button class="btn-layout-toggle active" id="btnToggleHud" onclick="toggleHud()" title="Toggle Metrics Strip">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+      </button>
+      <button class="btn-layout-toggle active" id="btnToggleDrawer" onclick="toggleDrawer()" title="Toggle Bottom Panel (Ctrl+J)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+      </button>
     </div>
   </nav>
 
-  <!-- 2. DIRECTORY & TOOLBAR -->
+  <!-- 2. WORKSPACE DIRECTORY & AGENT ACTION TOOLBAR -->
   <div class="ide-toolbar">
-    <div class="dir-bar">
-      <span class="dir-label">DIR:</span>
-      <input type="text" id="dirInput" class="dir-input" placeholder="Select workspace directory..." spellcheck="false" onkeydown="if(event.key==='Enter')changeWorkspaceDir()">
-      <button class="btn-ide accent" onclick="browseWorkspaceFolder()" title="Open native OS folder selection dialog">Browse</button>
-      <button class="btn-ide" onclick="revealWorkspaceInExplorer()" title="Open in Windows File Explorer">Explorer</button>
+    <div class="workspace-nav-bar">
+      <div class="ws-badge" id="wsBadge" title="Current Active Workspace">
+        <span class="ws-icon">// WORKSPACE:</span>
+        <span class="ws-folder-name" id="wsFolderName">workspace</span>
+      </div>
+
+      <div class="ws-input-container">
+        <input type="text" id="dirInput" class="dir-input" placeholder="Type or paste workspace directory path (Press Enter to open instantly)..." spellcheck="false" onkeydown="if(event.key==='Enter')changeWorkspaceDir()">
+        <button class="btn-ws-action accent" id="btnOpenWorkspace" onclick="changeWorkspaceDir()" title="Open workspace directory immediately (Enter)">Open &#8629;</button>
+      </div>
+
+      <div class="recent-workspaces-wrapper">
+        <select id="recentWorkspacesSelect" class="recent-ws-select" onchange="if(this.value)changeWorkspaceDir(this.value)" title="Quick-switch recent workspaces">
+          <option value="">Recent Workspaces...</option>
+        </select>
+      </div>
     </div>
 
     <div style="display:flex; align-items:center; gap:0.4rem;">
-      <button class="btn-ide cli" onclick="openActiveCli()" title="Launch native cmd.exe in this folder">Open CLI</button>
-      <button class="btn-ide" onclick="refreshAll()">Refresh</button>
+      <button class="btn-ide cli" onclick="openActiveCli()" title="Launch native terminal in this workspace">Terminal</button>
+      <button class="btn-ide" onclick="refreshAll()" title="Resync agent metrics and state">Sync</button>
+      <button class="btn-ide" id="btnSelectFolder" onclick="browseWorkspaceFolder()" style="display:none;" title="Browse folder">Browse</button>
+      <input type="file" id="nativeFolderInput" webkitdirectory directory style="display:none" onchange="handleNativeFolderSelect(event)">
     </div>
   </div>
 
   <!-- 3. METRICS STRIP -->
-  <div class="metrics-strip">
+  <div class="metrics-strip" id="metricsStrip">
+    <div class="metric-box">
+      <div class="metric-box-title">
+        <span>Lifetime Odometer</span>
+        <span style="color:var(--cyan)">CLI Total</span>
+      </div>
+      <div class="metric-box-val" id="valLifetimeOdometer">0</div>
+      <div class="metric-box-sub">Total CLI token usage</div>
+    </div>
     <div class="metric-box">
       <div class="metric-box-title">
         <span>Lifetime Tokens Saved</span>
-        <span style="color:var(--green)">CLI Synced</span>
+        <span style="color:var(--cyan)">CLI Synced</span>
       </div>
       <div class="metric-box-val" id="valTokensSaved">0</div>
       <div class="metric-box-sub" id="valTokensSub">Filtered noise & smart context</div>
@@ -1139,20 +1531,20 @@
         <span style="color:var(--cyan)">$1.25 / 1M</span>
       </div>
       <div class="metric-box-val" id="valProSavings">$0.00</div>
-      <div class="metric-box-sub" id="valProIdr">Rp 0</div>
+      <div class="metric-box-sub" id="valProSub">Static cache efficiency</div>
     </div>
     <div class="metric-box">
       <div class="metric-box-title">
         <span>Flash Savings (Est)</span>
-        <span style="color:var(--purple)">$0.075 / 1M</span>
+        <span style="color:var(--cyan)">$0.075 / 1M</span>
       </div>
       <div class="metric-box-val" id="valFlashSavings">$0.00</div>
-      <div class="metric-box-sub" id="valFlashIdr">Rp 0</div>
+      <div class="metric-box-sub" id="valFlashSub">Sub-ms turn synthesis</div>
     </div>
     <div class="metric-box">
       <div class="metric-box-title">
         <span>Active Dev Ports</span>
-        <span id="valPortCount" style="color:var(--amber)">0 Active</span>
+        <span id="valPortCount" style="color:var(--cyan)">0 Active</span>
       </div>
       <div class="metric-box-val" id="valPortsSummary">None</div>
       <div class="metric-box-sub">Dev daemon port guard</div>
@@ -1184,11 +1576,10 @@
       <!-- CHAT HEADER -->
       <div class="chat-view-header">
         <div class="chat-info-block">
-          <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
-            <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
-            <span class="chat-token-badge" id="activeChatTokens">Session: ~0 tokens | Lifetime Odometer: 0 tokens</span>
-          </div>
-          <span class="chat-model-badge" id="activeChatModel">Auto-Routing: Gemini 3.1 Pro / 3.8 Flash</span>
+          <span class="chat-topic-title" id="activeChatTitle">New Conversation</span>
+          <span class="chat-id-badge" id="activeChatId">ID: —</span>
+          <span class="chat-token-badge" id="activeChatTokens" style="display:none;"></span>
+          <span class="chat-model-badge" id="activeChatModel" style="display:none;"></span>
         </div>
         <div style="display:flex; align-items:center; gap:0.35rem;">
           <button class="btn-ide" onclick="renameCurrentChat()">Edit Title</button>
@@ -1199,7 +1590,7 @@
       <!-- CHAT FEED -->
       <div class="chat-feed" id="chatFeed">
         <div class="empty-state" id="feedEmptyState">
-          <div style="font-weight:600; color:var(--text-main);">Graviton Autonomous Developer IDE</div>
+          <div style="font-weight:600; color:var(--text-main);">Graviton Autonomous Developer Agent</div>
           <div>Choose your effort (Fast, Grav, Deep), enter a prompt, or run visual CLI tools.</div>
         </div>
       </div>
@@ -1217,15 +1608,19 @@
           <div class="composer-toggles">
             <label class="toggle-label">
               <input type="checkbox" id="dryRunToggle" class="toggle-input">
-              <span>Dry Run (Simulate Only)</span>
+              <span>Dry Run</span>
             </label>
-            <span id="scopeBadge" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);">Scoper: Ready</span>
+            <span id="scopeBadge" style="display:none;"></span>
           </div>
         </div>
 
         <div class="composer-input-row">
-          <textarea id="promptInput" class="prompt-textarea" placeholder="Type prompt for Antigravity (Press Enter to execute, Shift+Enter for newline)..." rows="2"></textarea>
-          <button class="btn-send" id="btnSend" onclick="executePrompt()">Execute</button>
+          <textarea id="promptInput" class="prompt-textarea" placeholder="Type prompt for Graviton..." rows="2"></textarea>
+          <button class="btn-send" id="btnSend" onclick="executePrompt()" title="Execute Prompt (Ctrl+Enter)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -1236,13 +1631,13 @@
       <div class="ide-drawer" id="ideDrawer">
         <div class="drawer-header">
           <div class="drawer-tabs">
-            <button class="drawer-tab active" onclick="switchDrawerTab('doctor')">Doctor</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('diff')">Diff</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('graph')">AST Graph</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('ports')">Ports</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('stats')">Odometer</button>
-            <button class="drawer-tab" onclick="switchDrawerTab('version')">Version</button>
+            <button class="drawer-tab active" data-tab="doctor" onclick="switchDrawerTab('doctor')">Doctor</button>
+            <button class="drawer-tab" data-tab="diff" onclick="switchDrawerTab('diff')">Diff</button>
+            <button class="drawer-tab" data-tab="undo" onclick="switchDrawerTab('undo')">Undo / Rollback</button>
+            <button class="drawer-tab" data-tab="graph" onclick="switchDrawerTab('graph')">AST Graph</button>
+            <button class="drawer-tab" data-tab="ports" onclick="switchDrawerTab('ports')">Ports</button>
+            <button class="drawer-tab" data-tab="stats" onclick="switchDrawerTab('stats')">Odometer</button>
+            <button class="drawer-tab" data-tab="version" onclick="switchDrawerTab('version')">Version</button>
           </div>
 
           <div class="drawer-controls">
@@ -1277,7 +1672,7 @@
     </div>
 
     <div class="statusbar-right">
-      <span id="statusbarTokens">Session: ~0 tokens | Odometer: 0 tokens</span>
+      <span id="statusbarTokens">Session: ~0 tokens</span>
       <span id="statusbarEffort">Effort: Grav</span>
       <button class="btn-toggle-panel" id="btnTogglePanel" onclick="toggleDrawer()">Panel</button>
     </div>
@@ -1303,6 +1698,11 @@
       if (sessionTokens !== null && sessionTokens !== undefined) latestSessionTokens = Number(sessionTokens) || 0;
       if (lifetimeTokens !== null && lifetimeTokens !== undefined) latestLifetimeTokens = Number(lifetimeTokens) || 0;
 
+      const valLifetimeOdo = document.getElementById('valLifetimeOdometer');
+      if (valLifetimeOdo) {
+        valLifetimeOdo.textContent = Number(latestLifetimeTokens).toLocaleString();
+      }
+
       const tokenEl = document.getElementById('activeChatTokens');
       if (tokenEl) {
         tokenEl.textContent = `Session: ~${latestSessionTokens.toLocaleString()} tokens | Lifetime Odometer: ${latestLifetimeTokens.toLocaleString()} tokens`;
@@ -1315,7 +1715,7 @@
 
       const statusbarTokens = document.getElementById('statusbarTokens');
       if (statusbarTokens) {
-        statusbarTokens.textContent = `Session: ~${latestSessionTokens.toLocaleString()} tokens | Odometer: ${latestLifetimeTokens.toLocaleString()} tokens`;
+        statusbarTokens.textContent = `Session: ~${latestSessionTokens.toLocaleString()} tokens`;
       }
     }
 
@@ -1341,22 +1741,42 @@
         .replace(/"/g, '&quot;');
     }
 
-    // 1. TOP MENU BAR INTERACTION
+    // 1. TOP MENU BAR INTERACTION (DESKTOP HOVER & ESCAPE CLOSE)
+    let isMenubarActive = false;
+
     function toggleMenu(menuId) {
       const el = document.getElementById(menuId);
       const wasOpen = el.classList.contains('open');
       closeMenus();
       if (!wasOpen) {
         el.classList.add('open');
+        isMenubarActive = true;
+      } else {
+        isMenubarActive = false;
+      }
+    }
+
+    function handleMenuHover(menuId) {
+      if (isMenubarActive) {
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+        const el = document.getElementById(menuId);
+        if (el) el.classList.add('open');
       }
     }
 
     function closeMenus() {
       document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+      isMenubarActive = false;
     }
 
     window.addEventListener('click', (e) => {
-      if (!e.target.closest('.menu-item')) {
+      if (!e.target.closest('.ide-menubar')) {
+        closeMenus();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
         closeMenus();
       }
     });
@@ -1370,14 +1790,36 @@
     function toggleSidebar() {
       const sidebar = document.getElementById('ideSidebar');
       const resizer = document.getElementById('sidebarResizer');
+      const btn = document.getElementById('btnToggleSidebar');
       if (sidebar.style.display === 'none') {
         sidebar.style.display = 'flex';
-        resizer.style.display = 'block';
+        if (resizer) resizer.style.display = 'block';
+        if (btn) btn.classList.add('active');
+        localStorage.setItem('graviton_sidebar_hidden', 'false');
         showToast('Sidebar opened');
       } else {
         sidebar.style.display = 'none';
-        resizer.style.display = 'none';
+        if (resizer) resizer.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+        localStorage.setItem('graviton_sidebar_hidden', 'true');
         showToast('Sidebar hidden');
+      }
+    }
+
+    function toggleHud() {
+      const hud = document.getElementById('metricsStrip');
+      const btn = document.getElementById('btnToggleHud');
+      if (!hud) return;
+      if (hud.style.display === 'none') {
+        hud.style.display = 'grid';
+        if (btn) btn.classList.add('active');
+        localStorage.setItem('graviton_hud_hidden', 'false');
+        showToast('Metrics strip visible');
+      } else {
+        hud.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+        localStorage.setItem('graviton_hud_hidden', 'true');
+        showToast('Metrics strip hidden');
       }
     }
 
@@ -1477,18 +1919,24 @@
     function closeDrawer() {
       const drawer = document.getElementById('ideDrawer');
       const resizer = document.getElementById('bottomDrawerResizer');
+      const btn = document.getElementById('btnToggleDrawer');
       drawer.classList.add('collapsed');
-      resizer.style.display = 'none';
+      if (resizer) resizer.style.display = 'none';
+      if (btn) btn.classList.remove('active');
       isDrawerCollapsed = true;
-      showToast('Panel closed (Click "Panel" on statusbar to reopen)');
+      localStorage.setItem('graviton_drawer_hidden', 'true');
+      showToast('Bottom panel closed');
     }
 
     function ensureDrawerOpen() {
       const drawer = document.getElementById('ideDrawer');
       const resizer = document.getElementById('bottomDrawerResizer');
+      const btn = document.getElementById('btnToggleDrawer');
       drawer.classList.remove('collapsed');
-      resizer.style.display = 'block';
+      if (resizer) resizer.style.display = 'block';
+      if (btn) btn.classList.add('active');
       isDrawerCollapsed = false;
+      localStorage.setItem('graviton_drawer_hidden', 'false');
     }
 
     function toggleDrawer() {
@@ -1499,23 +1947,91 @@
       }
     }
 
-    // 3. WORKSPACE DIRECTORY & EXPLORER
+    // 3. WORKSPACE DIRECTORY & EXPLORER (INSTANT FAST-PATH)
+    function updateWorkspaceDisplay(cwd) {
+      if (!cwd) return;
+      const folderNameEl = document.getElementById('wsFolderName');
+      const normalized = String(cwd).replace(/[\\/]+$/, '');
+      const parts = normalized.split(/[\\/]/);
+      const baseName = parts[parts.length - 1] || normalized;
+      if (folderNameEl) folderNameEl.textContent = baseName;
+      const dirInput = document.getElementById('dirInput');
+      if (dirInput && dirInput.value !== cwd) dirInput.value = cwd;
+      const statusCwd = document.getElementById('statusbarCwd');
+      if (statusCwd) statusCwd.textContent = `Workspace: ${cwd}`;
+    }
+
+    function saveRecentWorkspace(cwd) {
+      if (!cwd) return;
+      try {
+        let recents = JSON.parse(localStorage.getItem('graviton_recent_workspaces') || '[]');
+        recents = recents.filter(p => p && p !== cwd);
+        recents.unshift(cwd);
+        recents = recents.slice(0, 8);
+        localStorage.setItem('graviton_recent_workspaces', JSON.stringify(recents));
+        renderRecentWorkspacesDropdown(recents);
+      } catch (e) {}
+    }
+
+    function renderRecentWorkspacesDropdown(recentsList) {
+      const select = document.getElementById('recentWorkspacesSelect');
+      if (!select) return;
+      let recents = recentsList;
+      if (!recents) {
+        try {
+          recents = JSON.parse(localStorage.getItem('graviton_recent_workspaces') || '[]');
+        } catch { recents = []; }
+      }
+      select.innerHTML = '<option value="">Recent Workspaces...</option>';
+      recents.forEach(p => {
+        const norm = String(p).replace(/[\\/]+$/, '');
+        const parts = norm.split(/[\\/]/);
+        const name = parts[parts.length - 1] || norm;
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = `${name} (${p})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function navigateToParentDir() {
+      if (!activeCwd) return;
+      const normalized = activeCwd.replace(/[\\/]+$/, '');
+      const parts = normalized.split(/[\\/]/);
+      if (parts.length > 1) {
+        parts.pop();
+        const sep = activeCwd.includes('\\') ? '\\' : '/';
+        let parent = parts.join(sep);
+        if (!parent && activeCwd.includes('\\')) parent = parts[0] + '\\';
+        if (!parent && !activeCwd.includes('\\')) parent = '/';
+        changeWorkspaceDir(parent);
+      } else {
+        showToast('Already at root directory');
+      }
+    }
+
     async function fetchWorkspace() {
       try {
         const res = await fetch('/api/workspace').then(r => r.json());
         if (res && res.cwd) {
           activeCwd = res.cwd;
-          document.getElementById('dirInput').value = activeCwd;
-          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
+          updateWorkspaceDisplay(activeCwd);
+          saveRecentWorkspace(activeCwd);
         }
       } catch (err) {
         console.error('Failed to fetch workspace:', err);
       }
     }
 
-    async function changeWorkspaceDir() {
-      const inputVal = document.getElementById('dirInput').value.trim();
+    async function changeWorkspaceDir(targetPath) {
+      const inputEl = document.getElementById('dirInput');
+      const inputVal = (typeof targetPath === 'string' ? targetPath : (inputEl ? inputEl.value : '')).trim();
       if (!inputVal) return;
+
+      const btnOpen = document.getElementById('btnOpenWorkspace');
+      const origText = btnOpen ? btnOpen.textContent : 'Open ↵';
+      if (btnOpen) btnOpen.textContent = 'Opening...';
+
       try {
         const res = await fetch('/api/workspace', {
           method: 'POST',
@@ -1525,40 +2041,43 @@
 
         if (res.success) {
           activeCwd = res.cwd;
-          document.getElementById('dirInput').value = activeCwd;
-          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
-          showToast(`Switched: ${activeCwd}`);
-          refreshAll();
+          currentConversationId = null;
+          isNewChatIntent = false;
+          updateWorkspaceDisplay(activeCwd);
+          saveRecentWorkspace(activeCwd);
+
+          const parts = activeCwd.replace(/[\\/]+$/, '').split(/[\\/]/);
+          const baseName = parts[parts.length - 1] || activeCwd;
+          showToast(`Switched workspace: ${baseName}`);
+
+          // Instant parallel refresh
+          await Promise.all([
+            fetchConversations(),
+            fetchStats(),
+            fetchPorts()
+          ]);
         } else {
           showToast(`Error: ${res.error || 'Invalid directory'}`);
         }
       } catch (err) {
         showToast(`Failed: ${err.message}`);
+      } finally {
+        if (btnOpen) btnOpen.textContent = origText;
       }
     }
 
-    async function browseWorkspaceFolder() {
-      showToast('Opening native folder picker dialog...');
-      try {
-        const res = await fetch('/api/pick-folder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cwd: activeCwd })
-        }).then(r => r.json());
+    function browseWorkspaceFolder() {
+      focusDirInput();
+      showToast('Type or paste directory path in the workspace bar');
+    }
 
-        if (res.success && res.picked) {
-          activeCwd = res.cwd;
-          document.getElementById('dirInput').value = activeCwd;
-          document.getElementById('statusbarCwd').textContent = `Workspace: ${activeCwd}`;
-          showToast(`Folder selected: ${activeCwd}`);
-          refreshAll();
-        } else if (res.cancelled) {
-          showToast('Folder selection cancelled');
-        } else if (res.message) {
-          showToast(res.message);
+    function handleNativeFolderSelect(event) {
+      const files = event.target.files;
+      if (files && files.length > 0) {
+        const folderName = files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : '';
+        if (folderName) {
+          showToast(`Folder selected: ${folderName}`);
         }
-      } catch (err) {
-        showToast(`Picker error: ${err.message}`);
       }
     }
 
@@ -1606,13 +2125,18 @@
     }
 
     // 4. CONVERSATIONS MANAGEMENT (FULL CRUD & SYNC)
-    async function fetchConversations() {
+    let isNewChatIntent = false;
+
+    async function fetchConversations(preserveFeed = false) {
       const listEl = document.getElementById('conversationsList');
       try {
         const res = await fetch(`/api/conversations?cwd=${encodeURIComponent(activeCwd)}`).then(r => r.json());
         conversationsData = res.conversations || [];
-        if (!currentConversationId || !conversationsData.some(c => c.id === currentConversationId)) {
-          currentConversationId = res.activeId || (conversationsData[0] ? conversationsData[0].id : null);
+
+        if (!isNewChatIntent) {
+          if (!currentConversationId || !conversationsData.some(c => c.id === currentConversationId)) {
+            currentConversationId = res.activeId || (conversationsData[0] ? conversationsData[0].id : null);
+          }
         }
 
         if (conversationsData.length === 0) {
@@ -1623,12 +2147,12 @@
             </div>
           `;
           updateChatViewHeader(null);
-          renderChatTurns([]);
+          if (!preserveFeed) renderChatTurns([]);
           return;
         }
 
         listEl.innerHTML = conversationsData.map((conv, idx) => {
-          const isActive = conv.id === currentConversationId;
+          const isActive = !isNewChatIntent && conv.id === currentConversationId;
           const num = idx + 1;
           const displayTitle = conv.title || `Chat ${num}`;
           const turns = conv.turns || 1;
@@ -1654,9 +2178,16 @@
           `;
         }).join('');
 
-        const activeConv = conversationsData.find(c => c.id === currentConversationId) || conversationsData[0];
+        const activeConv = isNewChatIntent ? null : (conversationsData.find(c => c.id === currentConversationId) || conversationsData[0]);
         updateChatViewHeader(activeConv);
-        loadConversationHistory(currentConversationId);
+
+        if (!preserveFeed) {
+          if (currentConversationId && !isNewChatIntent) {
+            loadConversationHistory(currentConversationId);
+          } else {
+            renderChatTurns([]);
+          }
+        }
       } catch (err) {
         listEl.innerHTML = '<div class="empty-state">Failed to load conversations.</div>';
       }
@@ -1664,13 +2195,14 @@
 
     async function selectConversation(id) {
       currentConversationId = id;
+      isNewChatIntent = false;
       try {
         await fetch('/api/conversations/select', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cwd: activeCwd, id })
         });
-        fetchConversations();
+        fetchConversations(false);
         showToast('Conversation activated');
       } catch (err) {
         console.error(err);
@@ -1685,7 +2217,8 @@
           body: JSON.stringify({ cwd: activeCwd })
         });
         currentConversationId = null;
-        fetchConversations();
+        isNewChatIntent = true;
+        fetchConversations(true);
         updateChatViewHeader(null);
         renderChatTurns([]);
         showToast('New conversation initialized');
@@ -1705,7 +2238,10 @@
 
         if (res.success) {
           showToast(res.message || 'Conversation deleted');
-          fetchConversations();
+          if (currentConversationId === id) {
+            currentConversationId = null;
+          }
+          fetchConversations(false);
         } else {
           showToast(`Error: ${res.message || 'Could not delete'}`);
         }
@@ -1734,7 +2270,7 @@
 
         if (res.success) {
           showToast('Title updated');
-          fetchConversations();
+          fetchConversations(true);
         } else {
           showToast(`Error: ${res.message || 'Could not rename'}`);
         }
@@ -1753,20 +2289,116 @@
 
     function updateChatViewHeader(conv) {
       const titleEl = document.getElementById('activeChatTitle');
-      const modelEl = document.getElementById('activeChatModel');
+      const idEl = document.getElementById('activeChatId');
       if (conv) {
         titleEl.textContent = conv.title || 'Untitled Conversation';
-        modelEl.textContent = `Active ID: ${conv.id ? conv.id.slice(0, 8) : '—'} | Auto-Routing: Pro / Flash`;
+        if (idEl) idEl.textContent = conv.id ? `ID: ${conv.id.slice(0, 8)}` : 'ID: —';
         const sTokens = conv.cumulativeTokens !== undefined ? conv.cumulativeTokens : latestSessionTokens;
         updateTokenDisplay(sTokens, latestLifetimeTokens);
       } else {
         titleEl.textContent = 'New Conversation';
-        modelEl.textContent = 'Auto-Routing: Gemini 3.1 Pro / 3.8 Flash';
+        if (idEl) idEl.textContent = 'ID: —';
         updateTokenDisplay(0, latestLifetimeTokens);
       }
     }
 
-    // 5. CHAT TURNS & EXECUTION
+    // 5. CHAT TURNS, MARKDOWN RENDERING & STREAMING
+    function copyCodeToClipboard(btn, codeBase64) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(codeBase64)));
+        navigator.clipboard.writeText(decoded).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1800);
+        });
+      } catch {
+        const pre = btn.closest('.code-box')?.querySelector('pre');
+        if (pre) {
+          navigator.clipboard.writeText(pre.textContent).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 1800);
+          });
+        }
+      }
+    }
+
+    function renderMarkdown(rawText) {
+      if (!rawText) return '';
+
+      // 1. Normalize line endings and isolate code blocks
+      const codeBlocks = [];
+      let text = String(rawText).replace(/\r\n/g, '\n').replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push({ lang: (lang || 'code').trim(), code });
+        return `@@CODE_BLOCK_${idx}@@`;
+      });
+
+      // 2. Escape HTML entities on prose first
+      text = escapeHtml(text);
+
+      // 3. Format prose HTML tags safely into tag chips (e.g. &lt;html&gt; -> tag chip)
+      text = text.replace(/&lt;([a-zA-Z0-9_\-\.\/]+)&gt;/g, '<span class="md-tag-chip">&lt;$1&gt;</span>');
+
+      // 4. Clean and convert file:/// links and markdown links into elegant chips
+      // Pattern 1: [label](file:///path) or [`label`](file:///path)
+      text = text.replace(/\[`?([^`\]\n]+)`?\]\(file:\/\/\/[^\)]+\)/g, '<span class="file-chip">$1</span>');
+      // Pattern 2: [label](http...) or [`label`](http...)
+      text = text.replace(/\[`?([^`\]\n]+)`?\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="md-link">$1</a>');
+      // Pattern 3: stray (file:///...) or file:///...
+      text = text.replace(/\(file:\/\/\/[^\)\s]+\)/g, '');
+      text = text.replace(/file:\/\/\/[^\s\)\],]+/g, '');
+
+      // 5. Convert inline code with backticks into code chips and strip all backticks completely
+      text = text.replace(/`([^`\n]+)`/g, '<span class="md-code-chip">$1</span>');
+      text = text.replace(/`/g, ''); // strip any remaining stray backticks
+
+      // 6. Headers: Strip markdown hashes (#) completely and render as clean section titles
+      text = text.replace(/^#{3,6}\s*(.*?)$/gm, '<div class="md-h3">$1</div>');
+      text = text.replace(/^##\s*(.*?)$/gm, '<div class="md-h2">$1</div>');
+      text = text.replace(/^#\s*(.*?)$/gm, '<div class="md-h1">$1</div>');
+      text = text.replace(/^#+\s*/gm, '');
+
+      // 7. Horizontal Rules
+      text = text.replace(/^---$/gm, '<hr class="md-hr">');
+
+      // 8. Bold & Italic: Clean formatting without stray asterisks or underscores
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+      text = text.replace(/\*\*/g, ''); // strip any unclosed double asterisks
+      text = text.replace(/(^|\s)\*(\s|$)/g, '$1$2'); // strip stray lonely asterisks
+
+      // 9. Ordered & Unordered Lists: Clean human-readable list items
+      text = text.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<div class="md-oli"><span class="oli-num">$1.</span> <span>$2</span></div>');
+      text = text.replace(/^\s*[-*•]\s+(.*)$/gm, '<div class="md-uli"><span class="uli-bullet">●</span> <span>$1</span></div>');
+
+      // 10. Paragraph breaks and Line breaks
+      text = text.replace(/\n\n+/g, '<div class="md-para-break"></div>');
+      text = text.replace(/\n/g, '<br>');
+
+      // 11. Re-insert formatted code boxes
+      text = text.replace(/@@CODE_BLOCK_(\d+)@@/g, (match, idxStr) => {
+        const item = codeBlocks[parseInt(idxStr, 10)];
+        if (!item) return '';
+        const escapedCode = escapeHtml(item.code);
+        const encodedSafe = btoa(unescape(encodeURIComponent(item.code)));
+        const langDisplay = item.lang.toUpperCase() || 'CODE';
+        return `
+          <div class="code-box">
+            <div class="code-box-header">
+              <span class="code-lang-tag">${escapeHtml(langDisplay)}</span>
+              <button class="btn-copy-code" onclick="copyCodeToClipboard(this, '${encodedSafe}')" title="Copy code">Copy</button>
+            </div>
+            <pre class="code-box-pre"><code>${escapedCode}</code></pre>
+          </div>
+        `;
+      });
+
+      return text;
+    }
+
     async function loadConversationHistory(convId) {
       if (!convId) return;
       try {
@@ -1793,8 +2425,8 @@
       if (!turns || turns.length === 0) {
         feed.innerHTML = `
           <div class="empty-state" id="feedEmptyState">
-            <div style="font-weight:600; color:var(--text-main);">Conversation Ready</div>
-            <div>Type a prompt to begin or pick a command below.</div>
+            <div style="font-weight:600; color:var(--text-main); font-size:14px;">Conversation Ready</div>
+            <div style="color:var(--text-muted); margin-top:4px;">Type your instructions below. Graviton will automatically route the optimal model.</div>
           </div>
         `;
         return;
@@ -1802,29 +2434,18 @@
 
       feed.innerHTML = turns.map((t, idx) => {
         const isUser = t.role === 'user';
-        const isLastAssistant = !isUser && (idx === turns.length - 1 || turns.slice(idx + 1).every(x => x.role === 'user'));
-        const turnTokens = t.tokens || (isLastAssistant ? (sessionTokens || latestSessionTokens) : null);
-
-        let tokenHtml = '';
-        if (!isUser && (turnTokens || lifetimeTokens || latestLifetimeTokens)) {
-          const sTok = turnTokens || sessionTokens || latestSessionTokens || 0;
-          const lTok = lifetimeTokens || latestLifetimeTokens || 0;
-          tokenHtml = `
-            <div class="turn-token-footer">
-              Session: ~${Number(sTok).toLocaleString()} tokens | Lifetime Odometer: ${Number(lTok).toLocaleString()} tokens
-            </div>
-          `;
-        }
+        const bodyContent = isUser
+          ? `<div style="white-space: pre-wrap;">${escapeHtml(t.text)}</div>`
+          : `<div class="turn-markdown-body">${renderMarkdown(t.text)}</div>`;
 
         return `
           <div class="chat-turn ${isUser ? 'user' : 'assistant'}">
             <div class="turn-header">
-              <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON / AGY'}</span>
+              <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON'}</span>
               <span>${t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ''}</span>
             </div>
             <div class="turn-bubble">
-              <div style="white-space: pre-wrap;">${escapeHtml(t.text)}</div>
-              ${tokenHtml}
+              ${bodyContent}
             </div>
           </div>
         `;
@@ -1858,26 +2479,18 @@
         `;
       }
 
-      let tokenHtml = '';
-      if (!isUser && meta && (meta.sessionTokens !== undefined || meta.lifetimeTokens !== undefined)) {
-        const sTok = meta.sessionTokens || latestSessionTokens || 0;
-        const lTok = meta.lifetimeTokens || latestLifetimeTokens || 0;
-        tokenHtml = `
-          <div class="turn-token-footer">
-            Session: ~${Number(sTok).toLocaleString()} tokens | Lifetime Odometer: ${Number(lTok).toLocaleString()} tokens
-          </div>
-        `;
-      }
+      const bodyContent = isUser
+        ? `<div style="white-space: pre-wrap;">${escapeHtml(text)}</div>`
+        : `<div class="turn-markdown-body">${renderMarkdown(text)}</div>`;
 
       div.innerHTML = `
         <div class="turn-header">
-          <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON / AGY'}</span>
+          <span class="turn-tag ${isUser ? 'user' : 'assistant'}">${isUser ? 'USER' : 'GRAVITON'}</span>
           <span>${new Date().toLocaleTimeString()}</span>
         </div>
         <div class="turn-bubble">
           ${extraHtml}
-          <div style="white-space: pre-wrap;">${escapeHtml(text)}</div>
-          ${tokenHtml}
+          ${bodyContent}
         </div>
       `;
 
@@ -1898,6 +2511,8 @@
       showToast(`Effort: ${displayName}`);
     }
 
+    const SEND_ICON_HTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+
     async function executePrompt() {
       const promptInput = document.getElementById('promptInput');
       const promptText = promptInput.value.trim();
@@ -1909,32 +2524,25 @@
       appendTurnToFeed('user', promptText);
       promptInput.value = '';
       btnSend.disabled = true;
-      btnSend.textContent = dryRun ? 'Simulating...' : 'Executing...';
+      btnSend.innerHTML = `<span class="cursor-pulse" style="font-size:11px;">●</span>`;
 
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: promptText,
-            effort: selectedEffort,
-            dryRun,
-            cwd: activeCwd,
-            conversationId: currentConversationId || undefined
-          })
-        }).then(r => r.json());
+      // 1. DRY RUN MODE
+      if (dryRun) {
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: promptText,
+              effort: selectedEffort,
+              dryRun: true,
+              cwd: activeCwd,
+              conversationId: currentConversationId || undefined,
+              isNew: isNewChatIntent
+            })
+          }).then(r => r.json());
 
-        if (res.success) {
-          if (res.conversationId) {
-            currentConversationId = res.conversationId;
-          }
-          if (res.sessionTokens !== undefined && res.lifetimeTokens !== undefined) {
-            latestSessionTokens = res.sessionTokens;
-            latestLifetimeTokens = res.lifetimeTokens;
-            updateTokenDisplay(res.sessionTokens, res.lifetimeTokens);
-          }
-
-          if (res.dryRun) {
+          if (res.success) {
             appendTurnToFeed('assistant', `[Dry Run Simulation Completed]\n${res.message}`, {
               targetScope: res.targetScope,
               modelRouting: res.modelRouting,
@@ -1943,27 +2551,171 @@
             });
             showToast('Dry run simulated successfully');
           } else {
-            const outText = (res.execution && res.execution.output) ? res.execution.output : 'Execution complete.';
-            appendTurnToFeed('assistant', outText, {
-              targetScope: res.targetScope,
-              modelRouting: res.modelRouting,
-              sessionTokens: res.sessionTokens || 0,
-              lifetimeTokens: res.lifetimeTokens || latestLifetimeTokens
-            });
-            showToast('Prompt executed');
-            fetchStats();
-            fetchConversations();
+            appendTurnToFeed('assistant', `Error: ${res.error || 'Dry run failed'}`);
+          }
+        } catch (err) {
+          appendTurnToFeed('assistant', `Network Error: ${err.message}`);
+        } finally {
+          btnSend.disabled = false;
+          btnSend.innerHTML = SEND_ICON_HTML;
+        }
+        return;
+      }
+
+      // 2. LIVE EXECUTION WITH REAL-TIME STREAMING
+      const feed = document.getElementById('chatFeed');
+      const assistantTurnEl = document.createElement('div');
+      assistantTurnEl.className = 'chat-turn assistant';
+      assistantTurnEl.innerHTML = `
+        <div class="turn-header">
+          <span class="turn-tag assistant">GRAVITON</span>
+          <span class="turn-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+        <div class="turn-bubble">
+          <div class="live-tools-container" style="display:none;"></div>
+          <div class="turn-content-stream"><span class="cursor-pulse">●</span> Thinking...</div>
+          <div class="turn-token-footer" style="display:none;"></div>
+        </div>
+      `;
+      feed.appendChild(assistantTurnEl);
+      feed.scrollTop = feed.scrollHeight;
+
+      const toolsContainer = assistantTurnEl.querySelector('.live-tools-container');
+      const contentEl = assistantTurnEl.querySelector('.turn-content-stream');
+      const footerEl = assistantTurnEl.querySelector('.turn-token-footer');
+
+      let accumulatedStreamText = '';
+      let isFirstChunk = true;
+
+      try {
+        const response = await fetch('/api/chat?stream=true', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify({
+            prompt: promptText,
+            effort: selectedEffort,
+            dryRun: false,
+            stream: true,
+            cwd: activeCwd,
+            conversationId: currentConversationId || undefined,
+            isNew: isNewChatIntent
+          })
+        });
+
+        if (response.headers.get('Content-Type')?.includes('text/event-stream') && response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let sseBuffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            sseBuffer += decoder.decode(value, { stream: true });
+            const sseLines = sseBuffer.split('\n\n');
+            sseBuffer = sseLines.pop() || '';
+
+            for (const block of sseLines) {
+              if (!block.trim()) continue;
+              let evtType = 'message';
+              let dataStr = '';
+              for (const line of block.split('\n')) {
+                if (line.startsWith('event: ')) evtType = line.slice(7).trim();
+                else if (line.startsWith('data: ')) dataStr = line.slice(6).trim();
+              }
+              if (!dataStr) continue;
+
+              try {
+                const payload = JSON.parse(dataStr);
+
+                if (evtType === 'tool') {
+                  toolsContainer.style.display = 'flex';
+                  if (payload.state === 'ACTIVE') {
+                    toolsContainer.innerHTML = `
+                      <div class="tool-badge active">
+                        <span class="tool-dot">●</span>
+                        <span>${escapeHtml(payload.desc || `Working: ${payload.tool}...`)}</span>
+                      </div>
+                    `;
+                  } else if (payload.state === 'DONE') {
+                    const durStr = payload.duration ? ` (${payload.duration.toFixed(1)}s)` : '';
+                    toolsContainer.innerHTML = `
+                      <div class="tool-badge done">
+                        <span class="tool-check">[OK]</span>
+                        <span>Executed ${escapeHtml(payload.tool)}${durStr}</span>
+                      </div>
+                    `;
+                  }
+                  feed.scrollTop = feed.scrollHeight;
+                } else if (evtType === 'delta') {
+                  if (isFirstChunk) {
+                    contentEl.innerHTML = '';
+                    isFirstChunk = false;
+                  }
+                  accumulatedStreamText += payload.text;
+                  contentEl.innerHTML = renderMarkdown(accumulatedStreamText) + '<span class="cursor-pulse">▍</span>';
+                  feed.scrollTop = feed.scrollHeight;
+                } else if (evtType === 'done') {
+                  toolsContainer.style.display = 'none';
+                  if (payload.conversationId) {
+                    currentConversationId = payload.conversationId;
+                    isNewChatIntent = false;
+                  }
+                  if (payload.response) {
+                    accumulatedStreamText = payload.response;
+                  }
+                  contentEl.innerHTML = renderMarkdown(accumulatedStreamText);
+
+                  const sTok = payload.sessionTokens || latestSessionTokens || 0;
+                  const lTok = payload.lifetimeTokens || latestLifetimeTokens || 0;
+                  latestSessionTokens = sTok;
+                  latestLifetimeTokens = lTok;
+                  updateTokenDisplay(sTok, lTok);
+
+                  fetchStats();
+                  fetchConversations(true); // preserve feed!
+                  showToast('Response completed');
+                } else if (evtType === 'error') {
+                  contentEl.innerHTML += `<div class="error-pill">[ERROR] ${escapeHtml(payload.error)}</div>`;
+                  showToast('Execution error');
+                }
+              } catch (parseErr) {
+                console.warn('SSE Parse error:', parseErr);
+              }
+            }
           }
         } else {
-          appendTurnToFeed('assistant', `Error: ${res.error || 'Execution failed'}`);
-          showToast('Execution error');
+          // Standard JSON fallback
+          const res = await response.json();
+          if (res.success) {
+            if (res.conversationId) {
+              currentConversationId = res.conversationId;
+              isNewChatIntent = false;
+            }
+            const cleanOut = (res.execution && res.execution.output) ? res.execution.output : 'Execution complete.';
+            contentEl.innerHTML = renderMarkdown(cleanOut);
+
+            const sTok = res.sessionTokens || latestSessionTokens || 0;
+            const lTok = res.lifetimeTokens || latestLifetimeTokens || 0;
+            latestSessionTokens = sTok;
+            latestLifetimeTokens = lTok;
+            updateTokenDisplay(sTok, lTok);
+
+            fetchStats();
+            fetchConversations(true); // preserve feed!
+            showToast('Prompt executed');
+          } else {
+            contentEl.innerHTML = `<div class="error-pill">[ERROR] ${escapeHtml(res.error || 'Execution failed')}</div>`;
+          }
         }
       } catch (err) {
-        appendTurnToFeed('assistant', `Network Error: ${err.message}`);
+        contentEl.innerHTML = `<div class="error-pill">[ERROR] Network Error: ${escapeHtml(err.message)}</div>`;
         showToast('Network error');
       } finally {
         btnSend.disabled = false;
-        btnSend.textContent = 'Execute';
+        btnSend.innerHTML = SEND_ICON_HTML;
       }
     }
 
@@ -1979,7 +2731,8 @@
       currentDrawerTab = tab;
       const tabs = document.querySelectorAll('.drawer-tab');
       tabs.forEach(t => {
-        t.classList.toggle('active', t.textContent.toLowerCase().includes(tab));
+        const isMatch = t.dataset.tab === tab || (tab === 'stats' && t.textContent.toLowerCase().includes('odometer')) || t.textContent.toLowerCase().includes(tab);
+        t.classList.toggle('active', isMatch);
       });
 
       const titleEl = document.getElementById('drawerTitle');
@@ -2060,7 +2813,7 @@
         } else if (currentDrawerTab === 'stats') {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         } else if (currentDrawerTab === 'version') {
-          bodyEl.textContent = `GRAVITON v${res.version || '3.13.0'}\nNode: ${navigator.userAgent}\nEnvironment: Developer IDE Localhost`;
+          bodyEl.textContent = `GRAVITON v${res.version || '5.0.0'}\nNode: ${navigator.userAgent}\nEnvironment: Developer Agent Localhost`;
         } else {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         }
@@ -2121,19 +2874,25 @@
           document.getElementById('valTokensSaved').textContent = Number(tokensSaved).toLocaleString();
 
           if (resHud.odometer && resHud.odometer.totalTokens !== undefined) {
-            document.getElementById('headerOdometer').textContent = `Lifetime: ${Number(resHud.odometer.totalTokens).toLocaleString()} tokens`;
+            const valOdo = document.getElementById('valLifetimeOdometer');
+            if (valOdo) valOdo.textContent = Number(resHud.odometer.totalTokens).toLocaleString();
+            const headerOdo = document.getElementById('headerOdometer');
+            if (headerOdo) headerOdo.textContent = `Lifetime: ${Number(resHud.odometer.totalTokens).toLocaleString()} tokens`;
           }
 
           if (resHud.proSavingsUsd !== undefined) {
             document.getElementById('valProSavings').textContent = `$${Number(resHud.proSavingsUsd).toFixed(2)}`;
           }
-          if (resHud.idrSavings !== undefined) {
-            document.getElementById('valProIdr').textContent = `Rp ${Number(resHud.idrSavings).toLocaleString()}`;
+          const elProSub = document.getElementById('valProSub');
+          if (elProSub) {
+            elProSub.textContent = 'Static cache efficiency';
           }
           if (resHud.flashSavingsUsd !== undefined) {
             document.getElementById('valFlashSavings').textContent = `$${Number(resHud.flashSavingsUsd).toFixed(2)}`;
-            const flashIdr = Math.round(Number(resHud.flashSavingsUsd) * 16000);
-            document.getElementById('valFlashIdr').textContent = `Rp ${flashIdr.toLocaleString()}`;
+          }
+          const elFlashSub = document.getElementById('valFlashSub');
+          if (elFlashSub) {
+            elFlashSub.textContent = 'Sub-ms turn synthesis';
           }
         }
       } catch (err) {
@@ -2162,7 +2921,7 @@
       fetchConversations();
       fetchStats();
       fetchPorts();
-      showToast('IDE synced with CLI');
+      showToast('Agent synced with CLI');
     }
 
     // Keyboard Shortcuts
@@ -2188,21 +2947,47 @@
       }
     });
 
-    // Startup
     window.addEventListener('DOMContentLoaded', () => {
       setupResizers();
-      fetchWorkspace().then(() => {
+      renderRecentWorkspacesDropdown();
+
+      // Restore layout preferences
+      if (localStorage.getItem('graviton_sidebar_hidden') === 'true') {
+        const sidebar = document.getElementById('ideSidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        const btn = document.getElementById('btnToggleSidebar');
+        if (sidebar) sidebar.style.display = 'none';
+        if (resizer) resizer.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+      }
+      if (localStorage.getItem('graviton_hud_hidden') === 'true') {
+        const hud = document.getElementById('metricsStrip');
+        const btn = document.getElementById('btnToggleHud');
+        if (hud) hud.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+      }
+      if (localStorage.getItem('graviton_drawer_hidden') === 'true') {
+        closeDrawer();
+      }
+
+      const drawerBody = document.getElementById('drawerBody');
+      if (drawerBody) {
+        drawerBody.textContent = 'Select a tab above to run diagnostics, view git diff, or inspect ports.';
+      }
+
+      Promise.all([
+        fetchWorkspace(),
+        fetchStats(),
+        fetchPorts()
+      ]).then(() => {
         fetchConversations();
-        fetchStats();
-        fetchPorts();
-        runCurrentDrawerCommand();
       });
 
-      // Polling every 8s
+      // Polling every 10s (lightweight)
       setInterval(() => {
         fetchPorts();
         fetchStats();
-      }, 8000);
+      }, 10000);
     });
   </script>
 </body>

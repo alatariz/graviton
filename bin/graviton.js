@@ -50,6 +50,14 @@ import { scaffoldProject, detectDomainFromPrompt } from '../src/scaffolder.js';
 import { launchLiveRunner, openBrowser } from '../src/live-runner.js';
 import { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from '../src/autonomous-router.js';
 import { resolveModelAndEffort } from '../src/model-selector.js';
+import { verifyProjectRuntime, generateSelfCorrectionDirective } from '../src/runtime-sentinel.js';
+import { evaluateWorkspaceAdversarially, evaluateCodeAdversarially, formatAdversarialCritique } from '../src/adversarial-critic.js';
+import { buildCodePropertyGraph, calculateBlastRadius, formatBlastRadiusReport } from '../src/code-property-graph.js';
+import { generateTestFile } from '../src/test-generator.js';
+import { planSymbolRename, applySymbolRename, formatRefactorPlan } from '../src/symbolic-refactor.js';
+import { auditDeadCode, formatDeadCodeReport, pruneUnusedImports } from '../src/dead-code-cleaner.js';
+import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock } from '../src/ambiguity-clarifier.js';
+import { runUnifiedSanityCheck, formatUnifiedDiagnosticReport } from '../src/unified-orchestrator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -248,8 +256,17 @@ async function main() {
   undo, rollback, rb             Revert files modified or created during the most recent AI session
   stats, hud                     Display lifetime token & dollar savings dashboard + active ports
   graph                          Render ASCII/Unicode multi-file dependency graph of project
+  verify, sentinel               Scan runtime integrity, DOM bindings & syntax health
+  audit, critique                Run dual-agent adversarial red-team security & resilience audit
+  blast, impact                  Calculate blast radius & downstream dependent ripple effect
+  cpg                            Inspect workspace Code Property Graph and symbol topology
+  gentest, testgen               Auto-generate deterministic unit test scaffold for a source file
+  refactor                       AST-guided safe symbol renaming across all workspace files
+  deadcode, prune                Audit and prune unused imports, dead exports, and orphaned helpers
+  clarify "<prompt>"             Analyze prompt ambiguity & display clarified engineering baseline
+  check, sanity                  Run unified diagnostic check (Sentinel + Critic + Dead-Code + CPG)
   doctor, doc                    Diagnose system health, Node.js runtime, & Antigravity installation
-  dashboard, web, ui             Launch localhost-only visual developer dashboard (http://localhost:3000)
+  agent, web, dashboard, ui      Launch localhost-only visual Gravity Agent (http://localhost:3000)
   chat, repl                     Launch interactive REPL chat session
   stop [port|all]                Terminate background dev daemon or free blocked development port
   version, -v                    Display Graviton CLI version
@@ -301,12 +318,12 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '3.13.0';
+    let version = '5.0.0';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
     } catch {}
-    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version}`);
+    console.log(`\x1b[1m\x1b[36mGRAVITON\x1b[0m v${version} (v3.x compatible)`);
     process.exit(0);
   }
 
@@ -362,18 +379,18 @@ async function main() {
     process.exit(0);
   }
 
-  // 4b. LOCALHOST DASHBOARD
-  if (command === 'web' || command === 'studio' || command === 'ui' || command === 'dashboard' || command === '--dashboard') {
+  // 4b. LOCALHOST GRAVITON AGENT (Gravity Agent)
+  if (command === 'agent' || command === 'web' || command === 'studio' || command === 'ui' || command === 'dashboard' || command === '--agent' || command === '--dashboard') {
     const webDir = path.join(__dirname, '..', 'web');
     const serverPath = path.join(webDir, 'server.js');
     if (fs.existsSync(serverPath)) {
-      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON LOCALHOST DASHBOARD ===\x1b[0m`);
-      console.log(`\x1b[90mStarting 100% private localhost dashboard from ${webDir}...\x1b[0m\n`);
+      console.log(`\n\x1b[1m\x1b[36m=== GRAVITON AGENT (Gravity Agent) ===\x1b[0m`);
+      console.log(`\x1b[90mStarting 100% private localhost agent from ${webDir}...\x1b[0m\n`);
       const proc = spawn('node', [serverPath], { cwd: webDir, stdio: 'inherit' });
       proc.on('close', code => process.exit(code || 0));
       return;
     } else {
-      console.log(`\x1b[33mGraviton Web Dashboard is located in the repository at ./web\x1b[0m`);
+      console.log(`\x1b[33mGraviton Agent is located in the repository at ./web\x1b[0m`);
     }
     process.exit(0);
   }
@@ -437,6 +454,159 @@ async function main() {
     console.log(`\x1b[36mAuto-launched in your default browser ready to play!\x1b[0m`);
     console.log(`\x1b[90m(Live-Reload is active. Any file edits made by AI will refresh the browser automatically.)\x1b[0m\n`);
     process.exit(0);
+  }
+
+  // 4h. AUTONOMOUS RUNTIME SENTINEL & VERIFICATION (V4.2.0)
+  if (command === 'verify' || command === 'sentinel' || command === '--verify') {
+    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    console.log(`\x1b[1m\x1b[36m=== GRAVITON AUTONOMOUS RUNTIME SENTINEL ===\x1b[0m`);
+    console.log(`Scanning workspace runtime integrity at: \x1b[1m${targetDir}\x1b[0m...\n`);
+    const report = verifyProjectRuntime(targetDir);
+    if (report.valid) {
+      console.log(`\x1b[1m\x1b[32m✔  PASS: ${report.summary}\x1b[0m\n`);
+      process.exit(0);
+    } else {
+      console.log(`\x1b[1m\x1b[31m✖  DEFECT DETECTED: ${report.summary}\x1b[0m\n`);
+      console.log(generateSelfCorrectionDirective(report));
+      process.exit(1);
+    }
+  }
+
+  // 4i. DUAL-AGENT ADVERSARIAL CRITIC & AUDIT (V4.4.0)
+  if (command === 'audit' || command === 'critique' || command === 'redteam') {
+    const target = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    let report;
+    if (fs.existsSync(target) && fs.statSync(target).isFile()) {
+      const code = fs.readFileSync(target, 'utf8');
+      report = evaluateCodeAdversarially(code, path.basename(target));
+    } else {
+      report = evaluateWorkspaceAdversarially(target);
+    }
+    console.log(formatAdversarialCritique(report));
+    process.exit(report.passed ? 0 : 1);
+  }
+
+  // 4j. CODE PROPERTY GRAPH & BLAST RADIUS ENGINE (V4.5.0)
+  if (command === 'blast' || command === 'impact') {
+    const target = filteredArgs[1];
+    if (!target) {
+      console.error('\x1b[31mError: Specify target file or symbol to analyze (e.g. grav blast src/pipeline.js)\x1b[0m');
+      process.exit(1);
+    }
+    const cpg = buildCodePropertyGraph(process.cwd());
+    const report = calculateBlastRadius(cpg, target);
+    console.log(formatBlastRadiusReport(report));
+    process.exit(0);
+  }
+
+  if (command === 'cpg') {
+    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const cpg = buildCodePropertyGraph(targetDir);
+    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON CODE PROPERTY GRAPH (CPG) ===\x1b[0m`);
+    console.log(`Root Workspace : \x1b[1m${cpg.root}\x1b[0m`);
+    console.log(`Files Indexed  : \x1b[32m${cpg.totalFiles}\x1b[0m`);
+    console.log(`Symbols Mapped : \x1b[33m${cpg.totalSymbols}\x1b[0m`);
+    console.log(`Topology Graph : \x1b[90m${Object.keys(cpg.dependencyGraph).length} dependency edges resolved\x1b[0m\n`);
+    process.exit(0);
+  }
+
+  // 4k. DETERMINISTIC TEST AUTO-GENERATOR (V4.6.0)
+  if (command === 'gentest' || command === 'testgen') {
+    const targetFile = filteredArgs[1];
+    if (!targetFile) {
+      console.error('\x1b[31mError: Specify source file to generate tests for (e.g. grav gentest src/calculator.js)\x1b[0m');
+      process.exit(1);
+    }
+    const customOut = filteredArgs[2] || null;
+    try {
+      const res = generateTestFile(targetFile, customOut);
+      console.log(`\n\x1b[1m\x1b[32m✔  Test suite generated successfully!\x1b[0m`);
+      console.log(`  Source File  : \x1b[1m${targetFile}\x1b[0m`);
+      console.log(`  Test File    : \x1b[1;36m${res.testFilePath}\x1b[0m`);
+      console.log(`  Tests Stubs  : \x1b[33m${res.testCount} assertions mapped\x1b[0m`);
+      console.log(`\x1b[90mRun test via: node ${res.testFilePath}\x1b[0m\n`);
+      process.exit(0);
+    } catch (err) {
+      console.error(`\x1b[31m[!] Test generation error: ${err.message}\x1b[0m`);
+      process.exit(1);
+    }
+  }
+
+  // 4l. SYMBOLIC REFACTORING ENGINE (V4.7.0)
+  if (command === 'refactor') {
+    const targetFile = filteredArgs[1];
+    const oldSymbol = filteredArgs[2];
+    const newSymbol = filteredArgs[3];
+    const isApply = rawArgs.includes('--apply');
+
+    if (!targetFile || !oldSymbol || !newSymbol) {
+      console.error('\x1b[31mError: Usage: grav refactor <file> <oldSymbol> <newSymbol> [--apply]\x1b[0m');
+      process.exit(1);
+    }
+
+    try {
+      const plan = planSymbolRename(process.cwd(), targetFile, oldSymbol, newSymbol);
+      if (!isApply) {
+        console.log(formatRefactorPlan(plan));
+        process.exit(0);
+      } else {
+        const res = applySymbolRename(plan);
+        console.log(`\n\x1b[1m\x1b[32m✔  Symbol refactoring applied successfully!\x1b[0m`);
+        console.log(`  Target File  : \x1b[1m${plan.targetFile}\x1b[0m`);
+        console.log(`  Symbol Move  : \x1b[33m${oldSymbol}\x1b[0m -> \x1b[32m${newSymbol}\x1b[0m`);
+        console.log(`  Files Updated: \x1b[1;36m${res.filesModified}\x1b[0m files (${res.replacementsApplied} code locations)\x1b[0m\n`);
+        process.exit(0);
+      }
+    } catch (err) {
+      console.error(`\x1b[31m[!] Refactor error: ${err.message}\x1b[0m`);
+      process.exit(1);
+    }
+  }
+
+  // 4m. DEAD-CODE & ENTROPY ELIMINATOR (V4.8.0)
+  if (command === 'deadcode' || command === 'prune') {
+    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const isApply = rawArgs.includes('--apply');
+
+    if (command === 'prune' && isApply) {
+      const res = pruneUnusedImports(targetDir);
+      console.log(`\n\x1b[1m\x1b[32m✔  Dead code pruning completed!\x1b[0m`);
+      console.log(`  Target Directory : \x1b[1m${targetDir}\x1b[0m`);
+      console.log(`  Files Cleaned    : \x1b[1;36m${res.filesModified}\x1b[0m`);
+      console.log(`  Unused Pruned    : \x1b[33m${res.symbolsPruned} unused import symbols removed\x1b[0m\n`);
+      process.exit(0);
+    } else {
+      const audit = auditDeadCode(targetDir);
+      console.log(formatDeadCodeReport(audit));
+      process.exit(audit.totalDeadItems === 0 ? 0 : 1);
+    }
+  }
+
+  // 4n. PROMPT AMBIGUITY & REQUIREMENT CLARIFIER (V4.9.0)
+  if (command === 'clarify' || command === 'enrich') {
+    const rawPrompt = filteredArgs.slice(1).join(' ').trim();
+    if (!rawPrompt) {
+      console.error('\x1b[31mError: Provide prompt to clarify (e.g. grav clarify "bikin auth")\x1b[0m');
+      process.exit(1);
+    }
+    const analysis = analyzePromptAmbiguity(rawPrompt);
+    console.log(`\n\x1b[1m\x1b[36m=== GRAVITON PROMPT AMBIGUITY ANALYSIS ===\x1b[0m`);
+    console.log(`Input Prompt    : \x1b[1m"${analysis.prompt}"\x1b[0m`);
+    console.log(`Domain Detected : \x1b[33m${analysis.domain}\x1b[0m`);
+    console.log(`Ambiguity Score : \x1b[${analysis.isAmbiguous ? '31' : '32'}m${analysis.score}/100 [${analysis.isAmbiguous ? 'AMBIGUOUS' : 'CLEAR'}]\x1b[0m`);
+    if (analysis.missingDimensions.length > 0) {
+      console.log(`Omitted Bounds  : \x1b[90m${analysis.missingDimensions.join('; ')}\x1b[0m`);
+    }
+    console.log('\n' + synthesizeClarifiedSpecificationBlock(analysis) + '\n');
+    process.exit(0);
+  }
+
+  // 4o. UNIFIED AUTONOMOUS COORDINATOR SANITY CHECK (V5.0.0)
+  if (command === 'check' || command === 'sanity' || command === 'v5') {
+    const targetDir = filteredArgs[1] ? path.resolve(process.cwd(), filteredArgs[1]) : process.cwd();
+    const sanity = runUnifiedSanityCheck(targetDir);
+    console.log(formatUnifiedDiagnosticReport(sanity));
+    process.exit(sanity.passed ? 0 : 1);
   }
 
   // 5. MAP & WORKSPACE HYDRATION

@@ -1,11 +1,11 @@
-// src/rollback-manager.js - Graviton V3.0.0 Safety Rollback Guard
+// src/rollback-manager.js - .0.0 Safety Rollback Guard
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { createGravitonFilter } from './ignore-parser.js';
 
 /**
- * Graviton V3.0.0 Safety Rollback Guard
+ * .0.0 Safety Rollback Guard
  * Provides one-click instant restoration of files modified or created during an AI session.
  */
 

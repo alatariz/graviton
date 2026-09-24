@@ -1,4 +1,4 @@
-// src/session-compactor.js - Graviton V3.2.0 Smart Session Compaction & Autonomous Sliding Window
+// src/session-compactor.js - .0.0 Smart Session Compaction & Autonomous Sliding Window
 import fs from 'fs';
 import path from 'path';
 import { getWorkspaceSession, saveWorkspaceSession, clearWorkspaceSession, getConversationHistory } from './session-manager.js';

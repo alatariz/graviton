@@ -1,4 +1,4 @@
-// src/sanity-guard.js - Graviton V3.0.0 Post-Run Syntax Sanity Guard
+// src/sanity-guard.js - .0.0 Post-Run Syntax Sanity Guard
 import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';

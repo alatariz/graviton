@@ -1,4 +1,4 @@
-// src/auth-helper.js - Graviton V3.0.0 Ecosystem & Google Account Credentials Helper
+// src/auth-helper.js - .0.0 Ecosystem & Google Account Credentials Helper
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

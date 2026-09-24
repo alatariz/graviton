@@ -1,4 +1,4 @@
-// src/cache-manager.js - Graviton V2.3.0 Document Transpilation Caching Layer
+// src/cache-manager.js - .0.0 Document Transpilation Caching Layer
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

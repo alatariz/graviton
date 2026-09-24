@@ -1,4 +1,4 @@
-// src/cognitive-contract.js - Graviton V3.6.0 Cognitive Execution Contract & Gemini Overclock Engine
+// src/cognitive-contract.js - .0.0 Cognitive Execution Contract & Gemini Overclock Engine
 
 /**
  * Domain-specific critical failure modes and edge cases.

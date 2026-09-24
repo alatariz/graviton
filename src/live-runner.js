@@ -1,4 +1,4 @@
-// src/live-runner.js - Graviton V3.11.0 Autonomous Live-Runner & Instant Browser Hot-Reload
+// src/live-runner.js - .0.0 Autonomous Live-Runner & Instant Browser Hot-Reload
 import http from 'http';
 import fs from 'fs';
 import path from 'path';

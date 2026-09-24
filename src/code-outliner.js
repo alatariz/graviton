@@ -1,4 +1,4 @@
-// src/code-outliner.js - Graviton V2.4.0 Smart Code Outliner & Zero-Waste Skeletonizer
+// src/code-outliner.js - .0.0 Smart Code Outliner & Zero-Waste Skeletonizer
 import path from 'path';
 
 /**
@@ -298,7 +298,7 @@ export function isSkeletonCandidate(filePath, lineCount) {
 }
 
 /**
- * Checks if a file qualifies for AST Function Indexing (Graviton V3.3.0 Large File Shield).
+ * Checks if a file qualifies for AST Function Indexing (.0.0 Large File Shield).
  * Automatically triggered on source code files > 250 lines.
  * @param {string} filePath
  * @param {number} lineCount

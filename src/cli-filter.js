@@ -1,4 +1,4 @@
-// src/cli-filter.js - Graviton V3.4.0 Deterministic Terminal & Test Runner Squeezer
+// src/cli-filter.js - .0.0 Deterministic Terminal & Test Runner Squeezer
 import { condenseTestOutput, condenseBuildOutput } from './stack-squeezer.js';
 
 export function stripAnsi(str) {

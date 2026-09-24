@@ -1,4 +1,4 @@
-// src/typo-guard.js - Graviton V3.0.0 Smart Typo & Keyboard Slip Guard
+// src/typo-guard.js - .0.0 Smart Typo & Keyboard Slip Guard
 // Intercepts accidental key slips (e.g. '=' adjacent to '-') and stray punctuation locally with 0 tokens.
 
 /**

@@ -1,4 +1,4 @@
-// src/hud.js - Graviton V3.7.0 Live Savings HUD & Economy Calculator
+// src/hud.js - .0.0 Live Savings HUD & Economy Calculator
 import os from 'os';
 import fs from 'fs';
 import path from 'path';

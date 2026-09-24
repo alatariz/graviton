@@ -1,4 +1,4 @@
-// src/dependency-graph.js - Graviton V3.7.0 Autonomous AST Dependency Graph Engine
+// src/dependency-graph.js - .0.0 Autonomous AST Dependency Graph Engine
 import fs from 'fs';
 import path from 'path';
 import { createGravitonFilter } from './ignore-parser.js';

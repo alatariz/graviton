@@ -1,4 +1,4 @@
-// src/delta-compressor.js - Graviton V2.5.0 Delta Compression & Turn Diff Caching Engine
+// src/delta-compressor.js - .0.0 Delta Compression & Turn Diff Caching Engine
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';

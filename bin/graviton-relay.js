@@ -2,7 +2,7 @@ import { spawnSync, spawn, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { purgeOldBackups, readOdometer, getLatestShadowBackups } from '../src/pipeline.js';
-import { getLatestConversationId, saveWorkspaceSession } from '../src/session-manager.js';
+import { getLatestConversationId, saveWorkspaceSession, getConversationHistory } from '../src/session-manager.js';
 import { captureWorkspaceSnapshot, saveSessionManifest } from '../src/rollback-manager.js';
 import { inspectSessionFiles } from '../src/sanity-guard.js';
 import { trackSessionTurn, checkCompactionStatus, autoCompactSessionIfExceeded } from '../src/session-compactor.js';
@@ -127,6 +127,69 @@ export function cleanTerminalOutput(text) {
   }
 
   return cleanedLines.join('\n');
+}
+
+/**
+ * Extracts clean assistant text from raw Antigravity output or NDJSON stream.
+ * Guarantees that raw JSON envelopes are stripped and authentic model text is returned.
+ * @param {string|Buffer} rawOutput
+ * @param {string} cwd
+ * @param {string|null} convId
+ * @param {boolean} preserveMarkdown
+ * @returns {string}
+ */
+export function extractCleanAssistantResponse(rawOutput, cwd = process.cwd(), convId = null, preserveMarkdown = true) {
+  if (!rawOutput) return '';
+  const str = typeof rawOutput === 'string' ? rawOutput : rawOutput.toString('utf8');
+
+  // Check if output contains NDJSON stream lines
+  if (str.includes('{"event"') || str.includes('"step_type"') || str.includes('"event":')) {
+    let deltas = '';
+    let finalResp = '';
+    const nonJsonLines = [];
+    const lines = str.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        nonJsonLines.push('');
+        continue;
+      }
+      try {
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          const data = JSON.parse(trimmed);
+          if (data.event === 'step_update' && data.step_update) {
+            if (data.step_update.step_type === 'agent_response' && data.step_update.text_delta) {
+              deltas += data.step_update.text_delta;
+            }
+          } else if (data.event === 'result' && data.result && data.result.response) {
+            finalResp = data.result.response;
+          }
+          // It's a JSON event, so skip it from clean output
+          continue;
+        }
+      } catch {}
+      nonJsonLines.push(line);
+    }
+    const candidate = (finalResp || deltas || nonJsonLines.join('\n')).trim();
+    if (candidate) {
+      return preserveMarkdown ? candidate : cleanTerminalOutput(candidate);
+    }
+  }
+
+  // Fallback: check transcript log if conversation ID is available
+  if (convId) {
+    try {
+      const hist = getConversationHistory(cwd, convId, 5);
+      if (hist && Array.isArray(hist.turns) && hist.turns.length > 0) {
+        const lastTurn = hist.turns[hist.turns.length - 1];
+        if (lastTurn && lastTurn.role === 'assistant' && lastTurn.text) {
+          return preserveMarkdown ? lastTurn.text : cleanTerminalOutput(lastTurn.text);
+        }
+      }
+    } catch {}
+  }
+
+  return preserveMarkdown ? str.trim() : cleanTerminalOutput(str).trim();
 }
 
 /**
@@ -458,6 +521,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       }
     } catch {}
 
+    try {
+      const latestConvId = options.conversationId || getLatestConversationId();
+      result.cleanResponse = extractCleanAssistantResponse(result.stdout, executionCwd, latestConvId, true);
+      result.conversationId = latestConvId;
+    } catch {}
+
     if (result.error) {
       console.error('Spawn Error:', result.error);
       if (options.rejectOnError) throw result.error;
@@ -488,6 +557,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let lastReportedTool = null;
     let hasReceivedResponse = false;
     let turnTokens = 0;
+    let cleanAccumulatedText = '';
+    let detectedConvId = null;
     const startTime = Date.now();
     let currentActiveTool = null;
     let toolStartTime = null;
@@ -580,6 +651,9 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
         try {
           const data = JSON.parse(line);
+          if (data.conversation_id) {
+            detectedConvId = data.conversation_id;
+          }
           if (data.event === 'step_update' && data.step_update) {
             const step = data.step_update;
 
@@ -608,13 +682,20 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                 }
 
                 if (toolDesc && toolDesc !== lastReportedTool) {
-                  if (toolLineActive) {
-                    process.stdout.write('\n');
-                    toolLineActive = false;
-                  }
                   lastReportedTool = toolDesc;
-                  process.stdout.write(toolDesc);
+                  process.stdout.write(`\r\x1b[K${toolDesc}`);
                   toolLineActive = true;
+                }
+
+                if (options.onToolUpdate) {
+                  try {
+                    options.onToolUpdate({
+                      state: 'ACTIVE',
+                      tool: toolName,
+                      parameters: params,
+                      desc: cleanTerminalOutput(toolDesc).trim()
+                    });
+                  } catch {}
                 }
               } else if (step.state === 'DONE') {
                 const dur = step.duration_seconds
@@ -622,13 +703,20 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                   : (toolStartTime ? `${((Date.now() - toolStartTime) / 1000).toFixed(1)}s` : '');
                 const durStr = dur ? ` \x1b[90m(${dur})\x1b[0m` : '';
                 if (toolLineActive) {
-                  process.stdout.write(` \x1b[32m✔\x1b[0m  Done${durStr}\n`);
-                  toolLineActive = false;
-                } else {
-                  console.log(`\x1b[32m✔\x1b[0m  Done${durStr}`);
+                  process.stdout.write(`\r\x1b[K\x1b[36m●  [AI Tool]\x1b[0m Executed ${step.tool_name}${durStr}`);
                 }
                 currentActiveTool = null;
                 toolStartTime = null;
+
+                if (options.onToolUpdate) {
+                  try {
+                    options.onToolUpdate({
+                      state: 'DONE',
+                      tool: step.tool_name,
+                      duration: step.duration_seconds || (dur ? parseFloat(dur) : null)
+                    });
+                  } catch {}
+                }
               }
             }
 
@@ -640,7 +728,13 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
               }
               currentActiveTool = null;
               hasReceivedResponse = true;
+              cleanAccumulatedText += step.text_delta;
               processStreamChunk(step.text_delta);
+              if (options.onTextDelta) {
+                try {
+                  options.onTextDelta(step.text_delta);
+                } catch {}
+              }
             }
 
             // Track tokens
@@ -656,9 +750,15 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
               toolLineActive = false;
             }
             if (!hasReceivedResponse && data.result.response) {
+              cleanAccumulatedText = data.result.response;
               processStreamChunk(data.result.response, true);
             } else {
               processStreamChunk('', true);
+            }
+            if (options.onResult) {
+              try {
+                options.onResult(data.result);
+              } catch {}
             }
             if (data.result.status && data.result.status !== 'SUCCESS') {
               triggerFailFast(`Antigravity result status: ${data.result.status}`);
@@ -693,13 +793,13 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     child.on('close', code => {
       clearInterval(watchdog);
       if (toolLineActive) {
-        process.stdout.write('\n');
+        process.stdout.write('\r\x1b[K');
         toolLineActive = false;
       }
       processStreamChunk('', true);
 
+      const latestConvId = options.conversationId || detectedConvId || getLatestConversationId();
       try {
-        const latestConvId = options.conversationId || getLatestConversationId();
         if (latestConvId) {
           const promptToSave = options.userPrompt || promptText;
           saveWorkspaceSession(executionCwd, latestConvId, promptToSave);
@@ -729,11 +829,19 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
         return reject(new Error(failReason || `[GRAVITON ERROR] Antigravity terminated abruptly with exit code ${code}`));
       }
 
+      const finalCleanText = cleanAccumulatedText
+        ? cleanAccumulatedText.trim()
+        : extractCleanAssistantResponse('', executionCwd, latestConvId, true);
+
       resolve({
         status: finalStatus,
         aborted,
         timedOut: isTimedOut,
         failReason,
+        turnTokens,
+        accumulatedText: finalCleanText,
+        cleanResponse: finalCleanText,
+        conversationId: latestConvId,
         error: isOk ? null : new Error(failReason || `Antigravity exited with code ${code}`)
       });
     });

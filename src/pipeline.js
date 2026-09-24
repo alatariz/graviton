@@ -14,6 +14,12 @@ import { buildDependencyGraph, formatAsciiGraph, getSurgicalContextFiles } from 
 import { bundleWebApplication } from './bundler.js';
 import { healCodeSyntax, healRelativeImports, selfHealFile } from './self-healer.js';
 import { calculateEconomyMetrics, renderAsciiHud } from './hud.js';
+import { synthesizeAgiCognitiveHarness, executeSocraticDialectic, generateTeleologicalContract, compressToNeuroSymbolic } from './synthetic-agi.js';
+import { formatSkillDirectivesBlock, resolveSkillDirectives } from './skill-matrix.js';
+import { resolveDesignSystem, formatDesignSystemSpecification } from './design-intelligence.js';
+import { verifyProjectRuntime, verifyJavaScriptSyntax, verifyDomBindings, verifyLocalImports, generateSelfCorrectionDirective, autoHealMissingDomElement } from './runtime-sentinel.js';
+import { detectGroundedLibraries, synthesizeGroundedResearchBlock, GROUNDED_LIBRARY_REGISTRY } from './live-researcher.js';
+import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock, DOMAIN_PATTERNS } from './ambiguity-clarifier.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -28,6 +34,12 @@ export { bundleWebApplication } from './bundler.js';
 export { healCodeSyntax, healRelativeImports, selfHealFile } from './self-healer.js';
 export { calculateEconomyMetrics, renderAsciiHud } from './hud.js';
 export { detectScaffoldIntent, detectBundleIntent, detectPlayIntent, autoHealWorkspaceFiles } from './autonomous-router.js';
+export { synthesizeAgiCognitiveHarness, executeSocraticDialectic, generateTeleologicalContract, compressToNeuroSymbolic } from './synthetic-agi.js';
+export { resolveSkillDirectives, formatSkillDirectivesBlock } from './skill-matrix.js';
+export { resolveDesignSystem, formatDesignSystemSpecification } from './design-intelligence.js';
+export { verifyProjectRuntime, verifyJavaScriptSyntax, verifyDomBindings, verifyLocalImports, generateSelfCorrectionDirective, autoHealMissingDomElement } from './runtime-sentinel.js';
+export { detectGroundedLibraries, synthesizeGroundedResearchBlock, GROUNDED_LIBRARY_REGISTRY } from './live-researcher.js';
+export { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock, DOMAIN_PATTERNS } from './ambiguity-clarifier.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -782,7 +794,7 @@ export function recordOdometer(sessionTokens) {
 }
 
 /**
- * Graviton V2.6.0 Output Token Economizer:
+ * .0.0 Output Token Economizer:
  * Injects concise diff-response directives unless the user is explicitly creating a new file from scratch.
  * @param {string} userInput
  * @param {object} options
@@ -796,7 +808,7 @@ export function generateEconomizerDirective(userInput, options = {}) {
 }
 
 /**
- * Graviton V3.0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
+ * .0.0 Zero-Token Middleware: Assembles the SuperPrompt locally via fs & regex.
  * Zero token cost, zero external API calls.
  */
 export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {}) {
@@ -834,6 +846,41 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     if (edgeCases && edgeCases.length > 0 && !cleanedInput.includes('[PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS]')) {
       const edgeCaseList = edgeCases.map((ec, idx) => `   - ${ec}`).join('\n');
       cleanedInput = `${cleanedInput}\n\n=== [PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS] ===\n${edgeCaseList}`;
+    }
+  }
+
+  // Synthetic AGI Metacognitive Engine (V4.0.0 1:1 Dialectic & Teleological Invariants)
+  if (!options.noAgi && !options.noMetacognition) {
+    const agiResult = synthesizeAgiCognitiveHarness(cleanedInput, architectIntent, options);
+    if (agiResult && agiResult.harness && !cleanedInput.includes('[.0.0 SYNTHETIC AGI METACOGNITIVE HARNESS]')) {
+      cleanedInput = `${cleanedInput}\n\n${agiResult.harness}`;
+    }
+  }
+
+  // Dynamic Skill Capabilities Matrix (V4.1.0 High-Leverage Skills)
+  if (!options.noSkills) {
+    const skillsBlock = formatSkillDirectivesBlock(cleanedInput);
+    if (skillsBlock && !cleanedInput.includes('[GRAVITON RELEVANT SKILL CAPABILITIES ACTIVATED]')) {
+      cleanedInput = `${cleanedInput}\n\n${skillsBlock}`;
+    }
+  }
+
+  // Grounded Live Intel & 2026 API Invariants (V4.3.0 Grounding Engine)
+  if (!options.noGrounding && !options.noResearch) {
+    const researchBlock = synthesizeGroundedResearchBlock(cleanedInput);
+    if (researchBlock && !cleanedInput.includes('[GRAVITON GROUNDED LIVE INTEL & 2026 API INVARIANTS]')) {
+      cleanedInput = `${cleanedInput}\n\n${researchBlock}`;
+    }
+  }
+
+  // Prompt Ambiguity & Requirement Clarifier (V4.9.0)
+  if (!options.noClarify) {
+    const ambiguityAnalysis = analyzePromptAmbiguity(userInput || cleanedInput);
+    if (ambiguityAnalysis.isAmbiguous) {
+      const clarifiedBlock = synthesizeClarifiedSpecificationBlock(ambiguityAnalysis);
+      if (clarifiedBlock && !cleanedInput.includes('[GRAVITON CLARIFIED ENGINEERING SPECIFICATION]')) {
+        cleanedInput = `${cleanedInput}\n\n${clarifiedBlock}`;
+      }
     }
   }
 
@@ -1059,6 +1106,7 @@ ${workspaceBlock}${injectedFilesBlock}
 
 [USER INSTRUCTION & ERROR LOG]:
 ${cleanedInput}`.replace(/\r\n/g, '\n').trim();
+
 
   // Local Trip Odometer: Silently track tokens
   const promptTokens = estimateTokens(finalPrompt);

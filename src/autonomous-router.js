@@ -1,4 +1,4 @@
-// src/autonomous-router.js - Graviton V3.12.0 Autonomous Zero-Option Intent Engine
+// src/autonomous-router.js - .0.0 Autonomous Zero-Option Intent Engine
 import fs from 'fs';
 import path from 'path';
 import { detectDomainFromPrompt, scaffoldProject } from './scaffolder.js';

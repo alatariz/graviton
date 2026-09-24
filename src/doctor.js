@@ -1,4 +1,4 @@
-// src/doctor.js - Graviton V3.0.0 System Health & Environment Doctor
+// src/doctor.js - .0.0 System Health & Environment Doctor
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

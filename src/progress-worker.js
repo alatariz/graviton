@@ -1,4 +1,4 @@
-// src/progress-worker.js - Graviton V3.0.0 Live AI Progress Worker Thread
+// src/progress-worker.js - .0.0 Live AI Progress Worker Thread
 // Runs concurrently on a background OS thread during AI prompt processing.
 
 import { parentPort } from 'worker_threads';
