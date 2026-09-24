@@ -380,14 +380,11 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   // When a terminal is opened inside Antigravity IDE, these variables cause agy.exe
   // to hook into the IDE GUI via language server RPC, which triggers interactive GUI
   // confirmation modals and overrides autonomous CLI mode (--dangerously-skip-permissions).
-  delete env.ANTIGRAVITY_CONVERSATION_ID;
-  delete env.ANTIGRAVITY_LS_ADDRESS;
-  delete env.ANTIGRAVITY_AGENT;
-  delete env.ANTIGRAVITY_CSRF_TOKEN;
-  delete env.ANTIGRAVITY_TRAJECTORY_ID;
-  delete env.ANTIGRAVITY_SOURCE_METADATA;
-  delete env.ANTIGRAVITY_PROJECT_ID;
-  delete env.ANTIGRAVITY_AGENTAPI_EXE;
+  for (const key of Object.keys(env)) {
+    if (/^(?:ANTIGRAVITY|GEMINI_CLI|VSCODE_GIT_IPC)/i.test(key)) {
+      delete env[key];
+    }
+  }
 
   // Dynamically resolve executable (checks agy and antigravity in ~/.gemini/bin, AppData, and PATH)
   const commandName = options.command || 'agy';
@@ -471,9 +468,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
       args.push('--continue');
     }
 
+    const useStdin = Boolean(promptText && !options.interactive && (promptText.length > 2000 || options.useStdin));
     if (promptText) {
       if (options.interactive) {
         args.push('-i', promptText);
+      } else if (useStdin) {
+        args.push('--input-format', 'text');
       } else {
         args.push('-p', promptText);
       }
@@ -493,10 +493,11 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
 
   // 1. Synchronous Execution Path: when options.args or options.sync is specified
   if (options.args || options.sync) {
-    const stdioMode = options.stdio || 'inherit';
+    const stdioMode = options.stdio || (useStdin ? ['pipe', 'inherit', 'inherit'] : 'inherit');
     const result = spawnSync(agyExecutable, args, {
       cwd: executionCwd,
       stdio: stdioMode,
+      input: useStdin ? promptText : undefined,
       shell: useShell,
       maxBuffer: 64 * 1024 * 1024,
       env
@@ -548,10 +549,15 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(agyExecutable, args, {
       cwd: executionCwd,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: [useStdin ? 'pipe' : 'inherit', 'pipe', 'pipe'],
       shell: useShell,
       env
     });
+
+    if (useStdin && child.stdin) {
+      child.stdin.write(promptText + '\n');
+      child.stdin.end();
+    }
 
     let stdoutBuffer = '';
     let lastReportedTool = null;
