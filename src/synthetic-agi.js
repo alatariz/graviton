@@ -72,7 +72,7 @@ export function resolveCritiqueDomain(promptText = '', intent = 'general') {
   if (/\b(?:auth|login|jwt|session|password|token|credential|security)\b/.test(p)) {
     return 'auth_security';
   }
-  if (/\b(?:minecraft|voxel|crafting|threejs|webgl|canvas|game)\b/.test(p) || intent === 'voxel_minecraft' || intent === 'game_dev') {
+  if (/\b(?:minecraft|voxel|crafting)\b/.test(p) || (/\b(?:threejs|three\.?js|webgl|3d)\b/.test(p) && /\b(?:game|scene|world|canvas)\b/.test(p)) || intent === 'voxel_minecraft') {
     return 'voxel_game';
   }
   if (/\b(?:sql|database|table|query|migration|schema|sqlite|postgres)\b/.test(p) || intent === 'database_sql') {
@@ -81,7 +81,7 @@ export function resolveCritiqueDomain(promptText = '', intent = 'general') {
   if (/\b(?:api|endpoint|backend|server|express|rest|route|controller)\b/.test(p) || intent === 'backend_api') {
     return 'backend_api';
   }
-  if (/\b(?:web|ui|dashboard|frontend|app|clone|component|page|css|html)\b/.test(p) || intent === 'frontend_ui') {
+  if (/\b(?:web|ui|dashboard|frontend|app|clone|component|page|css|html|tampilan|game)\b/.test(p) || intent === 'frontend_ui' || intent === 'game_dev') {
     return 'fullstack_web';
   }
   return 'general';

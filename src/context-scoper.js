@@ -154,10 +154,12 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
 
     // 3. Semantic Role & Extension matching
     if (isUiPrompt) {
-      if (baseName.endsWith('.html') || baseName.endsWith('.jsx') || baseName.endsWith('.tsx') || baseName.endsWith('.vue')) {
-        score += 55;
+      if (baseName === 'index.html' || baseName === 'index.jsx' || baseName === 'index.tsx') {
+        score += 120;
+      } else if (baseName.endsWith('.html') || baseName.endsWith('.jsx') || baseName.endsWith('.tsx') || baseName.endsWith('.vue')) {
+        score += 90;
       } else if (baseName.endsWith('.css') || baseName.endsWith('.scss') || baseName.endsWith('.tailwind')) {
-        score += 35;
+        score += 50;
       }
     }
 
@@ -171,13 +173,35 @@ export function resolveTargetScope(prompt = '', cwd = process.cwd()) {
       }
     }
 
+    // 4. Concept Synonyms & Domain Term Mapping
+    const conceptSynonyms = {
+      soal: ['exercise', 'curriculum', 'quiz', 'question', 'task', 'stage'],
+      latihan: ['exercise', 'practice', 'evaluator'],
+      level: ['stage', 'level', 'exercise', 'app'],
+      kunci: ['solution', 'evaluator', 'answer'],
+      jawaban: ['solution', 'evaluator', 'answer'],
+      hint: ['hint', 'evaluator', 'app'],
+      skor: ['score', 'stats', 'srs']
+    };
+
+    for (const [idConcept, mappedWords] of Object.entries(conceptSynonyms)) {
+      if (promptLower.includes(idConcept)) {
+        for (const mw of mappedWords) {
+          if (baseName.includes(mw)) {
+            score += 35;
+          }
+        }
+      }
+    }
+
     if (score > 0) {
       scoredFiles.push({ file: relFile, score });
     }
   }
 
   scoredFiles.sort((a, b) => b.score - a.score);
-  let targets = scoredFiles.slice(0, 3).map(s => s.file);
+  const maxTargets = (isUiPrompt && isLogicPrompt) ? 4 : 3;
+  let targets = scoredFiles.slice(0, maxTargets).map(s => s.file);
   let isLastTouch = false;
 
   // Fallback 1: Last-Touch Context

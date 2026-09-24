@@ -30,11 +30,13 @@ export function analyzePromptProfile(text) {
   let intent = 'general';
   if (/\b(?:minecraft|voxel|sandbox|crafting)\b/i.test(clean)) {
     intent = 'voxel_minecraft';
-  } else if (/\b(?:game|cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon|flappy|snake|tetris|pong|pacman|chess|catur|mario|platformer)\b/i.test(clean)) {
+  } else if (/\b(?:kaya\s+game|model\s+game|gamifikasi|gamification)\b/i.test(clean)) {
+    intent = 'frontend_ui';
+  } else if (/\b(?:cs2|fps|shooter|canvas|three\.?js|webgl|phaser|permainan|arcade|player|weapon|flappy|snake|tetris|pong|pacman|chess|catur|mario|platformer)\b/i.test(clean) || (/\bgame\b/i.test(clean) && !/\b(?:tampilan|ui|halaman|belajar|soal|level|web|excel|spreadsheet|dashboard|clean|tombol)\b/i.test(clean))) {
     intent = 'game_dev';
   } else if (/\b(?:api|backend|rest|crud|endpoint|express|fastapi|nest|controller|route|microservice)\b/i.test(clean)) {
     intent = 'backend_api';
-  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css|trello|kanban|todo|spotify|ecommerce|shop|store|calculator|kalkulator|editor|aplikasi|app|web|website|web\s*app)\b/i.test(clean)) {
+  } else if (/\b(?:dashboard|landing\s+page|ui|frontend|react|vue|component|modal|navbar|tailwind|html|css|trello|kanban|todo|spotify|ecommerce|shop|store|calculator|kalkulator|editor|aplikasi|app|web|website|web\s*app|tampilan|halaman|desain|layout)\b/i.test(clean)) {
     intent = 'frontend_ui';
   } else if (/\b(?:database|sql|table|schema|migration|bigquery|postgres|mysql|sqlite|query)\b/i.test(clean)) {
     intent = 'database_sql';

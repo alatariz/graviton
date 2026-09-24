@@ -14,7 +14,7 @@ export const GROUNDED_LIBRARY_REGISTRY = {
   },
   three_js: {
     name: 'Three.js Modern 3D WebGL Engine',
-    triggers: ['threejs', 'three.js', 'three', 'webgl', '3d canvas', 'voxel'],
+    triggers: ['threejs', 'three.js', 'three js', 'webgl', '3d canvas', 'three.min.js'],
     invariants: [
       'Use modern BoxGeometry, SphereGeometry, PlaneGeometry (NEVER use deprecated CubeGeometry).',
       'Color management: Use sRGB color space (`renderer.outputColorSpace = THREE.SRGBColorSpace`).',

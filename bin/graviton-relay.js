@@ -577,6 +577,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let toolExecutionCount = 0;
     const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || (options.isDeep ? 20 : 12);
     const fileViewTracker = {};
+    let scratchProbeCount = 0;
 
     const processStreamChunk = (chunk, isFinal = false) => {
       streamLineBuffer += chunk;
@@ -683,7 +684,14 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                   const file = params.TargetFile || params.AbsolutePath || '';
                   toolDesc = `\x1b[33m●  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'run_command') {
-                  const cmd = (params.CommandLine || '').slice(0, 45);
+                  const rawCmd = params.CommandLine || '';
+                  if (/node\s+(?:-e|--eval)|python\s+-c|Get-ChildItem/i.test(rawCmd)) {
+                    scratchProbeCount++;
+                    if (scratchProbeCount >= 2) {
+                      process.stdout.write(`\n\x1b[33m[GRAVITON REPL GUARD]\x1b[0m AI running ad-hoc inspection script (${scratchProbeCount}x). Enforcing direct file edits...\x1b[0m\n`);
+                    }
+                  }
+                  const cmd = rawCmd.slice(0, 45);
                   toolDesc = `\x1b[35m●  [AI Working]\x1b[0m Running: \x1b[1m${cmd}\x1b[0m...`;
                 } else if (toolName === 'grep_search' || toolName === 'find_by_name') {
                   toolDesc = `\x1b[34m●  [AI Working]\x1b[0m Searching codebase: \x1b[1m${params.Query || params.Pattern || ''}\x1b[0m...`;

@@ -842,9 +842,11 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     architectIntent = architectResult.intent || 'general';
   }
 
+  const sourcePrompt = userInput || cleanedInput;
+
   // Pre-emptive Domain Safety & Edge-Case Invariants (V3.6.0 Overclock Engine)
   if (!options.noOverclock && !options.noEdgeCases) {
-    const edgeCases = synthesizeDomainEdgeCases(architectIntent, cleanedInput);
+    const edgeCases = synthesizeDomainEdgeCases(architectIntent, sourcePrompt);
     if (edgeCases && edgeCases.length > 0 && !cleanedInput.includes('[PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS]')) {
       const edgeCaseList = edgeCases.map((ec, idx) => `   - ${ec}`).join('\n');
       cleanedInput = `${cleanedInput}\n\n=== [PRE-EMPTIVE DOMAIN SAFETY & EDGE-CASE INVARIANTS] ===\n${edgeCaseList}`;
@@ -853,7 +855,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
   // Synthetic AGI Metacognitive Engine (V4.0.0 1:1 Dialectic & Teleological Invariants)
   if (!options.noAgi && !options.noMetacognition) {
-    const agiResult = synthesizeAgiCognitiveHarness(cleanedInput, architectIntent, options);
+    const agiResult = synthesizeAgiCognitiveHarness(sourcePrompt, architectIntent, options);
     if (agiResult && agiResult.harness && !cleanedInput.includes('[.0.0 SYNTHETIC AGI METACOGNITIVE HARNESS]')) {
       cleanedInput = `${cleanedInput}\n\n${agiResult.harness}`;
     }
@@ -861,7 +863,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
   // Dynamic Skill Capabilities Matrix (V4.1.0 High-Leverage Skills)
   if (!options.noSkills) {
-    const skillsBlock = formatSkillDirectivesBlock(cleanedInput);
+    const skillsBlock = formatSkillDirectivesBlock(sourcePrompt);
     if (skillsBlock && !cleanedInput.includes('[GRAVITON RELEVANT SKILL CAPABILITIES ACTIVATED]')) {
       cleanedInput = `${cleanedInput}\n\n${skillsBlock}`;
     }
@@ -869,7 +871,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
   // Grounded Live Intel & 2026 API Invariants (V4.3.0 Grounding Engine)
   if (!options.noGrounding && !options.noResearch) {
-    const researchBlock = synthesizeGroundedResearchBlock(cleanedInput);
+    const researchBlock = synthesizeGroundedResearchBlock(sourcePrompt);
     if (researchBlock && !cleanedInput.includes('[GRAVITON GROUNDED LIVE INTEL & 2026 API INVARIANTS]')) {
       cleanedInput = `${cleanedInput}\n\n${researchBlock}`;
     }
@@ -877,7 +879,7 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
 
   // Prompt Ambiguity & Requirement Clarifier (V4.9.0)
   if (!options.noClarify) {
-    const ambiguityAnalysis = analyzePromptAmbiguity(userInput || cleanedInput);
+    const ambiguityAnalysis = analyzePromptAmbiguity(sourcePrompt);
     if (ambiguityAnalysis.isAmbiguous) {
       const clarifiedBlock = synthesizeClarifiedSpecificationBlock(ambiguityAnalysis);
       if (clarifiedBlock && !cleanedInput.includes('[GRAVITON CLARIFIED ENGINEERING SPECIFICATION]')) {
@@ -970,7 +972,9 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
         const lineCount = rawFileContent.split('\n').length;
         const ext = path.extname(resolved).slice(1) || '';
         const relPath = path.relative(currentCwd, resolved).replace(/\\/g, '/');
-        const cappedContent = readAndTruncateFile(resolved, 500);
+        const isPrimaryTarget = scopedTargets.some(t => t.toLowerCase() === relPath.toLowerCase() || t.toLowerCase() === path.basename(relPath).toLowerCase());
+        const maxLinesToInject = isPrimaryTarget ? 1000 : 500;
+        const cappedContent = readAndTruncateFile(resolved, maxLinesToInject);
 
         // DELTA COMPRESSION HOOK
         // If continuous conversation session is active and delta is not disabled:
@@ -1092,7 +1096,8 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in conversational responses; provide localized Search/Replace blocks or Unified Diffs. For major UI redesigns, large layout overhauls, or when modifying > 30% of a file on disk: USE write_to_file (with Overwrite: true) to write the complete updated file in A SINGLE PASS. NEVER loop between view_file and replace_file_content on the same file more than 2 times.
 9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.
 10. [AUTONOMOUS DIRECT EXECUTION - ZERO APPROVAL REQUESTS]: You are executing with full autonomous privileges (--dangerously-skip-permissions). NEVER output phrases requesting user approval or review, such as "AWAITING USER APPROVAL", "SUMMARY OF ACTIONABLE DECISIONS", "Please review the implementation plan and approve", or ask the user for confirmation. Execute modifications immediately and autonomously.
-11. [ANTI-EXPLORATION & MAXIMUM 8 TOOL STEPS]: You have a strict budget of at most 8 tool calls for this entire turn. All needed target files and AST outlines are already pinned. Do NOT run directory commands (Get-ChildItem, ls, dir). Do NOT call view_file repeatedly on files you have already viewed. Make your edits decisively and provide your response within 8 steps.`.replace(/\r\n/g, '\n');
+11. [ANTI-EXPLORATION & MAXIMUM 8 TOOL STEPS]: You have a strict budget of at most 8 tool calls for this entire turn. All needed target files and AST outlines are already pinned. Do NOT run directory commands (Get-ChildItem, ls, dir). Do NOT call view_file repeatedly on files you have already viewed. Make your edits decisively and provide your response within 8 steps.
+12. [NO AD-HOC CLI SCRIPTS OR REPL PROBING]: You are strictly forbidden from running exploratory inspection scripts (such as 'node -e "..."', 'python -c "..."', eval one-liners, grep, or cat) to count variables, test snippets, or inspect data structures. You are equipped with direct workspace context and AST indexes. Apply file modifications directly using write_to_file or replace_file_content.`.replace(/\r\n/g, '\n');
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map only if targets are already pinned
   const hasTargets = targetScope && Array.isArray(targetScope.targets) && targetScope.targets.length > 0;
