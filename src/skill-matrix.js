@@ -3,7 +3,7 @@
 
 export const SKILL_TRIGGERS = [
   {
-    keywords: ['ui', 'landing', 'css', 'html', 'tailwind', 'component', 'modal', 'navbar', 'responsive', 'frontend', 'desain', 'tampilan', 'bento', 'design'],
+    keywords: ['ui', 'web', 'website', 'dashboard', 'landing', 'css', 'html', 'tailwind', 'component', 'modal', 'navbar', 'responsive', 'frontend', 'desain', 'tampilan', 'bento', 'design'],
     skill: 'ui-ux-pro-max & modern-web-guidance',
     directive: 'Enforce 2026 visual standards (Bento Grid, subtle glassmorphism, high-contrast accessible tokens, micro-interactions, zero-dated guarantee).'
   },
