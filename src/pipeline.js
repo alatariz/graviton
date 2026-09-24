@@ -888,10 +888,12 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const gravitonFilter = createGravitonFilter(currentCwd);
   let sessionFilesIgnored = 0;
 
-  // Smart File Hydration: detect file names mentioned in userInput
+  // Smart File Hydration: combine explicit user mentions and zero-token scoped targets
+  const targetScope = (options && options.targetScope) || resolveTargetScope(userInput, currentCwd);
   const fileRegex = /\b([a-zA-Z0-9_./\\-]+\.(?:js|jsx|ts|tsx|py|rs|go|html|css|json|md|yaml|yml|sql|sh|docx|xlsx|pptx|pdf|csv|tsv))\b/gi;
   const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
-  const uniqueFiles = Array.from(new Set(matches));
+  const scopedTargets = targetScope && Array.isArray(targetScope.targets) ? targetScope.targets : [];
+  const uniqueFiles = Array.from(new Set([...matches, ...scopedTargets]));
 
   const injectedFiles = [];
   const injectedDependencies = [];
@@ -1064,7 +1066,6 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
     ? '\n\n' + allInjected.join('\n\n')
     : '';
 
-  const targetScope = resolveTargetScope(userInput, currentCwd);
   const compactMemory = getCompactMemoryDirective(currentCwd);
   const isContinuous = Boolean(options && options.isContinuous);
   const conversationTitle = options && options.conversationTitle ? options.conversationTitle : null;
@@ -1080,7 +1081,8 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
 7. TARGET SCOPE & CONTEXT FOCUS: If a targeted scope is provided below, proceed directly to inspect or edit the designated target files. Do NOT perform redundant exploratory tool calls (list_dir or grep_search) across the workspace.
 8. [SURGICAL CODE MODIFICATION & OUTPUT ECONOMIZER]: Follow the minimal blast radius rule. Never rewrite unaffected methods or entire files in responses. Provide localized Search/Replace blocks or Unified Diffs, keeping explanations minimal.
 9. [CLEAN CLI OUTPUT]: This is a direct terminal CLI session. NEVER use raw Markdown bold asterisks (**) or header hashes (###, ##, #) in explanatory text. Use clean plain text with simple bullet points (-) and uppercase section headers without asterisks.
-10. [AUTONOMOUS DIRECT EXECUTION - ZERO APPROVAL REQUESTS]: You are executing with full autonomous privileges (--dangerously-skip-permissions). NEVER output phrases requesting user approval or review, such as "AWAITING USER APPROVAL", "SUMMARY OF ACTIONABLE DECISIONS", "Please review the implementation plan and approve", or ask the user for confirmation. Execute modifications immediately and autonomously.`.replace(/\r\n/g, '\n');
+10. [AUTONOMOUS DIRECT EXECUTION - ZERO APPROVAL REQUESTS]: You are executing with full autonomous privileges (--dangerously-skip-permissions). NEVER output phrases requesting user approval or review, such as "AWAITING USER APPROVAL", "SUMMARY OF ACTIONABLE DECISIONS", "Please review the implementation plan and approve", or ask the user for confirmation. Execute modifications immediately and autonomously.
+11. [ANTI-EXPLORATION & SURGICAL TOOL DISCIPLINE]: The target files for this task are explicitly pinned and outlined above. Do NOT perform exploratory file scanning (grep_search or repeated view_file). Inspect only the necessary file sections in a single pass and execute localized edits immediately. Do NOT exceed 10 tool calls per prompt.`.replace(/\r\n/g, '\n');
 
   // Delta Prompting: in continuous sessions, omit repetitive workspace tree map to conserve tokens
   const workspaceBlock = isContinuous

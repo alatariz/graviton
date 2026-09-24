@@ -1,7 +1,7 @@
 {
   "name": "@alatariz/graviton",
-  "version": "5.1.1",
-  "description": "Graviton V5.1.1 - Autonomous Synthetic AGI Engine, Unified Coordinator & Relational Memory for Antigravity",
+  "version": "5.1.2",
+  "description": "Graviton V5.1.2 - Autonomous Synthetic AGI Engine, Unified Coordinator & Relational Memory for Antigravity",
   "license": "AGPL-3.0-or-later",
   "author": "alatariz <alatarizx@gmail.com>",
   "repository": {

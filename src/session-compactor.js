@@ -228,7 +228,7 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
   const currentTurns = sessionData.turns || 0;
   const currentTokens = sessionData.cumulativeTokens || 0;
   const isTurnOver = currentTurns >= threshold;
-  const isTokenOver = currentTokens >= tokenLimit && currentTurns > windowSize;
+  const isTokenOver = currentTokens >= tokenLimit && currentTurns >= 1;
 
   if (!isTurnOver && !isTokenOver) {
     return {
@@ -240,7 +240,10 @@ export function checkAndApplySlidingWindow(cwd = process.cwd(), conversationId =
   }
 
   // Calculate turns to prune/distill
-  const turnsToCompact = currentTurns - windowSize;
+  let turnsToCompact = currentTurns - windowSize;
+  if (turnsToCompact <= 0 && isTokenOver) {
+    turnsToCompact = Math.max(1, currentTurns > 1 ? currentTurns - 1 : 1);
+  }
   if (turnsToCompact <= 0) {
     return {
       autoCompacted: false,

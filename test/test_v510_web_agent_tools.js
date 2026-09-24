@@ -1,4 +1,4 @@
-// test/test_v510_web_agent_tools.js - Graviton V5.1.1 Web Agent Tools & Autonomous Integration Tests
+// test/test_v510_web_agent_tools.js - Graviton V5.1.2 Web Agent Tools & Autonomous Integration Tests
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.dirname(__dirname);
 
 console.log('===============================================================');
-console.log('   GRAVITON V5.1.1 WEB AGENT & AUTONOMOUS TOOLS TEST SUITE');
+console.log('   GRAVITON V5.1.2 WEB AGENT & AUTONOMOUS TOOLS TEST SUITE');
 console.log('===============================================================\n');
 
 function httpPost(port, pathName, payload) {
@@ -184,7 +184,7 @@ export function runMain() {
     console.log('  ✔ PASS: Prompt ambiguity clarification endpoint verified\n');
 
     console.log('---------------------------------------------------------------');
-    console.log('✔  ALL V5.1.1 WEB AGENT & AUTONOMOUS TOOLS TESTS PASSED!');
+    console.log('✔  ALL V5.1.2 WEB AGENT & AUTONOMOUS TOOLS TESTS PASSED!');
     console.log('---------------------------------------------------------------\n');
   } finally {
     await new Promise(resolve => server.close(resolve));
