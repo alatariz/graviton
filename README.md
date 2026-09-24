@@ -2,7 +2,7 @@
 
   <img src="graviton-logo.png" width="160" alt="Graviton Logo" />
 
-  # GRAVITON V5.1.2
+  # GRAVITON V5.1.3
 
   ### Autonomous AI Acceleration & Intelligent Context Engine for Google Antigravity
 
@@ -11,7 +11,7 @@
   </p>
 
   <p align="center">
-    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-5.1.2-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 5.1.2" /></a>
+    <a href="https://github.com/alatariz/graviton/releases"><img src="https://img.shields.io/badge/version-5.1.3-00f0ff.svg?style=for-the-badge&logo=semver&logoColor=black" alt="Version 5.1.3" /></a>
     <a href="https://github.com/alatariz/graviton/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg?style=for-the-badge" alt="License AGPL-3.0" /></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+" /></a>
     <a href="https://github.com/alatariz/graviton"><img src="https://img.shields.io/badge/built%20for-Google%20Antigravity-8A2BE2.svg?style=for-the-badge" alt="Built for Google Antigravity" /></a>
@@ -37,7 +37,7 @@
 ---
 
 > [!IMPORTANT]
-> **What is Graviton V5.1.2?**
+> **What is Graviton V5.1.3?**
 > Graviton is a zero-auth, high-performance terminal accelerator and **Autonomous Synthetic Metacognitive Engine** built specifically for the **Google Antigravity CLI (`agy`)**. 
 > Executing **100% offline** on your local machine with zero external API keys and **zero third-party runtime dependencies**, Graviton orchestrates a unified suite of autonomous background engines: Socratic dialectic reasoning, Code Property Graph (CPG) blast radius calculation, deterministic unit test synthesis, symbolic refactoring, dead-code elimination, runtime self-correction sentinels, 2026 API grounding invariants, and instant document transpilation with **51/51 test suites passing 100%**. All commands work interchangeably with either `graviton` or the shorthand `grav`.
 
@@ -118,7 +118,7 @@ graviton --version
 
 # Ultra-fast alias:
 grav --version
-# Output: GRAVITON v5.1.2 (v3.x compatible)
+# Output: GRAVITON v5.1.3 (v3.x compatible)
 ```
 
 ---
@@ -246,7 +246,7 @@ The culmination of defensive engineering:
 - **Memory Coherence:** Cumulative marathon chat memory distillation maintaining <200 tokens across 50+ turns.
 - **Master Test Suite:** 20/20 test suites passing 100% with 0 regressions.
 
-### 11. Phase 11: V5.0.0 & V5.1.2 Autonomous Synthetic Intelligence & Web Agent
+### 11. Phase 11: V5.0.0 & V5.1.3 Autonomous Synthetic Intelligence & Web Agent
 The transition from passive prompt filtering to proactive autonomous intelligence:
 - **Requirement Specification Clarifier:** Automatically detects ambiguous or underspecified prompts, calculates ambiguity scores, and seamlessly expands requirements with concrete technical bounds, edge-case constraints, and architectural invariants before execution.
 - **Dual-Agent Adversarial Red-Team & Verification Critic:** Evaluates generated code against memory leaks, unhandled rejections, race conditions, OWASP injection patterns, and stale state bugs.
@@ -518,11 +518,11 @@ Prevent unwanted files, proprietary secrets, and build directories from leaking 
 
 ---
 
-<h2 id="empirical-benchmarks">Empirical Benchmarks: Real-World Efficiency in V5.1.2</h2>
+<h2 id="empirical-benchmarks">Empirical Benchmarks: Real-World Efficiency in V5.1.3</h2>
 
 Measured on production enterprise repositories across 51 Master Test Suites:
 
-| Scenario / Task | Without Graviton (Raw Output) | With Graviton V5.1.2 | Token Efficiency | Latency Impact |
+| Scenario / Task | Without Graviton (Raw Output) | With Graviton V5.1.3 | Token Efficiency | Latency Impact |
 | :--- | :--- | :--- | :--- | :--- |
 | **Terminal Error Dump** (`jest` / `pytest` 2,000 lines) | ~28,000 tokens | ~1,400 tokens | **-95.0% Noise Stripped** | `< 1ms local overhead` |
 | **Locating Target File** (*"Fix login bug"*) | 5,000–12,000 tokens (3-4 exploratory search loops) | 0 tokens (Instant Smart Target Pinning) | **100% Search Loops Eliminated** | **Turnaround cut from 30s to 3s** |

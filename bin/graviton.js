@@ -306,7 +306,7 @@ async function main() {
 
   // 2. VERSION
   if (command === 'version' || command === '--version' || command === '-v') {
-    let version = '5.1.2';
+    let version = '5.1.3';
     try {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
       version = pkg.version || version;
@@ -990,30 +990,6 @@ async function main() {
     }
   }
 
-  const superPrompt = constructSuperPrompt(input, currentCwd, {
-    isContinuous: continueSession,
-    conversationTitle: activeTitle,
-    conversationId: targetConversationId,
-    full: isFull,
-    noDelta: isNoDelta,
-    noSqueeze: isNoSqueeze,
-    rawOutput: isRawOutput,
-    isDeep: isDeep,
-    isFast: isFast
-  });
-
-  let finalSuperPrompt = autonomousScaffoldDirective
-    ? `${superPrompt}\n\n${autonomousScaffoldDirective}`
-    : superPrompt;
-
-  if (clarifiedSpecificationDirective) {
-    finalSuperPrompt = `${finalSuperPrompt}\n\n${clarifiedSpecificationDirective}`;
-  }
-
-  if (finalSuperPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
-    console.log('\x1b[36m[GRAVITON AUTONOMOUS OVERCLOCK]\x1b[0m Synthesized full-stack architecture specification with zero stubs.');
-  }
-
   const targetScope = resolveTargetScope(input, currentCwd);
   if (clipboardAttachment && clipboardAttachment.targetFiles && clipboardAttachment.targetFiles.length > 0) {
     for (const tf of clipboardAttachment.targetFiles) {
@@ -1028,6 +1004,31 @@ async function main() {
   if (targetScope && targetScope.targets && targetScope.targets.length > 0) {
     const scopeLabel = targetScope.isLastTouch ? 'Last-Touch Context' : 'Smart Scoper';
     console.log(`\x1b[35m[GRAVITON CONTEXT SCOPER]\x1b[0m Targeted Files: \x1b[1m${targetScope.targets.join(', ')}\x1b[0m \x1b[90m(${scopeLabel})\x1b[0m`);
+  }
+
+  const superPrompt = constructSuperPrompt(input, currentCwd, {
+    isContinuous: continueSession,
+    conversationTitle: activeTitle,
+    conversationId: targetConversationId,
+    full: isFull,
+    noDelta: isNoDelta,
+    noSqueeze: isNoSqueeze,
+    rawOutput: isRawOutput,
+    isDeep: isDeep,
+    isFast: isFast,
+    targetScope
+  });
+
+  let finalSuperPrompt = autonomousScaffoldDirective
+    ? `${superPrompt}\n\n${autonomousScaffoldDirective}`
+    : superPrompt;
+
+  if (clarifiedSpecificationDirective) {
+    finalSuperPrompt = `${finalSuperPrompt}\n\n${clarifiedSpecificationDirective}`;
+  }
+
+  if (finalSuperPrompt.includes('ARCHITECTED TECHNICAL SPECIFICATION')) {
+    console.log('\x1b[36m[GRAVITON AUTONOMOUS OVERCLOCK]\x1b[0m Synthesized full-stack architecture specification with zero stubs.');
   }
 
   const stats = loadStats();
@@ -1180,6 +1181,19 @@ async function main() {
       console.log(`\x1b[32m✔  [RUNTIME SENTINEL]\x1b[0m Workspace integrity verified (0 syntax defects, 0 broken imports).`);
     }
   } catch {}
+
+  // Post-Execution Adversarial Critic Security Audit (Active in Deep Mode):
+  if (isDeep) {
+    try {
+      const criticReport = evaluateWorkspaceAdversarially(currentCwd);
+      if (!criticReport.passed && criticReport.stats.high > 0) {
+        console.log(`\x1b[33m[GRAVITON RED-TEAM CRITIC]\x1b[0m Detected ${criticReport.stats.high} high-severity security issue(s):`);
+        criticReport.findings.filter(f => f.severity === 'HIGH').slice(0, 2).forEach(f => {
+          console.log(`  ● [${f.ruleId}] in ${f.file}:${f.line} - ${f.description}`);
+        });
+      }
+    } catch {}
+  }
 
   console.log(`\x1b[32m✔  Execution complete. (${sessionTag}Session: ~${Number(odo.lastSessionTokens || 0).toLocaleString()} tokens | Lifetime Odometer: ${Number(odo.totalTokens || 0).toLocaleString()} tokens)\x1b[0m`);
   process.exit(0);

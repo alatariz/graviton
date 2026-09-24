@@ -2773,7 +2773,7 @@
         doctor: 'Verifies Node.js engine compatibility, Google Antigravity (agy) binary resolution, Git version, and filesystem cache health.',
         ports: 'Monitors active development servers, identifies stuck localhost processes, and terminates background daemons.',
         stats: 'Tracks session token consumption, lifetime tokens saved, Flash/Pro dollar economy, and cache efficiency.',
-        version: 'Displays current Graviton release (v5.1.2), Node environment, active workspace directory, and autonomous engine readiness.'
+        version: 'Displays current Graviton release (v5.1.3), Node environment, active workspace directory, and autonomous engine readiness.'
       };
 
       if (titleEl) titleEl.textContent = titles[tab] || tab.toUpperCase();
@@ -2956,7 +2956,7 @@
         } else if (currentDrawerTab === 'stats') {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         } else if (currentDrawerTab === 'version') {
-          bodyEl.textContent = `GRAVITON v${res.version || '5.1.2'}\nNode: ${navigator.userAgent}\nEnvironment: Developer Agent Localhost`;
+          bodyEl.textContent = `GRAVITON v${res.version || '5.1.3'}\nNode: ${navigator.userAgent}\nEnvironment: Developer Agent Localhost`;
         } else {
           bodyEl.textContent = JSON.stringify(res, null, 2);
         }

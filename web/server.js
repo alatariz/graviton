@@ -693,7 +693,17 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       }
 
       let executionConvId = requestedConvId;
+      let existingConvTitle = null;
       if (requestedConvId) {
+        if (activeSession && activeSession.id === requestedConvId && activeSession.title) {
+          existingConvTitle = activeSession.title;
+        } else {
+          try {
+            const allConvs = getWorkspaceConversations(targetCwd);
+            const found = allConvs.conversations.find(c => c.id === requestedConvId);
+            if (found && found.title) existingConvTitle = found.title;
+          } catch {}
+        }
         try {
           const autoComp = autoCompactSessionIfExceeded(targetCwd, requestedConvId);
           if (autoComp && autoComp.autoCompacted) {
@@ -754,7 +764,8 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         isContinuous: Boolean(requestedConvId),
         conversationId: requestedConvId,
         isDeep,
-        isFast
+        isFast,
+        targetScope
       });
 
       let finalSuperPrompt = synthesized.superPrompt || prompt;
@@ -870,6 +881,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           if (liveConvId) {
             savedConv = saveWorkspaceConversation(targetCwd, liveConvId, prompt, {
               tokens: turnToks,
+              title: existingConvTitle || undefined,
               assistantText: cleanOutput,
               activeFiles: targetScope.targets || targetScope.files || []
             });
@@ -947,6 +959,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       if (effectiveConvId) {
         savedConv = saveWorkspaceConversation(targetCwd, effectiveConvId, prompt, {
           tokens: lastTokens,
+          title: existingConvTitle || undefined,
           assistantText: executionResult.output,
           activeFiles: targetScope.targets || targetScope.files || []
         });

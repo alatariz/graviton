@@ -20,6 +20,7 @@ import { resolveDesignSystem, formatDesignSystemSpecification } from './design-i
 import { verifyProjectRuntime, verifyJavaScriptSyntax, verifyDomBindings, verifyLocalImports, generateSelfCorrectionDirective, autoHealMissingDomElement } from './runtime-sentinel.js';
 import { detectGroundedLibraries, synthesizeGroundedResearchBlock, GROUNDED_LIBRARY_REGISTRY } from './live-researcher.js';
 import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock, DOMAIN_PATTERNS } from './ambiguity-clarifier.js';
+import { buildCodePropertyGraph, calculateBlastRadius, synthesizeBlastRadiusDirective } from './code-property-graph.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -40,6 +41,7 @@ export { resolveDesignSystem, formatDesignSystemSpecification } from './design-i
 export { verifyProjectRuntime, verifyJavaScriptSyntax, verifyDomBindings, verifyLocalImports, generateSelfCorrectionDirective, autoHealMissingDomElement } from './runtime-sentinel.js';
 export { detectGroundedLibraries, synthesizeGroundedResearchBlock, GROUNDED_LIBRARY_REGISTRY } from './live-researcher.js';
 export { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock, DOMAIN_PATTERNS } from './ambiguity-clarifier.js';
+export { buildCodePropertyGraph, calculateBlastRadius, synthesizeBlastRadiusDirective } from './code-property-graph.js';
 
 export function estimateTokens(text) {
   if (!text || typeof text !== 'string') return 0;
@@ -894,6 +896,14 @@ export function constructSuperPrompt(userInput, cwd = process.cwd(), options = {
   const matches = ((userInput || '').match(fileRegex) || []).map(m => m.trim());
   const scopedTargets = targetScope && Array.isArray(targetScope.targets) ? targetScope.targets : [];
   const uniqueFiles = Array.from(new Set([...matches, ...scopedTargets]));
+  // Autonomous Code Property Graph (CPG) & Blast Radius Guard (V5.1.3)
+  let cpgBlastBlock = '';
+  if (!options.noCpg && scopedTargets.length > 0) {
+    try {
+      const cpg = buildCodePropertyGraph(currentCwd, { maxFiles: 120 });
+      cpgBlastBlock = synthesizeBlastRadiusDirective(cpg, scopedTargets.slice(0, 3));
+    } catch {}
+  }
 
   const injectedFiles = [];
   const injectedDependencies = [];
@@ -1090,6 +1100,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
     : workspaceInfo;
 
   const targetDirectiveBlock = targetScope && targetScope.directive ? `\n\n${targetScope.directive}` : '';
+  const cpgBlock = cpgBlastBlock ? `\n\n${cpgBlastBlock}` : '';
   const compactMemoryBlock = compactMemory ? `\n\n${compactMemory}` : '';
   const topicDirectiveBlock = conversationTitle
     ? `\n\n[ACTIVE CONVERSATION TOPIC]: "${conversationTitle}"\nStay strictly focused on resolving tasks within this conversation topic.`
@@ -1102,7 +1113,7 @@ CRITICAL WORKSPACE & DIRECTORY ISOLATION RULES:
   const finalPrompt = `[SYSTEM DIRECTIVE]: "${systemDirective}"
 
 [CWD]: ${currentCwd}
-${compactMemoryBlock}${targetDirectiveBlock}${topicDirectiveBlock}${economizerBlock}${cognitiveContractBlock}
+${compactMemoryBlock}${targetDirectiveBlock}${cpgBlock}${topicDirectiveBlock}${economizerBlock}${cognitiveContractBlock}
 
 ${workspaceBlock}${injectedFilesBlock}
 
