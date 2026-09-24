@@ -39,6 +39,7 @@ import { generateTestFile } from '../src/test-generator.js';
 import { planSymbolRename, applySymbolRename, formatRefactorPlan } from '../src/symbolic-refactor.js';
 import { analyzePromptAmbiguity, synthesizeClarifiedSpecificationBlock } from '../src/ambiguity-clarifier.js';
 import { detectDomainFromPrompt, scaffoldProject } from '../src/scaffolder.js';
+import { autoCompactSessionIfExceeded, getCompactMemoryDirective } from '../src/session-compactor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -681,7 +682,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       const isExplicitNew = Boolean(body.isNew);
       const activeSession = getActiveConversation(targetCwd);
 
-      // Conversation Continuity: if not explicitly starting new chat, default to workspace's active conversation
+      // Conversation Continuity & Autonomous Sliding-Window Compactor
       let requestedConvId = null;
       if (!isExplicitNew) {
         if (body.conversationId) {
@@ -689,6 +690,19 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         } else if (activeSession && activeSession.id) {
           requestedConvId = activeSession.id;
         }
+      }
+
+      let executionConvId = requestedConvId;
+      if (requestedConvId) {
+        try {
+          const autoComp = autoCompactSessionIfExceeded(targetCwd, requestedConvId);
+          if (autoComp && autoComp.autoCompacted) {
+            console.log(`\x1b[36m[GRAVITON WEB IDE]\x1b[0m ${autoComp.message}`);
+            // If session exceeded limits (>25k tokens or >6 turns), start fresh lightweight
+            // Antigravity turn with compact memory so we do not reload historical tool steps.
+            executionConvId = null;
+          }
+        } catch {}
       }
 
       // Map Fast / Grav / Deep (and backwards compatible low / medium / high)
@@ -811,7 +825,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           return;
         }
 
-        let liveConvId = requestedConvId;
+        let liveConvId = executionConvId;
         let cleanText = '';
 
         try {
@@ -847,6 +861,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           try {
             autoHealWorkspaceFiles(targetCwd);
             verifyProjectRuntime(targetCwd);
+            autoCompactSessionIfExceeded(targetCwd, liveConvId);
           } catch {}
 
           const odo = readOdometer();
@@ -893,7 +908,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         try {
           const runRes = await runAntigravityWithAutoAllow(finalSuperPrompt, {
             cwd: targetCwd,
-            conversationId: requestedConvId || undefined,
+            conversationId: executionConvId || undefined,
             userPrompt: prompt,
             effort: modelRouting.agyEffort,
             model: modelRouting.baseModel,
@@ -910,6 +925,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           try {
             autoHealWorkspaceFiles(targetCwd);
             verifyProjectRuntime(targetCwd);
+            autoCompactSessionIfExceeded(targetCwd, effectiveConvId);
           } catch {}
 
           executionResult = {

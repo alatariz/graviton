@@ -574,6 +574,8 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let failReason = null;
     let toolLineActive = false;
     let streamLineBuffer = '';
+    let toolExecutionCount = 0;
+    const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || (options.isDeep ? 50 : 35);
 
     const processStreamChunk = (chunk, isFinal = false) => {
       streamLineBuffer += chunk;
@@ -698,6 +700,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                   } catch {}
                 }
               } else if (step.state === 'DONE') {
+                toolExecutionCount++;
                 const dur = step.duration_seconds
                   ? `${step.duration_seconds.toFixed(1)}s`
                   : (toolStartTime ? `${((Date.now() - toolStartTime) / 1000).toFixed(1)}s` : '');
@@ -713,9 +716,16 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                     options.onToolUpdate({
                       state: 'DONE',
                       tool: step.tool_name,
-                      duration: step.duration_seconds || (dur ? parseFloat(dur) : null)
+                      duration: step.duration_seconds || (dur ? parseFloat(dur) : null),
+                      stepCount: toolExecutionCount
                     });
                   } catch {}
+                }
+
+                // Autonomous Circuit Breaker: Prevent infinite exploratory tool loops
+                if (toolExecutionCount >= MAX_TOOL_STEPS && !aborted) {
+                  console.error(`\n\x1b[1;33m[GRAVITON CIRCUIT BREAKER]\x1b[0m Autonomous tool limit reached (${toolExecutionCount} steps). Finalizing execution to prevent runaway token loop.\x1b[0m`);
+                  triggerFailFast(`Tool execution loop limit exceeded (${MAX_TOOL_STEPS} steps).`);
                 }
               }
             }
