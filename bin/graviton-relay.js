@@ -573,11 +573,12 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
     let aborted = false;
     let failReason = null;
     let toolLineActive = false;
-    let streamLineBuffer = '';
     let toolExecutionCount = 0;
-    const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || (options.isDeep ? 20 : 12);
+    const defaultMaxSteps = options.isFast ? 15 : (options.isDeep ? 40 : 25);
+    const MAX_TOOL_STEPS = Number(process.env.GRAVITON_MAX_TOOL_STEPS) || defaultMaxSteps;
     const fileViewTracker = {};
     let scratchProbeCount = 0;
+    let filesModifiedCount = 0;
 
     const processStreamChunk = (chunk, isFinal = false) => {
       streamLineBuffer += chunk;
@@ -681,6 +682,7 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                   }
                   toolDesc = `\x1b[36m●  [AI Working]\x1b[0m Inspecting \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'write_to_file' || toolName === 'replace_file_content' || toolName === 'multi_replace_file_content') {
+                  filesModifiedCount++;
                   const file = params.TargetFile || params.AbsolutePath || '';
                   toolDesc = `\x1b[33m●  [AI Working]\x1b[0m Modifying \x1b[1m${path.basename(file) || file}\x1b[0m...`;
                 } else if (toolName === 'run_command') {
@@ -739,9 +741,14 @@ export function runAntigravityWithAutoAllow(promptText, options = {}) {
                 }
 
                 // Autonomous Circuit Breaker: Prevent infinite exploratory tool loops
-                if (toolExecutionCount >= MAX_TOOL_STEPS && !aborted) {
-                  console.error(`\n\x1b[1;33m[GRAVITON CIRCUIT BREAKER]\x1b[0m Autonomous tool limit reached (${toolExecutionCount} steps). Finalizing execution to prevent runaway token loop.\x1b[0m`);
-                  triggerFailFast(`Tool execution loop limit exceeded (${MAX_TOOL_STEPS} steps).`);
+                if (!aborted) {
+                  if (filesModifiedCount === 0 && toolExecutionCount >= 18) {
+                    console.error(`\n\x1b[1;33m[GRAVITON CIRCUIT BREAKER]\x1b[0m Pure inspection loop detected without code edits (${toolExecutionCount} steps). Finalizing execution.\x1b[0m`);
+                    triggerFailFast(`Pure inspection loop detected without code edits (${toolExecutionCount} steps).`);
+                  } else if (toolExecutionCount >= MAX_TOOL_STEPS) {
+                    console.error(`\n\x1b[1;33m[GRAVITON CIRCUIT BREAKER]\x1b[0m Autonomous tool limit reached (${toolExecutionCount} steps). Finalizing execution to prevent runaway token loop.\x1b[0m`);
+                    triggerFailFast(`Tool execution loop limit exceeded (${MAX_TOOL_STEPS} steps).`);
+                  }
                 }
               }
             }

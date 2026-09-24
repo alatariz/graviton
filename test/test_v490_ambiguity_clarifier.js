@@ -27,7 +27,12 @@ assert.ok(briefAuth.missingDimensions.some(d => d.includes('brevity')), 'Must fl
 const briefApi = analyzePromptAmbiguity('buatkan api order');
 assert.strictEqual(briefApi.isAmbiguous, true, 'Short prompt "buatkan api order" must be flagged');
 assert.strictEqual(briefApi.domain, 'API', 'Must correctly identify API domain');
-console.log('  ✔ PASS: Vague brief prompts accurately flagged with domain resolution\n');
+
+// Test boundary safety for Indonesian words like 'tapi' (must not match 'api')
+const indonesianTapi = analyzePromptAmbiguity('buat kuis tabel di tengah layar tapi aman ada hint');
+assert.notStrictEqual(indonesianTapi.domain, 'API', 'Indonesian "tapi" must not trigger API domain');
+assert.strictEqual(indonesianTapi.domain, 'INTERACTIVE_APP', 'Must match INTERACTIVE_APP domain');
+console.log('  ✔ PASS: Vague brief prompts accurately flagged with domain resolution and boundary safety\n');
 
 // [TEST 2] Testing Well-Specified Detailed Prompts (Should NOT be flagged)
 console.log('[TEST 2] Testing analyzePromptAmbiguity on clear, well-specified instructions...');

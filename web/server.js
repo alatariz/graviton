@@ -715,6 +715,11 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
         } catch {}
       }
 
+      // If starting fresh (new chat or auto-compacted fresh start), do NOT pretend delta continuity exists!
+      // In a fresh Antigravity session, the AI must receive full code for scoped target files, not CONTEXT REUSE comments.
+      const isContinuousSession = Boolean(executionConvId) && !isExplicitNew;
+      const effectiveSynthesisConvId = isContinuousSession ? executionConvId : null;
+
       // Map Fast / Grav / Deep (and backwards compatible low / medium / high)
       const isFast = rawEffort === 'fast' || rawEffort === 'low';
       const isDeep = rawEffort === 'deep' || rawEffort === 'high';
@@ -739,7 +744,7 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
           dryRun: true,
           cwd: targetCwd,
           prompt,
-          conversationId: requestedConvId,
+          conversationId: effectiveSynthesisConvId,
           effortName: isFast ? 'Fast' : (isDeep ? 'Deep' : 'Grav'),
           modelRouting,
           targetScope,
@@ -761,8 +766,8 @@ if ($d.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
       const synthesized = await synthesizePrompt(prompt, null, {
         cwd: targetCwd,
         effort: modelRouting.agyEffort,
-        isContinuous: Boolean(requestedConvId),
-        conversationId: requestedConvId,
+        isContinuous: isContinuousSession,
+        conversationId: effectiveSynthesisConvId,
         isDeep,
         isFast,
         targetScope

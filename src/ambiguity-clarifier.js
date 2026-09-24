@@ -18,6 +18,14 @@ export const DOMAIN_PATTERNS = {
       'Theme: High-contrast professional palette matching workspace design tokens.'
     ]
   },
+  INTERACTIVE_APP: {
+    triggers: ['game', 'permainan', 'kuis', 'quiz', 'level', 'soal', 'skor', 'point', 'poin', 'latihan', 'stage', 'tebakan'],
+    defaults: [
+      'State Management: Single deterministic state loop with progress tracking in localStorage.',
+      'UX Flow: Seamless transitions between stages/levels with clear instant feedback (hints, answers, score deltas).',
+      'Layout: Centered, distraction-free interactive board/table with clean typography and zero side clutter.'
+    ]
+  },
   API: {
     triggers: ['api', 'endpoint', 'rest', 'crud', 'route', 'backend', 'service', 'controller'],
     defaults: [
@@ -66,10 +74,14 @@ export function analyzePromptAmbiguity(prompt) {
   const wordCount = words.length;
   const lower = cleanText.toLowerCase();
 
-  // Identify domain
+  // Identify domain with boundary-safe matching
   let detectedDomain = 'GENERAL_UI';
   for (const [domKey, domMeta] of Object.entries(DOMAIN_PATTERNS)) {
-    if (domMeta.triggers.some(t => lower.includes(t))) {
+    const matched = domMeta.triggers.some(t => {
+      const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`(?:^|[^a-zA-Z0-9_])${escaped}(?:$|[^a-zA-Z0-9_])`, 'i').test(lower);
+    });
+    if (matched) {
       detectedDomain = domKey;
       break;
     }
